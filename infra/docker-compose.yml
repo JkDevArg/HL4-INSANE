@@ -26,6 +26,7 @@ volumes:
   redis-data:
   loki-data:
   grafana-data:
+  prometheus-data:    # TSDB de Prometheus (métricas históricas de recursos)
 
 services:
 
@@ -197,3 +198,63 @@ services:
     ports:
       - "127.0.0.1:3000:3000"   # SOLO admin (túnel SSH). El público usa caster-overlay.
     depends_on: [loki]
+
+  # ── Monitoreo de recursos: cAdvisor (métricas por contenedor) ──────────────
+  # Expone CPU/RAM/red/FS de cada contenedor. NO publica puerto: Prometheus lo
+  # scrapea internamente (cadvisor:8080). privileged para leer cgroups del host.
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.49.1
+    container_name: ctf-cadvisor
+    restart: unless-stopped
+    privileged: true
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    networks:
+      - net_siem   # solo admin; sin IP fija ni puerto publicado
+
+  # ── Monitoreo de recursos: Prometheus (TSDB + scraper) ─────────────────────
+  # Scrapea cAdvisor cada 15s. Publica SOLO en 127.0.0.1:9090 para depurar
+  # (Grafana lo consume internamente vía http://prometheus:9090).
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    container_name: ctf-prometheus
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=15d
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    networks:
+      - net_siem
+    ports:
+      - "127.0.0.1:9090:9090"   # SOLO admin (depuración del scrape). Túnel SSH.
+    depends_on: [cadvisor]
+
+  # ── Panel admin propio (recursos en vivo + control ON/OFF por equipo) ──────
+  # AISLADO del caster y de los jugadores: se publica SOLO en 127.0.0.1:8091
+  # (túnel SSH). Monta el socket de Docker para leer stats y hacer stop/start
+  # de los contenedores ctf_team_* (lista blanca aplicada en el código).
+  admin-panel:
+    build: ../siem/admin-panel
+    container_name: ctf-admin-panel
+    restart: unless-stopped
+    environment:
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+    volumes:
+      # Acceso al motor de Docker: stats EN VIVO + start/stop de contenedores.
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - net_siem
+    ports:
+      - "127.0.0.1:8091:8091"   # SOLO localhost -> túnel SSH. Jugadores e internet NO lo alcanzan.
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8091/healthz').status==200 else 1)\""]
+      interval: 15s
+      timeout: 5s
+      retries: 3

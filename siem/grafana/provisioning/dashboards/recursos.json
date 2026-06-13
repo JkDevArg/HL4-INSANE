@@ -1,0 +1,135 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "refresh": "10s",
+  "schemaVersion": 39,
+  "tags": ["ctf", "recursos", "cadvisor"],
+  "templating": {
+    "list": [
+      {
+        "name": "team",
+        "label": "Equipo",
+        "type": "custom",
+        "description": "Filtra por contenedores de un equipo (NN) o todos.",
+        "query": "ctf_team_.* : Todos, ctf_team_01_.* : team_01, ctf_team_02_.* : team_02, ctf_team_03_.* : team_03, ctf_team_04_.* : team_04, ctf_team_05_.* : team_05, ctf_team_06_.* : team_06, ctf_team_07_.* : team_07, ctf_team_08_.* : team_08, ctf_team_09_.* : team_09, ctf_team_10_.* : team_10",
+        "current": { "text": "Todos", "value": "ctf_team_.*" },
+        "includeAll": false,
+        "multi": false,
+        "options": []
+      }
+    ]
+  },
+  "time": { "from": "now-1h", "to": "now" },
+  "title": "Recursos por equipo (cAdvisor)",
+  "uid": "ctf-recursos",
+  "version": 1,
+  "panels": [
+    {
+      "id": 1,
+      "type": "timeseries",
+      "title": "CPU por contenedor (% de un núcleo)",
+      "description": "rate de container_cpu_usage_seconds_total. 1.0 = un núcleo saturado.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 0 },
+      "fieldConfig": { "defaults": { "unit": "percentunit" }, "overrides": [] },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum by (name) (rate(container_cpu_usage_seconds_total{name=~\"$team\"}[2m]))",
+          "legendFormat": "{{name}}"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "Memoria por contenedor",
+      "description": "container_memory_usage_bytes (RSS + cache).",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 0 },
+      "fieldConfig": { "defaults": { "unit": "bytes" }, "overrides": [] },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum by (name) (container_memory_usage_bytes{name=~\"$team\"})",
+          "legendFormat": "{{name}}"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "title": "Red recibida (rx) por contenedor",
+      "description": "rate de container_network_receive_bytes_total.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 9 },
+      "fieldConfig": { "defaults": { "unit": "Bps" }, "overrides": [] },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum by (name) (rate(container_network_receive_bytes_total{name=~\"$team\"}[2m]))",
+          "legendFormat": "{{name}}"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "Red transmitida (tx) por contenedor",
+      "description": "rate de container_network_transmit_bytes_total.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 9 },
+      "fieldConfig": { "defaults": { "unit": "Bps" }, "overrides": [] },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum by (name) (rate(container_network_transmit_bytes_total{name=~\"$team\"}[2m]))",
+          "legendFormat": "{{name}}"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "CPU agregado POR EQUIPO",
+      "description": "Suma del CPU de todos los contenedores de cada equipo. Agrupa por el prefijo ctf_team_NN.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 18 },
+      "fieldConfig": { "defaults": { "unit": "percentunit" }, "overrides": [] },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum by (team) (label_replace(rate(container_cpu_usage_seconds_total{name=~\"ctf_team_.*\"}[2m]), \"team\", \"$1\", \"name\", \"ctf_team_(\\\\d{2})_.*\"))",
+          "legendFormat": "team_{{team}}"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "Memoria agregada POR EQUIPO",
+      "description": "Suma de memoria de los contenedores de cada equipo.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 18 },
+      "fieldConfig": { "defaults": { "unit": "bytes" }, "overrides": [] },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum by (team) (label_replace(container_memory_usage_bytes{name=~\"ctf_team_.*\"}, \"team\", \"$1\", \"name\", \"ctf_team_(\\\\d{2})_.*\"))",
+          "legendFormat": "team_{{team}}"
+        }
+      ]
+    }
+  ]
+}

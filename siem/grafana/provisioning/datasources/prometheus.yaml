@@ -1,0 +1,17 @@
+# Datasource Prometheus para Grafana (provisioning automático).
+# Métricas históricas de recursos (cAdvisor -> Prometheus). El datasource Loki
+# (loki.yaml) sigue siendo el isDefault; este se selecciona por uid en el dashboard.
+apiVersion: 1
+
+datasources:
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    # Hostname Docker del stack SIEM (puerto interno 9090).
+    url: http://prometheus:9090
+    uid: prometheus
+    isDefault: false
+    editable: true
+    jsonData:
+      # Debe coincidir (o ser >=) con el scrape_interval de prometheus.yml.
+      timeInterval: 15s

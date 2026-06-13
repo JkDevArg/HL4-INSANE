@@ -1,0 +1,5 @@
+# Panel de administración del CTF — dependencias mínimas.
+# FastAPI + servidor ASGI. httpx habla con el socket Unix de Docker.
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+httpx==0.28.1

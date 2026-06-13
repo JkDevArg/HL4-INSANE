@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex,nofollow" />
+<title>CTFHL4 — Panel Admin</title>
+<style>
+  /* Tema oscuro tipo consola admin. */
+  :root{
+    --bg:#0b0f14; --panel:#111821; --panel2:#0e141c; --border:#1e2a38;
+    --txt:#cdd9e5; --muted:#7d8da0; --accent:#39d98a; --accent2:#3ba0ff;
+    --warn:#ffb648; --danger:#ff5d5d; --mono:"JetBrains Mono",Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);font:14px/1.4 var(--mono);}
+  header{display:flex;align-items:center;gap:18px;padding:12px 20px;background:var(--panel);
+    border-bottom:1px solid var(--border);flex-wrap:wrap;}
+  header h1{font-size:15px;margin:0;color:var(--accent);letter-spacing:1px}
+  header .sub{color:var(--muted);font-size:12px}
+  .spacer{flex:1}
+  button{font-family:var(--mono);cursor:pointer;border-radius:6px;border:1px solid var(--border);
+    background:var(--panel2);color:var(--txt);padding:7px 12px;font-size:13px}
+  button:hover{border-color:var(--accent2)}
+  button.on{border-color:var(--accent);color:var(--accent)}
+  button.off{border-color:var(--danger);color:var(--danger)}
+  button:disabled{opacity:.4;cursor:not-allowed}
+  .host-bar{display:flex;gap:24px;padding:12px 20px;background:var(--panel2);
+    border-bottom:1px solid var(--border);flex-wrap:wrap;align-items:center}
+  .gauge{min-width:220px}
+  .gauge .label{font-size:12px;color:var(--muted);display:flex;justify-content:space-between}
+  .bar{height:10px;background:#0a0f15;border:1px solid var(--border);border-radius:5px;overflow:hidden;margin-top:4px}
+  .bar > div{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .4s}
+  .bar.hot > div{background:linear-gradient(90deg,var(--warn),var(--danger))}
+  main{padding:18px 20px;display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:14px}
+  .card h2{margin:0 0 10px;font-size:14px;display:flex;align-items:center;gap:8px}
+  .led{width:10px;height:10px;border-radius:50%;display:inline-block;box-shadow:0 0 6px currentColor}
+  .led.run{background:var(--accent);color:var(--accent)}
+  .led.stop{background:var(--danger);color:var(--danger)}
+  .led.partial{background:var(--warn);color:var(--warn)}
+  .metric{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin:5px 0}
+  .metric b{color:var(--txt);font-weight:600}
+  .actions{display:flex;gap:8px;margin-top:12px}
+  .actions button{flex:1}
+  table{width:100%;border-collapse:collapse;font-size:12px}
+  th,td{text-align:left;padding:5px 8px;border-bottom:1px solid var(--border)}
+  th{color:var(--muted);font-weight:600}
+  .full{grid-column:1/-1}
+  /* Login */
+  #login{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center}
+  #login .box{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:32px;width:340px}
+  #login h1{color:var(--accent);font-size:16px;margin:0 0 6px;letter-spacing:1px}
+  #login p{color:var(--muted);font-size:12px;margin:0 0 20px}
+  #login input{width:100%;padding:10px;background:var(--panel2);border:1px solid var(--border);
+    border-radius:6px;color:var(--txt);font-family:var(--mono);margin-bottom:12px}
+  #login button{width:100%;padding:10px;border-color:var(--accent);color:var(--accent)}
+  #login .err{color:var(--danger);font-size:12px;min-height:16px;margin-top:8px}
+  .hidden{display:none!important}
+  .ts{font-size:11px;color:var(--muted)}
+</style>
+</head>
+<body>
+
+<!-- ── Pantalla de login ─────────────────────────────────────────── -->
+<div id="login">
+  <div class="box">
+    <h1>CTFHL4 — PANEL ADMIN</h1>
+    <p>Acceso restringido. Solo administradores (túnel SSH).</p>
+    <input id="pw" type="password" placeholder="Contraseña de admin" autocomplete="current-password" />
+    <button id="loginBtn">Ingresar</button>
+    <div class="err" id="loginErr"></div>
+  </div>
+</div>
+
+<!-- ── Dashboard ─────────────────────────────────────────────────── -->
+<div id="app" class="hidden">
+  <header>
+    <h1>⬡ CTFHL4-INSANE</h1>
+    <span class="sub">Panel de recursos y control · contenedores <code>ctf_team_*</code></span>
+    <span class="spacer"></span>
+    <span class="ts" id="ts"></span>
+    <button id="logoutBtn">Salir</button>
+  </header>
+
+  <div class="host-bar">
+    <div class="gauge">
+      <div class="label"><span>CPU host</span><span id="hostCpuTxt">—</span></div>
+      <div class="bar" id="hostCpuBar"><div style="width:0"></div></div>
+    </div>
+    <div class="gauge">
+      <div class="label"><span>RAM host</span><span id="hostMemTxt">—</span></div>
+      <div class="bar" id="hostMemBar"><div style="width:0"></div></div>
+    </div>
+    <div class="gauge" style="min-width:auto">
+      <div class="label"><span>Núcleos</span><span id="hostNcpu">—</span></div>
+    </div>
+  </div>
+
+  <main>
+    <div id="teams"></div>
+    <!-- teams se rellena con tarjetas; usamos display:contents abajo -->
+  </main>
+
+  <main>
+    <div class="card full">
+      <h2>Top contenedores por consumo</h2>
+      <table>
+        <thead><tr><th>Contenedor</th><th>Equipo</th><th>CPU%</th><th>RAM</th><th>Red rx/tx</th></tr></thead>
+        <tbody id="topBody"></tbody>
+      </table>
+    </div>
+    <div class="card full">
+      <h2>Stack del CTF (plataforma / SIEM)</h2>
+      <table>
+        <thead><tr><th>Contenedor</th><th>Estado</th><th>CPU%</th><th>RAM</th><th>Red rx/tx</th></tr></thead>
+        <tbody id="stackBody"></tbody>
+      </table>
+    </div>
+  </main>
+</div>
+
+<script>
+const REFRESH_MS = 4000;
+let timer = null;
+
+// ── Utilidades de formato ──────────────────────────────────────────
+function fmtBytes(b){
+  if(!b) return "0 B";
+  const u=["B","KB","MB","GB","TB"]; let i=0; b=Number(b);
+  while(b>=1024 && i<u.length-1){b/=1024;i++;}
+  return b.toFixed(b<10&&i>0?1:0)+" "+u[i];
+}
+function pctBar(el, pct){
+  const bar = el.querySelector("div");
+  const p = Math.min(pct, 100);
+  bar.style.width = p+"%";
+  el.classList.toggle("hot", pct >= 80);
+}
+
+// ── Login ───────────────────────────────────────────────────────────
+async function doLogin(){
+  const pw = document.getElementById("pw").value;
+  const err = document.getElementById("loginErr");
+  err.textContent = "";
+  const r = await fetch("/api/login", {
+    method:"POST", headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({password: pw})
+  });
+  if(r.ok){ showApp(); }
+  else { err.textContent = "Contraseña incorrecta."; }
+}
+async function doLogout(){
+  await fetch("/api/logout", {method:"POST"});
+  if(timer) clearInterval(timer);
+  document.getElementById("app").classList.add("hidden");
+  document.getElementById("login").classList.remove("hidden");
+  document.getElementById("pw").value="";
+}
+function showApp(){
+  document.getElementById("login").classList.add("hidden");
+  document.getElementById("app").classList.remove("hidden");
+  refresh();
+  if(timer) clearInterval(timer);
+  timer = setInterval(refresh, REFRESH_MS);
+}
+
+// ── Acciones de equipo ──────────────────────────────────────────────
+async function teamAction(n, action){
+  const verbo = action==="stop" ? "APAGAR" : (action==="start"?"ENCENDER":"REINICIAR");
+  if(!confirm(`¿${verbo} todos los contenedores del Equipo ${String(n).padStart(2,"0")}?`)) return;
+  const r = await fetch(`/api/team/${n}/${action}`, {method:"POST"});
+  if(!r.ok){ alert("Error: "+(await r.text())); }
+  await refresh();
+}
+
+// ── Render del dashboard ────────────────────────────────────────────
+function ledClass(t){
+  if(t.running === 0) return "stop";
+  if(t.running < t.containers) return "partial";
+  return "run";
+}
+
+function renderTeams(teams){
+  const root = document.getElementById("teams");
+  // teams como contenedor que aporta tarjetas al grid principal.
+  root.style.display = "contents";
+  root.innerHTML = "";
+  teams.forEach(t=>{
+    const nn = String(t.team).padStart(2,"0");
+    const card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML = `
+      <h2><span class="led ${ledClass(t)}"></span> Equipo ${nn}
+        <span style="margin-left:auto;color:var(--muted);font-size:12px">${t.running}/${t.containers} up</span></h2>
+      <div class="metric"><span>CPU (suma)</span><b>${t.cpu_pct.toFixed(1)} %</b></div>
+      <div class="metric"><span>RAM</span><b>${fmtBytes(t.mem_used)}</b></div>
+      <div class="bar"><div style="width:${Math.min(t.cpu_pct,100)}%"></div></div>
+      <div class="metric" style="margin-top:8px"><span>Red rx / tx</span>
+        <b>${fmtBytes(t.net_rx)} / ${fmtBytes(t.net_tx)}</b></div>
+      <div class="actions">
+        <button class="off" ${t.running===0?"disabled":""}
+          onclick="teamAction(${t.team},'stop')">⏻ Apagar</button>
+        <button class="on" ${t.running===t.containers?"disabled":""}
+          onclick="teamAction(${t.team},'start')">▶ Encender</button>
+      </div>`;
+    root.appendChild(card);
+  });
+  if(teams.length===0){
+    root.innerHTML = `<div class="card"><h2>Sin equipos</h2>
+      <div class="metric">No hay contenedores <code>ctf_team_*</code> desplegados.</div></div>`;
+  }
+}
+
+function renderTop(top){
+  const tb = document.getElementById("topBody");
+  tb.innerHTML = top.map(c=>`<tr>
+    <td>${c.name}</td>
+    <td>${c.team!==null?String(c.team).padStart(2,"0"):"—"}</td>
+    <td>${c.cpu_pct.toFixed(1)}</td>
+    <td>${fmtBytes(c.mem_used)}</td>
+    <td>${fmtBytes(c.net_rx)} / ${fmtBytes(c.net_tx)}</td>
+  </tr>`).join("") || `<tr><td colspan="5" class="ts">Sin actividad.</td></tr>`;
+}
+
+function renderStack(stack){
+  const tb = document.getElementById("stackBody");
+  tb.innerHTML = stack.map(c=>`<tr>
+    <td>${c.name}</td>
+    <td><span class="led ${c.state==='running'?'run':'stop'}" style="margin-right:6px"></span>${c.state}</td>
+    <td>${c.cpu_pct.toFixed(1)}</td>
+    <td>${fmtBytes(c.mem_used)}</td>
+    <td>${fmtBytes(c.net_rx)} / ${fmtBytes(c.net_tx)}</td>
+  </tr>`).join("");
+}
+
+// ── Refresh principal ───────────────────────────────────────────────
+async function refresh(){
+  let r;
+  try { r = await fetch("/api/stats"); }
+  catch(e){ return; }
+  if(r.status === 401){ // sesión caducada
+    if(timer) clearInterval(timer);
+    document.getElementById("app").classList.add("hidden");
+    document.getElementById("login").classList.remove("hidden");
+    return;
+  }
+  if(!r.ok) return;
+  const d = await r.json();
+
+  // Host
+  const h = d.host;
+  document.getElementById("hostCpuTxt").textContent =
+    `${h.cpu_pct.toFixed(1)} %  (${h.cpu_pct_raw.toFixed(0)}% de ${h.ncpu} núcleos)`;
+  pctBar(document.getElementById("hostCpuBar"), h.cpu_pct);
+  document.getElementById("hostMemTxt").textContent =
+    `${fmtBytes(h.mem_used)} / ${fmtBytes(h.mem_total)} (${h.mem_pct.toFixed(0)}%)`;
+  pctBar(document.getElementById("hostMemBar"), h.mem_pct);
+  document.getElementById("hostNcpu").textContent = h.ncpu;
+  document.getElementById("ts").textContent =
+    "Actualizado " + new Date(d.ts*1000).toLocaleTimeString("es-PE");
+
+  renderTeams(d.teams);
+  renderTop(d.top);
+  renderStack(d.stack);
+}
+
+// ── Arranque ────────────────────────────────────────────────────────
+document.getElementById("loginBtn").addEventListener("click", doLogin);
+document.getElementById("pw").addEventListener("keydown", e=>{ if(e.key==="Enter") doLogin(); });
+document.getElementById("logoutBtn").addEventListener("click", doLogout);
+
+// ¿Ya hay sesión válida? (cookie httpOnly -> preguntamos al backend)
+fetch("/api/whoami").then(r=>r.json()).then(d=>{
+  if(d.authenticated) showApp();
+}).catch(()=>{});
+</script>
+</body>
+</html>
