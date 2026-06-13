@@ -81,3 +81,27 @@ together.ai
 api.together.xyz
 replicate.com
 api.replicate.com
+meta.ai
+pi.ai
+blackbox.ai
+chat.lmsys.org
+lmarena.ai
+
+# --- Microsoft Copilot / Office AI (incluye ecs.office.com pedido) ---
+ecs.office.com
+copilot.cloud.microsoft
+m365.cloud.microsoft
+substrate.office.com
+edgeservices.bing.com
+www.bing.com/chat
+
+# --- Proveedores DoH (DNS-over-HTTPS): bloquearlos evita evadir el sinkhole ---
+# Nota: 1.1.1.1 / 8.8.8.8 por IP no se bloquean vía DNS; ver ai-ip-blocklist.sh.
+dns.google
+cloudflare-dns.com
+mozilla.cloudflare-dns.com
+chrome.cloudflare-dns.com
+dns.quad9.net
+doh.opendns.com
+dns.nextdns.io
+doh.cleanbrowsing.org

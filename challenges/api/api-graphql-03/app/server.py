@@ -49,8 +49,30 @@ from graphql.validation import NoSchemaIntrospectionCustomRule, specified_rules
 VALIDATION_RULES = list(specified_rules) + [NoSchemaIntrospectionCustomRule]
 
 from siem import emit
+from reqlog import reqlog_http
 
 app = Flask(__name__)
+
+
+@app.before_request
+def _log_request():
+    """Loguea CADA petición entrante COMPLETA (método, ruta, query, headers,
+    body) para el SIEM del stream. Captura íntegra la query GraphQL del POST."""
+    try:
+        src_ip = request.headers.get("X-Forwarded-For", request.remote_addr)
+        if src_ip and "," in src_ip:
+            src_ip = src_ip.split(",")[0].strip()
+        body = request.get_data(cache=True, as_text=True)
+        reqlog_http(
+            src_ip=src_ip,
+            method=request.method,
+            path=request.path,
+            query=request.query_string.decode("utf-8", "replace"),
+            headers=dict(request.headers),
+            body=body,
+        )
+    except Exception:
+        pass
 
 FLAG = os.environ.get("FLAG", "flag{EJEMPLO_LOCAL}")
 # PIN de 4 dígitos del admin, aleatorio por instancia/equipo.

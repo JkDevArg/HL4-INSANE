@@ -5,6 +5,35 @@ flags dinámicas, retos HARD/INSANE y SIEM de monitoreo en tiempo real.
 
 ---
 
+## 🚀 Despliegue en 1 comando
+
+En un servidor Ubuntu 22.04 / 24.04 limpio (con la IP/dominio público apuntando a él):
+
+```bash
+git clone <URL_DEL_REPO> ctfhl4 && cd ctfhl4
+sudo ./bootstrap.sh <IP_O_DOMINIO_PUBLICO>
+```
+
+Eso instala Docker, levanta la plataforma + SIEM, configura la VPN (con DNS
+interno y bloqueo de IA), el firewall (aislamiento por equipo, internet
+permitido pero IA/chatbots bloqueados), Suricata, el dashboard público
+anonimizado, genera los certificados (4 por equipo) y lanza los retos.
+
+Opciones: `--teams N` · `--no-challenges` · `--vpn-proto tcp` · `--vpn-port N`.
+Al terminar imprime las URLs, credenciales y dónde están los `.ovpn`.
+
+Detalle paso a paso y verificación: ver `docs/DESPLIEGUE-VM.md` e
+`docs/INTEGRACION-Y-PRUEBA.md`. Endpoints/gotchas de red: `docs/ARCHITECTURE.md`.
+
+### Tras un reinicio o al recrear contenedores
+Docker reescribe la tabla `raw`; reaplica el firewall para que la VPN siga
+alcanzando los retos:
+```bash
+sudo bash infra/firewall/setup-nftables.sh
+```
+
+---
+
 ## Arquitectura General
 
 ```

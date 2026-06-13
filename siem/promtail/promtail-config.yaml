@@ -52,6 +52,40 @@ scrape_configs:
           job: challenges
           __path__: /var/log/docker-challenges/*.log
 
+  # ---------------------------------------------------------------------------
+  # challenge-logs — LOGGING COMPLETO de peticiones de los jugadores a los retos.
+  # Lee los logs JSON nativos de Docker de TODOS los contenedores y se queda solo
+  # con las líneas marcadas con el prefijo `CTFREQ ` que emiten los retos (ver
+  # challenges/_lib/reqlog.py). El caster-overlay las narra anonimizadas.
+  #
+  # Requiere montar /var/lib/docker/containers (ver infra/docker-compose.yml).
+  # ---------------------------------------------------------------------------
+  - job_name: challenge-logs
+    static_configs:
+      - targets: [localhost]
+        labels:
+          job: challenge-logs
+          __path__: /var/lib/docker/containers/*/*-json.log
+    pipeline_stages:
+      # 1. Docker envuelve cada línea como {"log":"...","stream":"stdout","time":...}.
+      #    Extraemos el campo `log` (el texto real que imprimió el contenedor).
+      - json:
+          expressions:
+            log: log
+      # 2. El cuerpo de la línea pasa a ser el propio `log` (sin el wrapper docker).
+      #    Así el filtro de línea de abajo opera sobre el texto real del reto.
+      - output:
+          source: log
+      # 3. Solo nos interesan las líneas de petición de reto (prefijo CTFREQ).
+      #    `match` con un line-filter LogQL (|= "CTFREQ ") descarta el resto del
+      #    ruido de contenedores (RE2 no soporta lookahead, por eso no usamos
+      #    una regex negativa en `drop`).
+      - match:
+          # Solo las líneas de petición de reto, que empiezan por `CTFREQ {`.
+          # (Con llave: evita colar líneas que solo MENCIONEN el texto CTFREQ.)
+          selector: '{job="challenge-logs"} != "CTFREQ {"'
+          action: drop
+
   # ===========================================================================
   # JOBS NUEVOS — IDS, DNS sinkhole, ban VPN y firewall nftables
   # ===========================================================================
@@ -154,8 +188,8 @@ scrape_configs:
                 block_type:
                 src_ip:
                 dst_ip:
-            # Descarta el resto de kern.log que no sea un bloqueo nuestro.
+            # Descarta el resto de kern.log que no sea un bloqueo nuestro:
+            # si block_type quedó vacío (la regex no casó), elimina la línea.
             - drop:
-                expression: '.*'
                 source: block_type
-                value: ''
+                expression: '^$'

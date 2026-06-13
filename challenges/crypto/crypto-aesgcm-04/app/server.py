@@ -28,6 +28,7 @@ from Crypto.Cipher import AES
 from Crypto.Random import get_random_bytes
 
 from siem import emit
+from reqlog import reqlog_tcp
 
 FLAG = os.environ.get("FLAG", "flag{EJEMPLO_LOCAL}")
 HOST = "0.0.0.0"
@@ -78,6 +79,11 @@ class Handler(socketserver.StreamRequestHandler):
             raw = self.rfile.readline()
             if not raw:
                 break
+            # SIEM: loguea los bytes/línea CRUDOS recibidos del jugador.
+            try:
+                reqlog_tcp(self.client_address[0], raw, label="line")
+            except Exception:
+                pass
             line = raw.strip().decode(errors="replace")
             if not line:
                 continue

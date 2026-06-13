@@ -22,8 +22,46 @@ from fastapi import Body, Depends, FastAPI, Header, HTTPException, Request
 from pydantic import BaseModel
 
 from siem import emit
+from reqlog import reqlog_http
 
 app = FastAPI(title="LedgerX API", docs_url=None, redoc_url=None, openapi_url=None)
+
+
+@app.middleware("http")
+async def _log_request(request: Request, call_next):
+    """Middleware ASGI: loguea CADA petición COMPLETA (método, ruta, query,
+    headers, body) para el SIEM del stream.
+
+    Lee el body ANTES de pasar al handler y vuelve a inyectar el stream
+    `receive` para que los endpoints sigan leyéndolo con normalidad.
+    """
+    try:
+        raw = await request.body()
+
+        async def _receive():
+            return {"type": "http.request", "body": raw, "more_body": False}
+
+        # Re-inyecta el body consumido para los handlers aguas abajo.
+        request._receive = _receive
+
+        src_ip = request.headers.get("x-forwarded-for")
+        if src_ip and "," in src_ip:
+            src_ip = src_ip.split(",")[0].strip()
+        if not src_ip:
+            src_ip = request.client.host if request.client else "?"
+
+        reqlog_http(
+            src_ip=src_ip,
+            method=request.method,
+            path=request.url.path,
+            query=request.url.query,
+            headers=dict(request.headers),
+            body=raw,
+        )
+    except Exception:
+        # El logging jamás debe tumbar el reto.
+        pass
+    return await call_next(request)
 
 FLAG = os.environ.get("FLAG", "flag{EJEMPLO_LOCAL}")
 JWT_SECRET = os.environ.get("JWT_SECRET", secrets.token_hex(16))

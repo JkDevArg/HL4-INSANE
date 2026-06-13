@@ -24,8 +24,33 @@ import uuid
 from flask import Flask, jsonify, request, Response
 
 from siem import emit
+from reqlog import reqlog_http
 
 app = Flask(__name__)
+
+
+@app.before_request
+def _log_request():
+    """Loguea CADA petición entrante COMPLETA (método, ruta, query, headers,
+    body) para el SIEM del stream. No interfiere con el manejo normal."""
+    try:
+        # IP real del cliente (detrás del proxy/VPN puede venir en XFF).
+        src_ip = request.headers.get("X-Forwarded-For", request.remote_addr)
+        if src_ip and "," in src_ip:
+            src_ip = src_ip.split(",")[0].strip()
+        # Cuerpo crudo (form/json/texto) tal cual lo envió el jugador.
+        body = request.get_data(cache=True, as_text=True)
+        reqlog_http(
+            src_ip=src_ip,
+            method=request.method,
+            path=request.path,
+            query=request.query_string.decode("utf-8", "replace"),
+            headers=dict(request.headers),
+            body=body,
+        )
+    except Exception:
+        # El logging jamás debe tumbar el reto.
+        pass
 
 FLAG = os.environ.get("FLAG", "flag{EJEMPLO_LOCAL}")
 REGISTRY_URL = os.environ.get("REGISTRY_URL", "http://registry:8080")

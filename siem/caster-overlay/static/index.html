@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SIEM · CTF Live Overlay</title>
+<style>
+  :root {
+    --bg: #03060a;
+    --bg2: #050a10;
+    --panel: #08111a;
+    --panel-2: #0a1622;
+    --panel-3: #0c1b2a;
+    --grid: #11293a;
+    --grid-2: #1b3c52;
+    --neon: #00ff9c;
+    --cyan: #2de2ff;
+    --cyan-dim: #1a8fb3;
+    --red: #ff2e4d;
+    --red-glow: rgba(255,46,77,0.55);
+    --orange: #ff9b2d;
+    --yellow: #ffe04a;
+    --green: #2dff8c;
+    --gray: #5d7185;
+    --txt: #cfe2f2;
+    --dim: #5e7488;
+    --dimmer: #3b4d5e;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--txt);
+    font-family: "JetBrains Mono", "Fira Code", "Consolas", ui-monospace, monospace;
+    overflow: hidden;
+    font-variant-ligatures: none;
+  }
+  body {
+    background:
+      radial-gradient(1400px 700px at 85% -12%, rgba(0,255,156,0.07), transparent),
+      radial-gradient(1000px 600px at 0% 112%, rgba(45,226,255,0.06), transparent),
+      radial-gradient(700px 500px at 50% 50%, rgba(255,46,77,0.02), transparent),
+      var(--bg);
+  }
+  /* Rejilla tech de fondo */
+  body::before {
+    content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background-image:
+      linear-gradient(rgba(45,226,255,0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(45,226,255,0.035) 1px, transparent 1px);
+    background-size: 46px 46px;
+    mask-image: radial-gradient(circle at 50% 40%, #000 30%, transparent 92%);
+  }
+  /* Scanline sutil */
+  body::after {
+    content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 999;
+    background: repeating-linear-gradient(0deg, rgba(0,0,0,0) 0px, rgba(0,0,0,0) 2px, rgba(0,0,0,0.06) 3px);
+    opacity: 0.4;
+  }
+
+  /* ---------- layout maestro ---------- */
+  .app {
+    position: relative; z-index: 1;
+    display: grid;
+    grid-template-rows: auto 1fr;
+    height: 100vh;
+    padding: 14px 18px;
+    gap: 12px;
+  }
+
+  /* esquinas tech reutilizables */
+  .tech { position: relative; }
+  .tech::before, .tech::after {
+    content: ""; position: absolute; width: 14px; height: 14px; pointer-events: none;
+  }
+  .tech::before { top: -1px; left: -1px; border-top: 2px solid var(--cyan); border-left: 2px solid var(--cyan); }
+  .tech::after  { bottom: -1px; right: -1px; border-bottom: 2px solid var(--cyan); border-right: 2px solid var(--cyan); }
+
+  /* ---------- barra superior ---------- */
+  header {
+    display: flex; align-items: stretch; justify-content: space-between; gap: 14px;
+    border: 1px solid var(--grid);
+    background: linear-gradient(180deg, var(--panel-2), var(--panel));
+    padding: 12px 20px;
+    box-shadow: 0 0 34px rgba(0,255,156,0.05), inset 0 0 0 1px rgba(45,226,255,0.03);
+  }
+  .brand { display: flex; flex-direction: column; justify-content: center; gap: 6px; min-width: 320px; }
+  .logo {
+    font-size: 30px; font-weight: 800; letter-spacing: 3px; line-height: 1;
+    color: var(--neon); text-shadow: 0 0 16px rgba(0,255,156,0.55);
+    display: flex; align-items: center; gap: 14px;
+  }
+  .logo .live {
+    color: var(--red); font-size: 14px; letter-spacing: 2px; font-weight: 800;
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 3px 9px; border: 1px solid var(--red);
+    box-shadow: 0 0 14px var(--red-glow); border-radius: 3px;
+  }
+  .logo .live .ledlive {
+    width: 9px; height: 9px; border-radius: 50%; background: var(--red);
+    box-shadow: 0 0 10px var(--red); animation: blink 1.1s steps(2,start) infinite;
+  }
+  @keyframes blink { 50% { opacity: 0.15; } }
+  .subtitle {
+    color: var(--dim); font-size: 11px; letter-spacing: 4px; text-transform: uppercase;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .clock { color: var(--cyan); font-weight: 700; letter-spacing: 2px; }
+  .conn { display: inline-flex; align-items: center; gap: 6px; letter-spacing: 1px; }
+  .conn .led { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 8px var(--green); }
+  .conn.down .led { background: var(--red); box-shadow: 0 0 8px var(--red); }
+  .conn.down { color: var(--red); }
+
+  /* tiles de stats */
+  .stats { display: flex; gap: 10px; flex: 1; justify-content: flex-end; }
+  .stat {
+    flex: 1; max-width: 150px; min-width: 92px; text-align: center;
+    border: 1px solid var(--grid); background: var(--panel-3);
+    padding: 8px 8px 9px; position: relative; overflow: hidden;
+  }
+  .stat::before {
+    content: ""; position: absolute; top: 0; left: 0; right: 0; height: 2px; opacity: 0.85;
+  }
+  .stat .v { font-size: 30px; font-weight: 800; line-height: 1; letter-spacing: 1px; }
+  .stat .k { font-size: 9px; letter-spacing: 2px; color: var(--dim); text-transform: uppercase; margin-top: 7px; }
+  .stat.total .v { color: var(--cyan); } .stat.total::before { background: var(--cyan); }
+  .stat.alerts .v { color: var(--red); } .stat.alerts::before { background: var(--red); }
+  .stat.ai .v { color: var(--orange); } .stat.ai::before { background: var(--orange); }
+  .stat.scan .v { color: var(--yellow); } .stat.scan::before { background: var(--yellow); }
+  .stat.solves .v { color: var(--neon); } .stat.solves::before { background: var(--neon); }
+  .stat.teamson .v { color: var(--green); } .stat.teamson::before { background: var(--green); }
+  .stat.players .v { color: var(--cyan); } .stat.players::before { background: var(--cyan); }
+  .stat .v.bump { animation: bump 0.5s ease; }
+  @keyframes bump { 0%{transform:scale(1);} 35%{transform:scale(1.28);} 100%{transform:scale(1);} }
+
+  /* ---------- grid principal ---------- */
+  .main {
+    display: grid;
+    grid-template-columns: 1.55fr 1fr;
+    grid-template-rows: 1.15fr 0.85fr;
+    grid-template-areas:
+      "teams  violations"
+      "feed   charts";
+    gap: 12px; min-height: 0;
+  }
+  .panel {
+    border: 1px solid var(--grid);
+    background: linear-gradient(180deg, var(--panel-2), var(--panel));
+    display: flex; flex-direction: column; min-height: 0; overflow: hidden;
+  }
+  .panel > h2 {
+    font-size: 13px; letter-spacing: 4px; text-transform: uppercase;
+    padding: 11px 16px; color: var(--cyan);
+    border-bottom: 1px solid var(--grid);
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    background: linear-gradient(90deg, rgba(45,226,255,0.06), transparent);
+    flex-shrink: 0;
+  }
+  .panel > h2 .tag { font-size: 10px; color: var(--dim); letter-spacing: 2px; }
+  .panel > h2 .dot { color: var(--neon); font-size: 9px; animation: blink 2s infinite; }
+  .pbody { flex: 1; min-height: 0; overflow: hidden; position: relative; }
+
+  /* ---------- scrollbar neón fino (listas con scroll interno) ---------- */
+  .scrolly { overflow-y: auto; overflow-x: hidden; scrollbar-width: thin; scrollbar-color: var(--cyan-dim) transparent; }
+  .scrolly::-webkit-scrollbar { width: 7px; }
+  .scrolly::-webkit-scrollbar-track { background: rgba(45,226,255,0.04); }
+  .scrolly::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, var(--cyan), var(--cyan-dim));
+    border-radius: 4px; box-shadow: 0 0 6px rgba(45,226,255,0.5);
+  }
+  .scrolly::-webkit-scrollbar-thumb:hover { background: var(--neon); box-shadow: 0 0 8px rgba(0,255,156,0.6); }
+
+  /* ---------- panel EQUIPOS ---------- */
+  #panelTeams { grid-area: teams; }
+  .teams-grid {
+    height: 100%; overflow: hidden;
+    display: grid; grid-template-columns: repeat(5, 1fr); grid-auto-rows: 1fr;
+    gap: 8px; padding: 10px;
+  }
+  .tcard {
+    border: 1px solid var(--grid); background: var(--panel-3);
+    padding: 8px 10px; display: flex; flex-direction: column; gap: 4px;
+    position: relative; overflow: hidden; transition: border-color 0.3s;
+  }
+  .tcard .thead { display: flex; align-items: center; gap: 7px; }
+  .tcard .led {
+    width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0;
+    background: var(--dimmer); border: 1px solid #000;
+  }
+  .tcard.online  .led { background: var(--green);  box-shadow: 0 0 10px var(--green); }
+  .tcard.banned  .led { background: var(--red);    box-shadow: 0 0 12px var(--red); animation: blink 0.7s steps(2,start) infinite; }
+  .tcard.offline .led { background: var(--dimmer); }
+  .tcard .tname { font-size: 14px; font-weight: 800; letter-spacing: 1px; color: var(--txt); }
+  .tcard.banned { border-color: var(--red); box-shadow: inset 0 0 22px rgba(255,46,77,0.18); }
+  .tcard.banned .tname { color: #ffb3bf; }
+  .tcard .stbadge {
+    margin-left: auto; font-size: 8px; letter-spacing: 1px; text-transform: uppercase;
+    color: var(--dim); border: 1px solid var(--grid); padding: 1px 5px; border-radius: 2px;
+  }
+  .tcard.online .stbadge { color: var(--green); border-color: rgba(45,255,140,0.4); }
+  .tcard.banned .stbadge { color: var(--red); border-color: var(--red); background: rgba(255,46,77,0.12); }
+  .tcard .trow { display: flex; align-items: baseline; gap: 8px; }
+  .tcard .conn { font-size: 12px; color: var(--cyan); font-weight: 700; }
+  .tcard .pts { font-size: 22px; font-weight: 800; color: var(--neon); line-height: 1; margin-left: auto;
+    text-shadow: 0 0 10px rgba(0,255,156,0.35); }
+  .tcard .slv { font-size: 10px; color: var(--dim); }
+  .tcard .last {
+    font-size: 9.5px; color: var(--dim); line-height: 1.2; margin-top: auto;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    border-top: 1px solid rgba(27,60,82,0.4); padding-top: 4px;
+  }
+  .tcard.leader {
+    border-color: var(--neon);
+    box-shadow: 0 0 22px rgba(0,255,156,0.22), inset 0 0 18px rgba(0,255,156,0.08);
+  }
+  .tcard.leader::after {
+    content: "★ LÍDER"; position: absolute; top: 0; right: 0;
+    font-size: 8px; letter-spacing: 1px; color: #04130c; background: var(--neon);
+    padding: 1px 6px; font-weight: 800;
+  }
+  .tcard .team-tag { color: var(--cyan); }
+
+  /* ---------- panel VIOLACIONES ---------- */
+  #panelViol { grid-area: violations; border-color: rgba(255,46,77,0.45); }
+  /* Acceso a IA: equipo/jugador y dominio en rojo + badge [BLOCK] */
+  .vname { color:#ff2e4d; font-weight:700; text-shadow:0 0 8px rgba(255,46,77,0.75); }
+  .vdom  { color:#ff5c5c; font-weight:700; text-decoration:underline; text-shadow:0 0 6px rgba(255,92,92,0.6); }
+  .vblock{ display:inline-block; color:#fff; background:#ff2e4d; padding:1px 8px; border-radius:3px;
+           font-weight:800; font-size:0.82em; margin-left:8px; letter-spacing:1px;
+           box-shadow:0 0 12px rgba(255,46,77,0.85); animation: blockpulse 1s ease-in-out infinite; }
+  @keyframes blockpulse { 0%,100%{ opacity:1; } 50%{ opacity:0.55; } }
+  /* Contador de repeticiones del mismo intento (×N) */
+  .vcount { display:inline-block; margin-left:8px; padding:1px 8px; border-radius:10px;
+            background:rgba(255,176,32,0.18); color:#ffb020; font-weight:800; font-size:0.85em;
+            border:1px solid rgba(255,176,32,0.5); }
+  #panelViol > h2 {
+    color: var(--red); background: linear-gradient(90deg, rgba(255,46,77,0.14), transparent);
+    border-bottom-color: rgba(255,46,77,0.4);
+  }
+  #panelViol > h2 .dot { color: var(--red); }
+  #panelViol.alarm { animation: panelalarm 1.3s infinite; }
+  @keyframes panelalarm { 50% { box-shadow: 0 0 30px rgba(255,46,77,0.4); border-color: var(--red); } }
+  .viol-list { height: 100%; overflow-y: auto; overflow-x: hidden; padding: 8px; display: flex; flex-direction: column; gap: 7px; }
+  .viol {
+    display: grid; grid-template-columns: 1fr auto; align-items: start; gap: 8px;
+    border: 1px solid rgba(255,46,77,0.35); border-left: 4px solid var(--red);
+    background: linear-gradient(90deg, rgba(255,46,77,0.16), rgba(255,46,77,0.03));
+    padding: 9px 12px; animation: slidein 0.4s ease; flex-shrink: 0;
+  }
+  .viol .vtxt { font-size: 16px; font-weight: 700; color: #ffd2da; line-height: 1.25; letter-spacing: 0.3px;
+    white-space: normal; overflow-wrap: anywhere; word-break: break-word; min-width: 0; }
+  .viol .vwhen { font-size: 10px; color: #d98a96; white-space: nowrap; text-align: right; }
+  .viol.t-ai      { border-left-color: var(--orange); }
+  .viol.t-ai      { background: linear-gradient(90deg, rgba(255,155,45,0.16), rgba(255,155,45,0.03)); border-color: rgba(255,155,45,0.4); }
+  .viol.t-ai .vtxt { color: #ffe2bf; }
+  .viol.t-ai .vwhen { color: #cfa46e; }
+  .viol.t-scan, .viol.t-exploit { border-left-color: var(--yellow); }
+  .viol.t-cheat   { border-left-color: var(--red); box-shadow: 0 0 16px rgba(255,46,77,0.25); }
+  .viol.t-cheat .vtxt { color: #ff8fa1; }
+  .viol .team-tag { color: inherit; font-weight: 800; }
+
+  /* ---------- panel ACTIVIDAD EN VIVO ---------- */
+  #panelFeed { grid-area: feed; }
+  .feed { height: 100%; overflow-y: auto; overflow-x: hidden; padding: 5px 0; }
+  .ev {
+    display: grid; grid-template-columns: 34px 1fr auto; align-items: start; gap: 11px;
+    padding: 7px 16px; border-left: 3px solid var(--gray); animation: slidein 0.35s ease;
+  }
+  @keyframes slidein { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: none; } }
+  .ev .ico { font-size: 19px; text-align: center; filter: drop-shadow(0 0 5px rgba(0,0,0,0.6)); }
+  .ev .txt { font-size: 14.5px; line-height: 1.3; min-width: 0;
+    white-space: normal; overflow-wrap: anywhere; word-break: break-word; }
+  .ev .when { font-size: 10px; color: var(--dim); white-space: nowrap; text-align: right; padding-top: 2px; }
+  .ev.sev-alert { border-left-color: var(--red); background: linear-gradient(90deg, rgba(255,46,77,0.13), transparent); }
+  .ev .team-tag { color: var(--cyan); font-weight: 700; }
+  .ev.sev-red    { border-left-color: var(--red);    background: linear-gradient(90deg, rgba(255,46,77,0.13), transparent); }
+  .ev.sev-orange { border-left-color: var(--orange); background: linear-gradient(90deg, rgba(255,155,45,0.10), transparent); }
+  .ev.sev-green  { border-left-color: var(--green);  background: linear-gradient(90deg, rgba(45,255,140,0.10), transparent); }
+  .ev.sev-cyan   { border-left-color: var(--cyan);   background: linear-gradient(90deg, rgba(45,226,255,0.07), transparent); }
+  .ev.sev-gray   { border-left-color: var(--dimmer); }
+  .ev.sev-red .txt    { color: #ffd2da; }
+  .ev.sev-orange .txt { color: #ffe2bf; }
+  .ev.sev-green .txt  { color: #c8ffe2; }
+
+  /* misc */
+  .empty { padding: 28px 16px; color: var(--dim); font-size: 14px; text-align: center; letter-spacing: 1px; }
+  .scrollfade { position:absolute; left:0; right:0; height:34px; pointer-events:none; z-index: 2; }
+  .scrollfade.top { top:0; background:linear-gradient(var(--panel-2),transparent); }
+  .scrollfade.bot { bottom:0; background:linear-gradient(transparent,var(--panel)); }
+
+  /* ---------- selector / tabs de equipos ---------- */
+  .teamtabs {
+    display: flex; align-items: center; gap: 6px; flex-wrap: nowrap;
+    overflow: hidden; padding: 8px 18px 0;
+  }
+  .ttab {
+    font-size: 11px; letter-spacing: 1px; font-weight: 700; cursor: pointer;
+    color: var(--dim); background: var(--panel-3); border: 1px solid var(--grid);
+    padding: 5px 11px; text-transform: uppercase; white-space: nowrap;
+    transition: all 0.18s; position: relative; user-select: none;
+  }
+  .ttab:hover { color: var(--cyan); border-color: var(--cyan-dim); }
+  .ttab.active {
+    color: #04130c; background: var(--cyan); border-color: var(--cyan);
+    box-shadow: 0 0 14px rgba(45,226,255,0.45);
+  }
+  .ttab.all.active { background: var(--neon); box-shadow: 0 0 14px rgba(0,255,156,0.45); }
+  .ttab .tdot { display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:5px; background: var(--dimmer); vertical-align: middle; }
+  .ttab.on .tdot { background: var(--green); box-shadow: 0 0 6px var(--green); }
+  .ttab.banned .tdot { background: var(--red); box-shadow: 0 0 6px var(--red); }
+
+  /* ---------- gráficas ---------- */
+  #panelCharts { grid-area: charts; }
+  .charts-body { height:100%; display:flex; flex-direction:column; gap:8px; padding:10px; min-height:0; }
+  .chart-box { position:relative; flex:1; min-height:0; border:1px solid var(--grid); background: var(--panel-3); padding:6px 8px 4px; }
+  .chart-box .cap { font-size:9px; letter-spacing:2px; color:var(--dim); text-transform:uppercase; margin-bottom:2px; }
+  .chart-box canvas { width:100% !important; }
+  .charts-row { display:flex; gap:8px; flex:1; min-height:0; }
+  .charts-row .chart-box { flex:1; }
+
+  /* ---------- vista detalle de equipo (panel central) ---------- */
+  .detail { height:100%; display:flex; flex-direction:column; min-height:0; padding:10px; gap:10px; overflow:hidden; }
+  .detail .dhead { display:flex; align-items:center; gap:14px; flex-shrink:0; }
+  .detail .dname { font-size:24px; font-weight:800; letter-spacing:2px; color:var(--cyan); text-shadow:0 0 14px rgba(45,226,255,0.4); }
+  .detail .dbadge { font-size:9px; letter-spacing:1px; text-transform:uppercase; color:var(--dim); border:1px solid var(--grid); padding:2px 7px; }
+  .detail .dbadge.online { color:var(--green); border-color:rgba(45,255,140,0.4); }
+  .detail .dbadge.banned { color:var(--red); border-color:var(--red); background:rgba(255,46,77,0.12); }
+  .detail .dstats { display:flex; gap:10px; margin-left:auto; }
+  .detail .dstat { text-align:center; border:1px solid var(--grid); background:var(--panel-3); padding:5px 12px; min-width:64px; }
+  .detail .dstat .v { font-size:22px; font-weight:800; line-height:1; }
+  .detail .dstat .k { font-size:8px; letter-spacing:1px; color:var(--dim); text-transform:uppercase; margin-top:4px; }
+  .detail .dstat.pts .v { color:var(--neon); } .detail .dstat.slv .v { color:var(--cyan); } .detail .dstat.conn .v { color:var(--green); }
+  .detail .dcur {
+    flex-shrink:0; font-size:14px; padding:8px 12px; border-left:3px solid var(--neon);
+    background:linear-gradient(90deg, rgba(0,255,156,0.12), transparent); color:#c8ffe2;
+  }
+  .detail .dcur .lbl { color:var(--dim); font-size:10px; letter-spacing:2px; text-transform:uppercase; display:block; margin-bottom:2px; }
+  .detail .dchals { flex-shrink:0; display:flex; flex-wrap:wrap; gap:6px; }
+  .detail .dchals .lbl { width:100%; color:var(--dim); font-size:10px; letter-spacing:2px; text-transform:uppercase; }
+  .detail .chip { font-size:11px; color:var(--cyan); border:1px solid var(--cyan-dim); background:rgba(45,226,255,0.06); padding:3px 9px; border-radius:2px; }
+  .detail .devents { flex:1; min-height:0; overflow:hidden; border-top:1px solid var(--grid); padding-top:6px; }
+  .detail .devents .lbl { color:var(--dim); font-size:10px; letter-spacing:2px; text-transform:uppercase; padding:0 6px 4px; }
+  #panelTeams.has-detail .teams-grid { display:none; }
+
+  /* ---------- peticiones COMPLETAS del equipo (CTFREQ) ---------- */
+  .detail .dreqs { flex:1; min-height:0; overflow:hidden; border-top:1px solid var(--grid); padding-top:6px; display:flex; flex-direction:column; }
+  .detail .dreqs .lbl { color:var(--dim); font-size:10px; letter-spacing:2px; text-transform:uppercase; padding:0 6px 4px; flex-shrink:0; }
+  .reqlist { flex:1; min-height:0; overflow-y:auto; overflow-x:hidden; padding:0 6px 6px; display:flex; flex-direction:column; gap:7px; }
+  .reqitem {
+    border:1px solid var(--grid); border-left:3px solid var(--cyan);
+    background:linear-gradient(90deg, rgba(45,226,255,0.06), transparent);
+    padding:7px 10px; animation:slidein 0.3s ease;
+  }
+  .reqitem .rhead { display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; }
+  .reqitem .rmethod { color:var(--neon); font-weight:800; font-size:12px; letter-spacing:1px; }
+  .reqitem .rproto  { color:var(--cyan); font-weight:700; font-size:10px; border:1px solid var(--cyan-dim); padding:0 5px; border-radius:2px; text-transform:uppercase; }
+  .reqitem .rpath   { color:var(--txt); font-size:12.5px; overflow-wrap:anywhere; word-break:break-word; min-width:0; }
+  .reqitem .rchal   { color:var(--dim); font-size:10px; margin-left:auto; white-space:nowrap; }
+  .reqitem .rwho    { color:var(--cyan); font-weight:700; font-size:11px; }
+  .reqitem .rkv     { font-size:10.5px; color:var(--dim); margin-top:4px; line-height:1.35; }
+  .reqitem .rkv b   { color:var(--cyan-dim); font-weight:700; }
+  .reqitem .rbody   {
+    margin-top:5px; font-size:11.5px; color:#c8ffe2; background:#03090f;
+    border:1px solid var(--grid); border-radius:3px; padding:6px 8px;
+    white-space:pre-wrap; overflow-wrap:anywhere; word-break:break-word;
+    max-height:160px; overflow-y:auto;
+  }
+  .reqitem .rbody .blbl { color:var(--dim); font-size:9px; letter-spacing:1px; text-transform:uppercase; display:block; margin-bottom:3px; }
+  .reqitem .rwhen { color:var(--dim); font-size:9.5px; }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+</head>
+<body>
+<div class="app">
+
+  <!-- ===== BARRA SUPERIOR ===== -->
+  <header class="tech">
+    <div class="brand">
+      <div class="logo" id="ctfName">
+        CTFHL4
+        <span class="live"><span class="ledlive"></span>LIVE</span>
+      </div>
+      <div class="subtitle">
+        <span>SIEM · SOC OVERLAY</span>
+        <span class="clock" id="clock">--:--:--</span>
+        <span class="conn" id="conn"><span class="led"></span><span id="connTxt">CONECTANDO</span></span>
+      </div>
+    </div>
+    <div class="stats">
+      <div class="stat total tech"><div class="v" id="stTotal">0</div><div class="k">Eventos</div></div>
+      <div class="stat alerts"><div class="v" id="stAlerts">0</div><div class="k">Alertas</div></div>
+      <div class="stat ai"><div class="v" id="stAi">0</div><div class="k">IA bloqueada</div></div>
+      <div class="stat scan"><div class="v" id="stScan">0</div><div class="k">Escaneos</div></div>
+      <div class="stat solves"><div class="v" id="stSolves">0</div><div class="k">Solves</div></div>
+      <div class="stat teamson"><div class="v" id="stTeams">0</div><div class="k">Equipos ON</div></div>
+      <div class="stat players tech"><div class="v" id="stPlayers">0</div><div class="k">Jugadores ON</div></div>
+    </div>
+  </header>
+
+  <!-- ===== GRID PRINCIPAL ===== -->
+  <div class="main">
+
+    <!-- EQUIPOS (grid de navegación) + DETALLE de equipo -->
+    <div class="panel tech" id="panelTeams">
+      <h2 id="teamsH2">Equipos <span class="tag" id="teamsTag">0/10 online</span></h2>
+      <div class="teamtabs" id="teamTabs"></div>
+      <div class="pbody">
+        <div class="teams-grid" id="teams">
+          <div class="empty">Cargando estado de equipos…</div>
+        </div>
+        <div class="detail" id="teamDetail" style="display:none">
+          <div class="dhead">
+            <span class="dname" id="dName">Equipo</span>
+            <span class="dbadge" id="dStatus">—</span>
+            <div class="dstats">
+              <div class="dstat pts"><div class="v" id="dPts">0</div><div class="k">Puntos</div></div>
+              <div class="dstat slv"><div class="v" id="dSlv">0</div><div class="k">Solves</div></div>
+              <div class="dstat conn"><div class="v" id="dConn">0</div><div class="k">Jugadores</div></div>
+            </div>
+          </div>
+          <div class="dcur" id="dCur"><span class="lbl">Reto actual</span><span id="dCurTxt">—</span></div>
+          <div class="dchals" id="dChals"></div>
+          <div class="devents">
+            <div class="lbl">Actividad del equipo</div>
+            <div class="pbody" style="height:calc(100% - 18px)">
+              <div class="feed scrolly" id="dFeed"></div>
+            </div>
+          </div>
+          <div class="dreqs">
+            <div class="lbl">📡 Peticiones a los retos (completas)</div>
+            <div class="reqlist scrolly" id="dReqs">
+              <div class="empty">Sin peticiones registradas…</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VIOLACIONES / AMENAZAS -->
+    <div class="panel tech" id="panelViol">
+      <h2>⚠ Violaciones / Amenazas <span class="dot">● live</span></h2>
+      <div class="pbody">
+        <div class="scrollfade top"></div>
+        <div class="viol-list scrolly" id="viol">
+          <div class="empty">Sin violaciones detectadas. Perímetro estable.</div>
+        </div>
+        <div class="scrollfade bot"></div>
+      </div>
+    </div>
+
+    <!-- ACTIVIDAD EN VIVO -->
+    <div class="panel tech" id="panelFeed">
+      <h2>Actividad en vivo <span class="dot" id="feedDot">● stream</span></h2>
+      <div class="pbody">
+        <div class="scrollfade top"></div>
+        <div class="feed scrolly" id="feed">
+          <div class="empty">Esperando actividad de los equipos…</div>
+        </div>
+        <div class="scrollfade bot"></div>
+      </div>
+    </div>
+
+    <!-- GRÁFICAS -->
+    <div class="panel tech" id="panelCharts">
+      <h2>📈 Telemetría <span class="tag" id="chartsTag">15 min</span></h2>
+      <div class="pbody">
+        <div class="charts-body">
+          <div class="chart-box">
+            <div class="cap">Actividad / Alertas por minuto</div>
+            <canvas id="chLine"></canvas>
+          </div>
+          <div class="charts-row">
+            <div class="chart-box">
+              <div class="cap">Eventos por equipo</div>
+              <canvas id="chBars"></canvas>
+            </div>
+            <div class="chart-box">
+              <div class="cap">Tipos de evento</div>
+              <canvas id="chDonut"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const POLL_MS = 3500;
+
+/* ---------- helpers ---------- */
+function esc(s) {
+  return String(s == null ? "" : s).replace(/[&<>"']/g, c => (
+    {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]
+  ));
+}
+// Resalta "Equipo NN" / "EQUIPO NN". Recibe texto YA ESCAPADO.
+function hi(text) {
+  return text.replace(/(EQUIPO\s\d{1,2}|Equipo\s\d{1,2})/g, '<span class="team-tag">$1</span>');
+}
+function relTime(iso) {
+  const t = new Date(iso).getTime();
+  if (isNaN(t)) return "";
+  const s = Math.max(0, Math.round((Date.now() - t) / 1000));
+  if (s < 60) return "hace " + s + "s";
+  const m = Math.floor(s / 60);
+  if (m < 60) return "hace " + m + "m";
+  return "hace " + Math.floor(m / 60) + "h";
+}
+async function getJSON(url) {
+  const r = await fetch(url, { cache: "no-store" });
+  if (!r.ok) throw new Error(r.status);
+  return r.json();
+}
+function setConn(ok) {
+  const c = document.getElementById("conn");
+  const t = document.getElementById("connTxt");
+  if (ok) { c.classList.remove("down"); t.textContent = "EN LÍNEA"; }
+  else    { c.classList.add("down");    t.textContent = "SIN CONEXIÓN"; }
+}
+
+/* ---------- reloj ---------- */
+function tickClock() {
+  const d = new Date();
+  const p = n => String(n).padStart(2, "0");
+  document.getElementById("clock").textContent = p(d.getHours())+":"+p(d.getMinutes())+":"+p(d.getSeconds());
+}
+setInterval(tickClock, 1000); tickClock();
+
+/* ---------- stats ---------- */
+const lastStat = {};
+function setStat(id, val) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const v = (val ?? 0);
+  if (lastStat[id] !== undefined && lastStat[id] !== v) {
+    el.classList.remove("bump"); void el.offsetWidth; el.classList.add("bump");
+  }
+  lastStat[id] = v;
+  el.textContent = v;
+}
+async function tickStats() {
+  try {
+    const s = await getJSON("/api/stats");
+    setStat("stTotal", s.total_events);
+    setStat("stAlerts", s.alerts);
+    setStat("stAi", s.ai_blocked);
+    setStat("stScan", s.scans);
+    setStat("stSolves", s.solves);
+    setStat("stTeams", s.teams_online);
+    setStat("stPlayers", s.players_online);
+    if (s.ctf_name) {
+      const el = document.getElementById("ctfName");
+      el.innerHTML = esc(s.ctf_name) + '<span class="live"><span class="ledlive"></span>LIVE</span>';
+    }
+    setConn(true);
+  } catch (e) { setConn(false); }
+}
+
+/* ---------- vista por equipo: estado de selección ---------- */
+// null = vista global "TODOS"; o nº de equipo (1..10).
+let selectedTeam = null;
+let lastTeams = [];
+
+function teamNum(label) {
+  const m = String(label || "").match(/(\d{1,2})/);
+  return m ? parseInt(m[1], 10) : null;
+}
+function selectTeam(n) {
+  selectedTeam = n;
+  renderTabs(lastTeams);
+  applyView();
+  // Refresca de inmediato la vista elegida (no esperes al próximo poll).
+  if (selectedTeam === null) { tickFeed(); } else { tickDetail(); }
+}
+// Expone el toggle entre grid global y detalle de equipo.
+function applyView() {
+  const panel = document.getElementById("panelTeams");
+  const detail = document.getElementById("teamDetail");
+  const grid = document.getElementById("teams");
+  if (selectedTeam === null) {
+    panel.classList.remove("has-detail");
+    detail.style.display = "none";
+    grid.style.display = "";
+  } else {
+    panel.classList.add("has-detail");
+    detail.style.display = "flex";
+    grid.style.display = "none";
+  }
+}
+
+/* ---------- tabs de equipos ---------- */
+function renderTabs(teams) {
+  const el = document.getElementById("teamTabs");
+  if (!el) return;
+  let html = `<div class="ttab all ${selectedTeam === null ? "active" : ""}" data-team="all">TODOS</div>`;
+  html += teams.map(t => {
+    const n = teamNum(t.team);
+    const status = (t.status || "offline");
+    const sc = status === "banned" ? "banned" : (t.connected > 0 ? "on" : "");
+    const active = selectedTeam === n ? "active" : "";
+    return `<div class="ttab ${sc} ${active}" data-team="${n}"><span class="tdot"></span>${esc(String(n).padStart(2,"0"))}</div>`;
+  }).join("");
+  el.innerHTML = html;
+  el.querySelectorAll(".ttab").forEach(tab => {
+    tab.onclick = () => {
+      const d = tab.getAttribute("data-team");
+      selectTeam(d === "all" ? null : parseInt(d, 10));
+    };
+  });
+}
+
+/* ---------- equipos (grid global) ---------- */
+async function tickTeams() {
+  const el = document.getElementById("teams");
+  try {
+    const teams = await getJSON("/api/teams");
+    if (!teams.length) return;
+    lastTeams = teams;
+    renderTabs(teams);
+    let online = 0;
+    const html = teams.map(t => {
+      const status = (t.status || "offline");
+      if (t.connected > 0) online++;
+      const cls = [status]; if (t.leader) cls.push("leader");
+      const stTxt = status === "banned" ? "BANEADO" : status === "online" ? "ONLINE" : "OFFLINE";
+      const conn = (t.connected ?? 0) + "/4";
+      const cur = t.current_challenge ? esc(t.current_challenge) : esc(t.last_action || "sin actividad");
+      const n = teamNum(t.team);
+      return `
+        <div class="tcard ${cls.join(' ')}" data-team="${n}" style="cursor:pointer">
+          <div class="thead">
+            <span class="led"></span>
+            <span class="tname">${hi(esc(t.team))}</span>
+            <span class="stbadge">${stTxt}</span>
+          </div>
+          <div class="trow">
+            <span class="conn">👥 ${esc(conn)}</span>
+            <span class="pts">${esc(t.points ?? 0)}</span>
+          </div>
+          <div class="trow">
+            <span class="slv">${esc(t.solves ?? 0)} solves</span>
+          </div>
+          <div class="last">${t.current_challenge ? "🎯 " : ""}${hi(cur)}</div>
+        </div>`;
+    }).join("");
+    el.innerHTML = html;
+    // Click en una tarjeta = seleccionar ese equipo.
+    el.querySelectorAll(".tcard").forEach(card => {
+      card.onclick = () => {
+        const n = parseInt(card.getAttribute("data-team"), 10);
+        if (!isNaN(n)) selectTeam(n);
+      };
+    });
+    document.getElementById("teamsTag").textContent = online + "/" + teams.length + " online";
+  } catch (e) { /* mantiene lo anterior */ }
+}
+
+/* ---------- detalle de un equipo ---------- */
+async function tickDetail() {
+  if (selectedTeam === null) return;
+  try {
+    const d = await getJSON("/api/team/" + selectedTeam + "?recent=20");
+    if (d.error) return;
+    document.getElementById("dName").innerHTML = hi(esc(d.team));
+    const status = (d.status || "offline");
+    const sb = document.getElementById("dStatus");
+    sb.className = "dbadge " + (status === "banned" ? "banned" : status === "online" ? "online" : "");
+    sb.textContent = status === "banned" ? "BANEADO" : status === "online" ? "ONLINE" : "OFFLINE";
+    document.getElementById("dPts").textContent = d.points ?? 0;
+    document.getElementById("dSlv").textContent = d.solves ?? 0;
+    document.getElementById("dConn").textContent = (d.connected ?? 0) + "/4";
+    document.getElementById("dCurTxt").textContent = d.current_challenge || "sin reto activo";
+    // Retos tocados (chips).
+    const ch = document.getElementById("dChals");
+    const touched = d.challenges_touched || [];
+    ch.innerHTML = '<span class="lbl">Retos tocados</span>' +
+      (touched.length ? touched.map(c => `<span class="chip">🎯 ${esc(c)}</span>`).join("")
+                      : '<span class="chip" style="color:var(--dim);border-color:var(--grid)">ninguno aún</span>');
+    // Eventos del equipo.
+    const fe = document.getElementById("dFeed");
+    const items = d.recent || [];
+    if (!items.length) {
+      fe.innerHTML = '<div class="empty">Sin actividad reciente de este equipo…</div>';
+    } else {
+      fe.innerHTML = items.map(it => `
+        <div class="ev ${sevClass(it)}">
+          <div class="ico">${esc(it.icon || "•")}</div>
+          <div class="txt">${hi(esc(it.text))}</div>
+          <div class="when">${esc(relTime(it.ts))}</div>
+        </div>`).join("");
+    }
+    // Peticiones COMPLETAS a los retos (headers + body íntegro).
+    renderRequests(d.requests || []);
+  } catch (e) { /* mantiene lo anterior */ }
+}
+
+/* ---------- peticiones COMPLETAS del equipo (CTFREQ) ---------- */
+// Renderiza CADA petición con método/ruta/query, TODOS los headers y el body
+// íntegro. Todo escapado (anti-XSS); el body puede contener payloads del jugador.
+function renderRequests(reqs) {
+  const el = document.getElementById("dReqs");
+  if (!el) return;
+  if (!reqs.length) {
+    el.innerHTML = '<div class="empty">Sin peticiones registradas…</div>';
+    return;
+  }
+  el.innerHTML = reqs.map(r => {
+    const proto = (r.proto || "").toLowerCase();
+    const isTcp = proto === "tcp";
+    // Cabecera: método + ruta(+query) en HTTP; etiqueta TCP en crypto.
+    let head;
+    if (isTcp) {
+      head = `<span class="rproto">TCP</span>`;
+    } else {
+      const q = r.query ? "?" + esc(r.query) : "";
+      head = `<span class="rmethod">${esc(r.method || "?")}</span>`
+           + `<span class="rpath">${esc(r.path || "/")}${q}</span>`;
+    }
+    // Headers (todos), uno por línea "k: v".
+    const hs = r.headers || {};
+    const hkeys = Object.keys(hs);
+    let headersHtml = "";
+    if (hkeys.length) {
+      headersHtml = '<div class="rkv"><b>headers</b><br>' +
+        hkeys.map(k => `${esc(k)}: ${esc(hs[k])}`).join("<br>") + '</div>';
+    }
+    // Body íntegro (anonimizado solo en IPs internas por el backend).
+    let bodyHtml = "";
+    if (r.body) {
+      bodyHtml = `<div class="rbody"><span class="blbl">${isTcp ? "datos recibidos" : "body"}</span>${esc(r.body)}</div>`;
+    }
+    return `<div class="reqitem">
+      <div class="rhead">
+        ${head}
+        <span class="rchal">🎯 ${esc(r.challenge || "")}</span>
+      </div>
+      <div class="rkv"><span class="rwho">${hi(esc(r.who || r.team || ""))}</span>
+        <span class="rwhen"> · ${esc(relTime(r.ts))}</span></div>
+      ${headersHtml}
+      ${bodyHtml}
+    </div>`;
+  }).join("");
+}
+
+/* ---------- violaciones ---------- */
+let lastViolKey = "";
+async function tickViol() {
+  const el = document.getElementById("viol");
+  const panel = document.getElementById("panelViol");
+  try {
+    const vs = await getJSON("/api/violations?limit=30");
+    if (!vs.length) {
+      el.innerHTML = '<div class="empty">Sin violaciones detectadas. Perímetro estable.</div>';
+      panel.classList.remove("alarm");
+      lastViolKey = "";
+      return;
+    }
+    const html = vs.map(v => {
+      let inner;
+      if (v.type === "ai_block") {
+        // "Equipo 01 · Jugador 2 quiso acceder a anthropic.com [BLOCK]" — todo en rojo.
+        const who = esc(v.team || "") + (v.player ? ` · Jugador ${esc(v.player)}` : "");
+        inner = `<span class="vname">${who}</span> quiso acceder a `
+              + `<span class="vdom">${esc(v.domain_or_detail || "")}</span>`
+              + `<span class="vblock">[BLOCK]</span>`;
+      } else {
+        inner = hi(esc(v.text));
+      }
+      const c = v.count || 1;
+      if (c > 1) inner += ` <span class="vcount">×${c}</span>`;
+      return `<div class="viol t-${esc(v.type || "")}">
+        <div class="vtxt">${inner}</div>
+        <div class="vwhen">${esc(relTime(v.ts))}</div>
+      </div>`;
+    }).join("");
+    el.innerHTML = html;
+    // Alarma visual si hay violación muy reciente (< 25s).
+    const newest = new Date(vs[0].ts).getTime();
+    const fresh = !isNaN(newest) && (Date.now() - newest) < 25000;
+    panel.classList.toggle("alarm", fresh);
+    lastViolKey = vs[0].ts + "|" + vs[0].text;
+  } catch (e) { /* mantiene lo anterior */ }
+}
+
+/* ---------- feed ---------- */
+const SEV_KIND = {
+  cheat: "sev-red", ban: "sev-red", scan: "sev-red",
+  ids: "sev-orange", ai_block: "sev-orange", login_fail: "sev-orange",
+  flag_ok: "sev-green",
+  login: "sev-cyan", vpn_connect: "sev-cyan", challenge: "sev-cyan",
+  request: "sev-cyan",
+};
+function sevClass(it) {
+  if (it.severity === "critical") return "sev-red";
+  if (SEV_KIND[it.kind]) return SEV_KIND[it.kind];
+  if (it.severity === "alert") return "sev-red";
+  if (it.severity === "success") return "sev-green";
+  if (it.severity === "warn") return "sev-orange";
+  return "sev-gray";
+}
+async function tickFeed() {
+  const el = document.getElementById("feed");
+  const dot = document.getElementById("feedDot");
+  try {
+    const items = await getJSON("/api/feed?limit=60");
+    dot.textContent = "● stream";
+    updateDonut(items);
+    if (!items.length) {
+      el.innerHTML = '<div class="empty">Sin actividad en la ventana actual…</div>';
+      return;
+    }
+    el.innerHTML = items.map(it => `
+      <div class="ev ${sevClass(it)}">
+        <div class="ico">${esc(it.icon || "•")}</div>
+        <div class="txt">${hi(esc(it.text))}</div>
+        <div class="when">${esc(relTime(it.ts))}</div>
+      </div>`).join("");
+    el.scrollTop = 0;
+  } catch (e) { dot.textContent = "● sin conexión"; }
+}
+
+/* ---------- gráficas (Chart.js por CDN) ---------- */
+let chLine = null, chBars = null, chDonut = null;
+const NEON = "#00ff9c", CY = "#2de2ff", RED = "#ff2e4d", ORANGE = "#ff9b2d", YELLOW = "#ffe04a";
+const GRID_C = "rgba(45,226,255,0.10)", TICK_C = "#5e7488";
+
+function chartsReady() { return typeof window.Chart !== "undefined"; }
+
+function baseOpts(extra) {
+  return Object.assign({
+    responsive: true, maintainAspectRatio: false, animation: { duration: 250 },
+    plugins: {
+      legend: { labels: { color: TICK_C, font: { size: 9, family: "monospace" }, boxWidth: 10 } },
+    },
+    scales: {
+      x: { ticks: { color: TICK_C, font: { size: 8, family: "monospace" }, maxRotation: 0, autoSkip: true, maxTicksLimit: 8 }, grid: { color: GRID_C } },
+      y: { ticks: { color: TICK_C, font: { size: 8, family: "monospace" }, precision: 0 }, grid: { color: GRID_C }, beginAtZero: true },
+    },
+  }, extra || {});
+}
+
+function initCharts() {
+  if (!chartsReady() || chLine) return;
+  const ctxL = document.getElementById("chLine");
+  const ctxB = document.getElementById("chBars");
+  const ctxD = document.getElementById("chDonut");
+  if (!ctxL || !ctxB || !ctxD) return;
+
+  chLine = new Chart(ctxL, {
+    type: "line",
+    data: { labels: [], datasets: [
+      { label: "Eventos", data: [], borderColor: CY, backgroundColor: "rgba(45,226,255,0.12)", borderWidth: 2, fill: true, tension: 0.3, pointRadius: 0 },
+      { label: "Alertas", data: [], borderColor: RED, backgroundColor: "rgba(255,46,77,0.10)", borderWidth: 2, fill: true, tension: 0.3, pointRadius: 0 },
+      { label: "IA bloq.", data: [], borderColor: ORANGE, backgroundColor: "rgba(255,155,45,0.08)", borderWidth: 1.5, fill: false, tension: 0.3, pointRadius: 0 },
+    ]},
+    options: baseOpts(),
+  });
+
+  chBars = new Chart(ctxB, {
+    type: "bar",
+    data: { labels: [], datasets: [
+      { label: "Eventos", data: [], backgroundColor: "rgba(0,255,156,0.55)", borderColor: NEON, borderWidth: 1 },
+    ]},
+    options: baseOpts({ plugins: { legend: { display: false } } }),
+  });
+
+  chDonut = new Chart(ctxD, {
+    type: "doughnut",
+    data: { labels: [], datasets: [{ data: [], backgroundColor: [CY, RED, ORANGE, NEON, YELLOW, "#8a6dff", "#5d7185"], borderColor: "#08111a", borderWidth: 2 }] },
+    options: { responsive: true, maintainAspectRatio: false, cutout: "58%",
+      plugins: { legend: { position: "right", labels: { color: TICK_C, font: { size: 9, family: "monospace" }, boxWidth: 10, padding: 6 } } } },
+  });
+}
+
+async function tickCharts() {
+  if (!chartsReady()) return;
+  initCharts();
+  if (!chLine) return;
+  try {
+    const ts = await getJSON("/api/timeseries?minutes=15");
+    chLine.data.labels = ts.labels || [];
+    chLine.data.datasets[0].data = ts.events || [];
+    chLine.data.datasets[1].data = ts.alerts || [];
+    chLine.data.datasets[2].data = ts.ai_blocked || [];
+    chLine.update("none");
+
+    const bt = ts.by_team || {};
+    chBars.data.labels = Object.keys(bt).map(k => (k.match(/\d+/) || [k])[0]);
+    chBars.data.datasets[0].data = Object.values(bt);
+    chBars.update("none");
+
+    // Dona de tipos de evento: feed global (independiente de la vista activa).
+    if (selectedTeam !== null) {
+      try { updateDonut(await getJSON("/api/feed?limit=80")); } catch (e) {}
+    }
+  } catch (e) { /* mantiene lo anterior */ }
+}
+
+// Dona de tipos de evento: se alimenta del feed global (kinds agregados).
+const KIND_LABEL = {
+  flag_ok: "Solves", ids: "IDS/Alertas", scan: "Escaneos", ai_block: "IA bloqueada", dns: "DNS",
+  challenge: "Retos", request: "Peticiones", login: "Logins", login_fail: "Login fallido", submit: "Submits",
+  vpn_connect: "VPN conn", vpn_disconnect: "VPN disc", cheat: "Trampa", ban: "Bans", flag_fail: "Flag fallida",
+};
+function updateDonut(items) {
+  if (!chDonut) return;
+  const counts = {};
+  (items || []).forEach(it => { const k = it.kind || "otro"; counts[k] = (counts[k] || 0) + 1; });
+  const entries = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 7);
+  chDonut.data.labels = entries.map(([k]) => KIND_LABEL[k] || k);
+  chDonut.data.datasets[0].data = entries.map(([, v]) => v);
+  chDonut.update("none");
+}
+
+/* ---------- loop ---------- */
+function loop() {
+  tickStats();
+  tickTeams();
+  tickViol();
+  // Vista central: global (feed) o detalle de equipo.
+  if (selectedTeam === null) tickFeed(); else tickDetail();
+  tickCharts();
+}
+applyView();
+loop();
+setInterval(loop, POLL_MS);
+</script>
+</body>
+</html>

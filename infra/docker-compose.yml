@@ -154,8 +154,29 @@ services:
       - ../siem/promtail/promtail-config.yaml:/etc/promtail/config.yaml:ro
       - /var/log:/var/log:ro
       - /var/log/suricata:/var/log/suricata:ro
+      # Logs JSON nativos de los contenedores (peticiones CTFREQ de los retos).
+      # READ-ONLY: promtail solo lee, nunca escribe.
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
     networks:
       - net_siem
+    depends_on: [loki]
+
+  # ── SIEM: Caster Overlay (PÚBLICO, anonimizado) ───────────────────────────
+  # Único servicio del SIEM expuesto a internet. Lee Loki internamente y solo
+  # publica datos ANONIMIZADOS (Equipo NN, nunca IPs). Players (tun0) bloqueados
+  # por nftables. Grafana/Loki siguen siendo internos (admin).
+  caster-overlay:
+    build: ../siem/caster-overlay
+    container_name: ctf-caster
+    restart: unless-stopped
+    environment:
+      - LOKI_URL=http://loki:3100
+      - WINDOW_MIN=15
+      - CTF_NAME=${CTF_NAME:-CTFHL4-INSANE}
+    networks:
+      - net_siem
+    ports:
+      - "8090:8090"   # público (stream/comentaristas). tun0 bloqueado por nft.
     depends_on: [loki]
 
   # ── SIEM: Grafana (solo admin, vía túnel SSH al 3000) ──────────────────────
@@ -174,5 +195,5 @@ services:
       net_siem:
         ipv4_address: 10.10.200.30
     ports:
-      - "127.0.0.1:3000:3000"   # SOLO localhost del servidor → admin por túnel SSH
+      - "127.0.0.1:3000:3000"   # SOLO admin (túnel SSH). El público usa caster-overlay.
     depends_on: [loki]

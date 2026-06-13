@@ -4,11 +4,17 @@ vpn/keys/
 *.pem
 *.crt
 *.p12
+*.ovpn
 
-# Secretos
+# Secretos y credenciales
 .env
 .env.*
+!*.env.example
+!.env.example
 *secret*
+credenciales*.txt
+credentials*.txt
+deliverables/
 
 # Python
 __pycache__/

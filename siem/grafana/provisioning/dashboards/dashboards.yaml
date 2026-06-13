@@ -4,7 +4,9 @@ apiVersion: 1
 providers:
   - name: ctf-siem
     orgId: 1
-    folder: "CTF SIEM"
+    # Folder General (vacío): legible por el rol Viewer anónimo (caster/público).
+    # Un folder personalizado en Grafana 10.x bloquea al anónimo por RBAC.
+    folder: ""
     type: file
     disableDeletion: false
     # Recarga los JSON cada 30s (útil al iterar dashboards).

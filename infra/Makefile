@@ -22,7 +22,9 @@ build:
 	$(COMPOSE) build
 
 seed:
-	$(COMPOSE) run --rm platform-api python seed.py
+	# exec (no run): siembra dentro del contenedor ya corriendo. 'run' crearia
+	# un contenedor nuevo que choca con la IP fija 10.10.100.12 de platform-api.
+	$(COMPOSE) exec platform-api python seed.py
 
 down:
 	$(COMPOSE) down

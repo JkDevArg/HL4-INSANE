@@ -6,6 +6,10 @@ auth_enabled: false
 server:
   http_listen_port: 3100
   grpc_listen_port: 9095
+  # warn: Loki NO loguea cada query a stdout. Evita el bucle en que promtail
+  # re-ingiere los logs de Loki (que contienen el texto "CTFREQ" de la query)
+  # dentro de job=challenge-logs.
+  log_level: warn
   # Permite líneas de log grandes (eve.json de Suricata puede ser verboso).
   grpc_server_max_recv_msg_size: 8388608
   grpc_server_max_send_msg_size: 8388608
