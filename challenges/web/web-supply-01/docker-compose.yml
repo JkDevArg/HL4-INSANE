@@ -1,0 +1,39 @@
+# web-supply-01 — Poisoned Pipeline. Parametrizable por equipo: TEAM_ID + FLAG + TEAM_N + CHAL_NET.
+#   Lanzado por infra/launch-team-challenges.sh:
+#     TEAM_ID=team_03 TEAM_N=3 FLAG="flag{...}" CHAL_NET=ctf_team_03 \
+#       docker compose -p ctf_team_03_web_supply_01 up -d --build
+#
+# AISLAMIENTO: ambos servicios viven SOLO en la red del equipo (172.30.N.0/24),
+# sin publicar puertos al host. El jugador los alcanza por la VPN (nftables enruta
+# 10.10.N.0/24 -> 172.30.N.0/24). Dos equipos NO colisionan ni se ven entre sí.
+#   - registry: index PyPI privado con upload anónimo (la vuln de supply chain) -> .11:8080
+#   - portal:   build runner que reinstala acme-utils desde el registry interno -> .10:8080
+networks:
+  team_net:
+    external: true
+    name: ${CHAL_NET:-ctf_local}
+
+services:
+  registry:
+    build: ./registry
+    image: web-supply-01-registry
+    networks:
+      team_net:
+        ipv4_address: 172.30.${TEAM_N:-99}.11
+    restart: unless-stopped
+
+  portal:
+    build: ./portal
+    image: web-supply-01-portal
+    depends_on:
+      - registry
+    environment:
+      FLAG: "${FLAG:-flag{EJEMPLO_LOCAL}}"
+      TEAM_ID: "${TEAM_ID:-team_local}"
+      CHALLENGE_ID: "web-supply-01"
+      REGISTRY_URL: "http://registry:8080"
+      COLLECTOR_URL: "${COLLECTOR_URL:-http://collector:9000}"
+    networks:
+      team_net:
+        ipv4_address: 172.30.${TEAM_N:-99}.10
+    restart: unless-stopped

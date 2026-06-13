@@ -1,0 +1,83 @@
+# ============================================================================
+#  ai-blocklist.txt — Dominios de IA a sinkhole (DNS -> 0.0.0.0)
+# ============================================================================
+#  Fuente de verdad para:
+#    - gen-dnsmasq-blocklist.sh  (genera líneas address=/dominio/0.0.0.0)
+#  Uso: un dominio por línea. Líneas que empiezan con '#' o vacías se ignoran.
+#
+#  AMPLIABLE: agrega aquí cualquier nuevo proveedor/servicio de IA y vuelve a
+#  ejecutar gen-dnsmasq-blocklist.sh + recarga dnsmasq. El sinkhole de dnsmasq
+#  con address=/dominio/0.0.0.0 cubre AUTOMÁTICAMENTE todos los subdominios
+#  (p.ej. api.openai.com, chat.openai.com, etc.), así que no hace falta
+#  enumerar cada subdominio. Aun así se listan algunos api.* comunes por
+#  documentación y por si se migra a otro motor de sinkhole.
+# ============================================================================
+
+# --- OpenAI / ChatGPT ---
+openai.com
+chatgpt.com
+api.openai.com
+chat.openai.com
+oaistatic.com
+oaiusercontent.com
+
+# --- Anthropic / Claude ---
+anthropic.com
+claude.ai
+api.anthropic.com
+console.anthropic.com
+
+# --- Google (Gemini / Bard) ---
+gemini.google.com
+bard.google.com
+generativelanguage.googleapis.com
+aistudio.google.com
+makersuite.google.com
+
+# --- Microsoft Copilot ---
+copilot.microsoft.com
+githubcopilot.com
+copilot.github.com
+api.githubcopilot.com
+
+# --- Perplexity ---
+perplexity.ai
+api.perplexity.ai
+
+# --- Poe (Quora) ---
+poe.com
+
+# --- Hugging Face ---
+huggingface.co
+api-inference.huggingface.co
+
+# --- Cohere ---
+cohere.ai
+cohere.com
+api.cohere.ai
+
+# --- Mistral ---
+mistral.ai
+api.mistral.ai
+chat.mistral.ai
+
+# --- xAI / Grok ---
+x.ai
+api.x.ai
+grok.com
+
+# --- DeepSeek ---
+deepseek.com
+chat.deepseek.com
+api.deepseek.com
+
+# --- Otros motores frecuentes (ampliable) ---
+you.com
+phind.com
+character.ai
+groq.com
+api.groq.com
+together.ai
+api.together.xyz
+replicate.com
+api.replicate.com

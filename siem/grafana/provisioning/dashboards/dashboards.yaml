@@ -1,0 +1,16 @@
+# Provider de dashboards: carga todos los JSON de esta carpeta al arrancar.
+apiVersion: 1
+
+providers:
+  - name: ctf-siem
+    orgId: 1
+    folder: "CTF SIEM"
+    type: file
+    disableDeletion: false
+    # Recarga los JSON cada 30s (útil al iterar dashboards).
+    updateIntervalSeconds: 30
+    allowUiUpdates: true
+    options:
+      # Path dentro del contenedor de Grafana (montar esta carpeta aquí).
+      path: /etc/grafana/provisioning/dashboards
+      foldersFromFilesStructure: false

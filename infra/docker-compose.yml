@@ -1,0 +1,178 @@
+# CTFHL4-INSANE — Orquestación unificada
+# Levanta plataforma + servicios internos + SIEM en las subnets del contrato (ARCHITECTURE.md §2/§3).
+# Suricata corre aparte (docker-compose.suricata.yml) porque necesita tun0 / network host.
+#
+# Uso:
+#   cp .env.example .env   # y edita los secretos
+#   make up                # o: docker compose up -d --build
+#   make seed              # crea equipos + retos e imprime credenciales
+
+networks:
+  # Red de plataforma + servicios internos. La VPN empuja ruta a 10.10.100.0/24.
+  net_platform:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.10.100.0/24
+  # Red del SIEM. Solo admin. La VPN NO la enruta (los equipos no deben verla).
+  net_siem:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.10.200.0/24
+
+volumes:
+  pg-data:
+  redis-data:
+  loki-data:
+  grafana-data:
+
+services:
+
+  # ── Punto de entrada (lo único que la VPN enruta hacia la plataforma) ──────
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: ctf-nginx
+    restart: unless-stopped
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    networks:
+      net_platform:
+        ipv4_address: 10.10.100.10
+    depends_on: [platform-web, platform-api]
+
+  # ── Frontend Next.js ───────────────────────────────────────────────────────
+  platform-web:
+    build:
+      context: ../platform/frontend
+      args:
+        NEXT_PUBLIC_API_BASE: /api
+    container_name: ctf-web
+    restart: unless-stopped
+    networks:
+      net_platform:
+        ipv4_address: 10.10.100.11
+
+  # ── Backend FastAPI ──────────────────────────────────────────────────────
+  platform-api:
+    build: ../platform/backend
+    container_name: ctf-api
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://ctf:${POSTGRES_PASSWORD}@postgres:5432/ctf
+      - REDIS_URL=redis://redis:6379/0
+      - FLAG_SERVICE_URL=http://flag-service:8001
+      - COLLECTOR_URL=http://collector:9000
+      - JWT_SECRET=${JWT_SECRET}
+      - VPN_CIDR=10.10.0.0/16
+      - TRUST_FORWARDED_FOR=true
+      - MAX_SESSIONS_PER_TEAM=4
+      - TEAM_COUNT=10
+    networks:
+      net_platform:
+        ipv4_address: 10.10.100.12
+      net_siem:        # necesita alcanzar al collector
+    depends_on: [postgres, redis, flag-service]
+
+  # ── Flag Service (HMAC) — solo red interna ────────────────────────────────
+  flag-service:
+    build: ../flag-service
+    container_name: ctf-flag-service
+    restart: unless-stopped
+    environment:
+      - MASTER_SECRET=${MASTER_SECRET}
+    networks:
+      net_platform:
+        ipv4_address: 10.10.100.20
+
+  # ── PostgreSQL ─────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: ctf-postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=ctf
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=ctf
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+    networks:
+      net_platform:
+        ipv4_address: 10.10.100.30
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ctf"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Redis (sesiones, rate-limit, contador de desconexiones, bans) ──────────
+  # IP fija 10.10.100.31: los scripts de ban de OpenVPN (en el host) la usan.
+  redis:
+    image: redis:7-alpine
+    container_name: ctf-redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis-data:/data
+    networks:
+      net_platform:
+        ipv4_address: 10.10.100.31
+
+  # ── SIEM: Collector ──────────────────────────────────────────────────────
+  collector:
+    build: ../siem/collector
+    container_name: ctf-collector
+    restart: unless-stopped
+    environment:
+      - LOKI_URL=http://loki:3100
+      - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL:-}
+    networks:
+      net_siem:
+        ipv4_address: 10.10.200.10
+    depends_on: [loki]
+
+  # ── SIEM: Loki ─────────────────────────────────────────────────────────────
+  loki:
+    image: grafana/loki:2.9.0
+    container_name: ctf-loki
+    restart: unless-stopped
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - ../siem/loki/loki-config.yaml:/etc/loki/local-config.yaml:ro
+      - loki-data:/loki
+    networks:
+      net_siem:
+        ipv4_address: 10.10.200.20
+
+  # ── SIEM: Promtail (lee logs del host) ─────────────────────────────────────
+  promtail:
+    image: grafana/promtail:2.9.0
+    container_name: ctf-promtail
+    restart: unless-stopped
+    command: -config.file=/etc/promtail/config.yaml
+    volumes:
+      - ../siem/promtail/promtail-config.yaml:/etc/promtail/config.yaml:ro
+      - /var/log:/var/log:ro
+      - /var/log/suricata:/var/log/suricata:ro
+    networks:
+      - net_siem
+    depends_on: [loki]
+
+  # ── SIEM: Grafana (solo admin, vía túnel SSH al 3000) ──────────────────────
+  grafana:
+    image: grafana/grafana:10.2.0
+    container_name: ctf-grafana
+    restart: unless-stopped
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-ctfadmin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_AUTH_ANONYMOUS_ENABLED=false
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ../siem/grafana/provisioning:/etc/grafana/provisioning:ro
+    networks:
+      net_siem:
+        ipv4_address: 10.10.200.30
+    ports:
+      - "127.0.0.1:3000:3000"   # SOLO localhost del servidor → admin por túnel SSH
+    depends_on: [loki]

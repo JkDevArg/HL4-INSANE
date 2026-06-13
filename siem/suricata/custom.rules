@@ -1,0 +1,111 @@
+# =============================================================================
+# custom.rules — Reglas IDS locales del CTF (CTFHL4-INSANE)
+# =============================================================================
+#
+# Objetivo del usuario: "si ejecutan nmap se debe ver".
+# Detectamos: escaneos nmap (SYN/NULL/FIN/XMAS/version/ping-sweep), escaneo
+# de puertos, fuerza bruta SSH/HTTP, y firmas de exploits web comunes.
+#
+# CONVENCIONES
+#   - SID en rango LOCAL: 1000000+ (reservado para reglas propias).
+#   - rev:1 en todas; incrementar al modificar una regla.
+#   - msg claro y prefijado por categoría: [NMAP], [SCAN], [BRUTE], [WEB-EXPLOIT].
+#   - Estas alertas salen a eve.json → Promtail → Loki (job=suricata) → Grafana
+#     (dashboard ids-alerts.json).
+#
+# CÓMO AÑADIR MÁS REGLAS
+#   1. Copia una línea existente y cámbiale el patrón.
+#   2. Asigna un SID nuevo y único >= 1000000 (no reutilices).
+#   3. Pon rev:1 y un msg descriptivo con su categoría.
+#   4. Recarga: `suricatasc -c reload-rules` o reinicia el contenedor.
+#   5. Valida sintaxis sin arrancar: `suricata -T -c suricata.yaml`.
+#
+# NOTA: HOME_NET = 10.10.0.0/16 (toda la VPN). Ver suricata.yaml.
+# =============================================================================
+
+
+# -----------------------------------------------------------------------------
+# 1) DETECCIÓN DE NMAP  [NMAP]
+# -----------------------------------------------------------------------------
+
+# 1.1 NULL scan (nmap -sN): paquete TCP sin flags activos. Patológico => scan.
+alert tcp any any -> $HOME_NET any (msg:"[NMAP] NULL scan detectado (sin flags TCP)"; flow:stateless; flags:0; classtype:attempted-recon; sid:1000001; rev:1;)
+
+# 1.2 FIN scan (nmap -sF): solo flag FIN, sin sesión establecida.
+alert tcp any any -> $HOME_NET any (msg:"[NMAP] FIN scan detectado"; flow:stateless; flags:F,12; classtype:attempted-recon; sid:1000002; rev:1;)
+
+# 1.3 XMAS scan (nmap -sX): FIN+PSH+URG encendidos ("árbol de navidad").
+alert tcp any any -> $HOME_NET any (msg:"[NMAP] XMAS scan detectado (FIN+PSH+URG)"; flow:stateless; flags:FPU,12; classtype:attempted-recon; sid:1000003; rev:1;)
+
+# 1.4 SYN scan / half-open (nmap -sS): muchos SYN en poco tiempo a distintos
+#     puertos del mismo host. threshold por src para no spamear.
+alert tcp any any -> $HOME_NET any (msg:"[NMAP] SYN scan / barrido de puertos (half-open)"; flags:S,12; flow:stateless; threshold:type both, track by_src, count 20, seconds 5; classtype:attempted-recon; sid:1000004; rev:1;)
+
+# 1.5 Version scan (nmap -sV): firma típica del probe de servicios de nmap.
+alert tcp any any -> $HOME_NET any (msg:"[NMAP] Service/Version scan (-sV) probe"; flow:to_server,established; content:"|0d 0a|"; content:"nmap"; nocase; classtype:attempted-recon; sid:1000005; rev:1;)
+
+# 1.6 Ping sweep (nmap -sn): ICMP echo a múltiples destinos desde una src.
+alert icmp any any -> $HOME_NET any (msg:"[NMAP] Ping sweep (barrido ICMP echo)"; itype:8; threshold:type both, track by_src, count 15, seconds 5; classtype:attempted-recon; sid:1000006; rev:1;)
+
+# 1.7 User-Agent de Nmap NSE (scripts HTTP de nmap).
+alert http any any -> $HOME_NET $HTTP_PORTS (msg:"[NMAP] User-Agent de Nmap NSE en HTTP"; flow:to_server,established; http.user_agent; content:"Nmap"; nocase; classtype:web-application-attack; sid:1000007; rev:1;)
+
+
+# -----------------------------------------------------------------------------
+# 2) ESCANEO DE PUERTOS GENÉRICO  [SCAN]
+# -----------------------------------------------------------------------------
+
+# 2.1 Muchos RST recibidos por una src (síntoma de barrido a puertos cerrados).
+alert tcp $HOME_NET any -> any any (msg:"[SCAN] Multiples RST -> posible escaneo de puertos"; flags:R; flow:stateless; threshold:type both, track by_dst, count 30, seconds 10; classtype:attempted-recon; sid:1000010; rev:1;)
+
+# 2.2 Conexiones a muchos puertos distintos del mismo destino (horizontal/vertical).
+alert tcp any any -> $HOME_NET any (msg:"[SCAN] Escaneo vertical de puertos (muchos puertos, mismo host)"; flags:S; flow:stateless; threshold:type both, track by_src, count 40, seconds 10; classtype:attempted-recon; sid:1000011; rev:1;)
+
+
+# -----------------------------------------------------------------------------
+# 3) FUERZA BRUTA  [BRUTE]
+# -----------------------------------------------------------------------------
+
+# 3.1 Fuerza bruta SSH: muchas conexiones nuevas al puerto 22 desde una src.
+alert tcp any any -> $HOME_NET 22 (msg:"[BRUTE] Posible fuerza bruta SSH (conexiones repetidas)"; flow:to_server; flags:S; threshold:type both, track by_src, count 10, seconds 30; classtype:attempted-admin; sid:1000020; rev:1;)
+
+# 3.2 Fuerza bruta de login HTTP: muchos POST a /login desde una src.
+alert http any any -> $HOME_NET $HTTP_PORTS (msg:"[BRUTE] Posible fuerza bruta de login HTTP (POST repetidos)"; flow:to_server,established; http.method; content:"POST"; http.uri; content:"login"; nocase; threshold:type both, track by_src, count 15, seconds 30; classtype:web-application-attack; sid:1000021; rev:1;)
+
+# 3.3 HTTP 401 repetidos hacia la misma src (respuestas de auth fallida).
+alert http $HOME_NET $HTTP_PORTS -> any any (msg:"[BRUTE] Multiples 401 Unauthorized -> brute-force HTTP basic"; flow:to_client,established; http.stat_code; content:"401"; threshold:type both, track by_dst, count 15, seconds 30; classtype:web-application-attack; sid:1000022; rev:1;)
+
+
+# -----------------------------------------------------------------------------
+# 4) FIRMAS DE EXPLOITS / HERRAMIENTAS WEB  [WEB-EXPLOIT]
+# -----------------------------------------------------------------------------
+
+# 4.1 sqlmap (User-Agent por defecto).
+alert http any any -> $HOME_NET $HTTP_PORTS (msg:"[WEB-EXPLOIT] sqlmap detectado (User-Agent)"; flow:to_server,established; http.user_agent; content:"sqlmap"; nocase; classtype:web-application-attack; sid:1000030; rev:1;)
+
+# 4.2 Nikto scanner (User-Agent).
+alert http any any -> $HOME_NET $HTTP_PORTS (msg:"[WEB-EXPLOIT] Nikto scanner detectado (User-Agent)"; flow:to_server,established; http.user_agent; content:"Nikto"; nocase; classtype:web-application-attack; sid:1000031; rev:1;)
+
+# 4.3 dirb / gobuster / ffuf / dirbuster (fuzzing de directorios por User-Agent).
+alert http any any -> $HOME_NET $HTTP_PORTS (msg:"[WEB-EXPLOIT] Fuzzing de directorios (gobuster/dirb/ffuf) User-Agent"; flow:to_server,established; http.user_agent; pcre:"/(gobuster|dirbuster|^dirb|ffuf|wfuzz|feroxbuster)/i"; classtype:web-application-attack; sid:1000032; rev:1;)
+
+# 4.4 Path traversal (../../ y variantes URL-encoded).
+alert http any any -> $HOME_NET $HTTP_PORTS (msg:"[WEB-EXPLOIT] Intento de path traversal (../)"; flow:to_server,established; http.uri; pcre:"/(\.\.\/|\.\.%2f|%2e%2e%2f|\.\.\\)/i"; classtype:web-application-attack; sid:1000033; rev:1;)
+
+# 4.5 Webshells comunes en la URI.
+alert http any any -> $HOME_NET $HTTP_PORTS (msg:"[WEB-EXPLOIT] Acceso a posible webshell (c99/r57/cmd.php/shell.php)"; flow:to_server,established; http.uri; pcre:"/(c99\.php|r57\.php|cmd\.php|shell\.php|b374k|wso\.php)/i"; classtype:web-application-attack; sid:1000034; rev:1;)
+
+# 4.6 SQLi básica en query string (UNION SELECT / OR 1=1).
+alert http any any -> $HOME_NET $HTTP_PORTS (msg:"[WEB-EXPLOIT] Posible SQL injection (UNION SELECT / OR 1=1)"; flow:to_server,established; http.uri; pcre:"/(union(\s|\+|%20)+select|or(\s|\+|%20)+1(\s|%20)*=(\s|%20)*1)/i"; classtype:web-application-attack; sid:1000035; rev:1;)
+
+# 4.7 Burp Suite / scanners en User-Agent (recon ofensivo).
+alert http any any -> $HOME_NET $HTTP_PORTS (msg:"[WEB-EXPLOIT] Herramienta ofensiva en User-Agent (curl/python/burp/nuclei)"; flow:to_server,established; http.user_agent; pcre:"/(burp|nuclei|nessus|acunetix|masscan|zgrab)/i"; classtype:web-application-attack; sid:1000036; rev:1;)
+
+
+# -----------------------------------------------------------------------------
+# 5) EXTRA — pistas de exfiltración / túneles (opcional, comentado)
+# -----------------------------------------------------------------------------
+# Descomenta y ajusta si quieres detectar resolución masiva de DNS (posible
+# tunneling) hacia el resolver interno.
+#
+# alert dns any any -> $DNS_SERVERS 53 (msg:"[DNS] Tasa de consultas DNS anormal (posible tunneling)"; threshold:type both, track by_src, count 100, seconds 10; classtype:bad-unknown; sid:1000040; rev:1;)

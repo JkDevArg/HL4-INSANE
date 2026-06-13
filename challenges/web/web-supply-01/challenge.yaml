@@ -1,0 +1,16 @@
+id: web-supply-01
+category: web
+name: "Poisoned Pipeline"
+difficulty: insane
+type: per-team
+serve: http
+flag_via: flag-service
+points: 500
+ports: [8080]
+siem: true
+description: >
+  "DevOps Portal" de la fintech ACME. El portal expone un panel de build que
+  reconstruye un microservicio interno tomando dependencias de un index PyPI
+  privado de la empresa. El registry interno permite subir paquetes sin firma
+  ni revisión. ¿Puedes envenenar la cadena de suministro y ejecutar código en
+  el runner de build? Empieza por http://<host>:8080/

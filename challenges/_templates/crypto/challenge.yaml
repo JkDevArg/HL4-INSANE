@@ -1,0 +1,11 @@
+id: crypto-CAMBIAME-NN
+category: crypto
+name: "CAMBIAME"
+difficulty: insane
+type: per-team
+serve: tcp
+flag_via: flag-service
+points: 500
+ports: [9999]
+siem: true
+description: "CAMBIAME: conecta con `nc <host> 9999`. Describe sin spoilear."

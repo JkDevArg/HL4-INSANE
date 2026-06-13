@@ -1,0 +1,17 @@
+# Datasource Loki para Grafana (provisioning automático).
+# Contrato sección 3: loki en puerto 3100, hostname Docker "loki".
+apiVersion: 1
+
+datasources:
+  - name: Loki
+    type: loki
+    access: proxy
+    # Hostname Docker del stack SIEM.
+    url: http://loki:3100
+    # Datasource por defecto (todos los dashboards apuntan aquí).
+    isDefault: true
+    uid: loki
+    editable: true
+    jsonData:
+      # Tope de líneas devueltas por consulta (suficiente para el CTF).
+      maxLines: 1000

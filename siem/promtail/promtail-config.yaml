@@ -1,0 +1,161 @@
+# Promtail — recolecta logs del host/servicios y los envía a Loki.
+# Contrato: hostname Docker "loki", puerto 3100.
+server:
+  http_listen_port: 9080
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+
+scrape_configs:
+
+  # ===========================================================================
+  # JOBS EXISTENTES (NO DUPLICAR) — VPN y Docker de retos
+  # ===========================================================================
+
+  # Logs de conexión VPN (quién se conecta/desconecta)
+  - job_name: openvpn
+    static_configs:
+      - targets: [localhost]
+        labels:
+          job: openvpn
+          __path__: /var/log/openvpn/openvpn.log
+    pipeline_stages:
+      - regex:
+          expression: '(?P<timestamp>\w{3}\s+\d+\s[\d:]+)\s.*CLIENT:(?P<client_ip>[\d.]+).*'
+      - labels:
+          client_ip:
+
+  # Status de OpenVPN (clientes activos)
+  - job_name: openvpn-status
+    static_configs:
+      - targets: [localhost]
+        labels:
+          job: openvpn-status
+          __path__: /var/log/openvpn/status.log
+
+  # Logs del sistema (auth, sudo, ssh)
+  - job_name: syslog
+    static_configs:
+      - targets: [localhost]
+        labels:
+          job: syslog
+          __path__: /var/log/syslog
+
+  # Logs de Docker (retos)
+  - job_name: docker-challenges
+    static_configs:
+      - targets: [localhost]
+        labels:
+          job: challenges
+          __path__: /var/log/docker-challenges/*.log
+
+  # ===========================================================================
+  # JOBS NUEVOS — IDS, DNS sinkhole, ban VPN y firewall nftables
+  # ===========================================================================
+
+  # ---------------------------------------------------------------------------
+  # Suricata: eve.json (alertas IDS). Parseamos el JSON y extraemos labels
+  # útiles: signature de la alerta, IPs origen/destino y protocolo.
+  # Dashboard: ids-alerts.json
+  # ---------------------------------------------------------------------------
+  - job_name: suricata
+    static_configs:
+      - targets: [localhost]
+        labels:
+          job: suricata
+          __path__: /var/log/suricata/eve.json
+    pipeline_stages:
+      # 1. eve.json ya es JSON por línea: extraemos campos de interés.
+      - json:
+          expressions:
+            event_type: event_type
+            src_ip: src_ip
+            dest_ip: dest_ip
+            proto: proto
+            signature: 'alert.signature'
+            category: 'alert.category'
+            severity: 'alert.severity'
+      # 2. Solo nos interesan eventos de tipo "alert" para el dashboard IDS;
+      #    el resto (flow/http/dns) se mantiene pero sin labels de alerta.
+      - labels:
+          src_ip:
+          dest_ip:
+          proto:
+          signature:
+          category:
+      # 3. Usa el timestamp del propio evento si está presente.
+      - timestamp:
+          source: timestamp
+          format: RFC3339Nano
+          fallback_formats:
+            - RFC3339
+
+  # ---------------------------------------------------------------------------
+  # DNS (dnsmasq): intentos de resolver dominios IA bloqueados (sinkhole).
+  # Política sección 6.1: dominios IA resuelven a 0.0.0.0.
+  # Dashboard: ids-alerts.json (panel "intentos de acceso a IA")
+  # ---------------------------------------------------------------------------
+  - job_name: dns
+    static_configs:
+      - targets: [localhost]
+        labels:
+          job: dns
+          __path__: /var/log/dnsmasq/queries.log
+    pipeline_stages:
+      # dnsmasq: "query[A] openai.com from 10.10.3.4"
+      - regex:
+          expression: 'query\[(?P<qtype>[A-Z]+)\]\s+(?P<domain>\S+)\s+from\s+(?P<src_ip>[\d.]+)'
+      - labels:
+          qtype:
+          domain:
+          src_ip:
+
+  # ---------------------------------------------------------------------------
+  # VPN events: log del sistema de ban (3 desconexiones → vpn_ban).
+  # Política sección 6.2. Dashboard: vpn-activity.json
+  # ---------------------------------------------------------------------------
+  - job_name: vpn-events
+    static_configs:
+      - targets: [localhost]
+        labels:
+          job: vpn-events
+          __path__: /var/log/openvpn/events.log
+    pipeline_stages:
+      # Formato esperado: "<ts> <event> CN=team_03 ip=10.10.3.4 count=2"
+      - regex:
+          expression: '(?P<event>connect|disconnect|ban)\s+CN=(?P<team_id>team_\d+)(\s+ip=(?P<src_ip>[\d.]+))?(\s+count=(?P<count>\d+))?'
+      - labels:
+          event:
+          team_id:
+
+  # ---------------------------------------------------------------------------
+  # Firewall (nftables): bloqueos LOG con prefijos del contrato.
+  # Lee kern.log (donde nftables vuelca los LOG con prefijo).
+  # Prefijos: INTER_TEAM_BLOCK, AI_BLOCK, INTERNET_BLOCK (secciones 2 y 6.1).
+  # Dashboard: ids-alerts.json (bloqueos inter-equipo) y challenge-traffic.
+  # ---------------------------------------------------------------------------
+  - job_name: firewall
+    static_configs:
+      - targets: [localhost]
+        labels:
+          job: firewall
+          __path__: /var/log/kern.log
+    pipeline_stages:
+      # Solo conservamos líneas que llevan uno de nuestros prefijos.
+      - match:
+          selector: '{job="firewall"}'
+          stages:
+            - regex:
+                expression: '(?P<block_type>INTER_TEAM_BLOCK|AI_BLOCK|INTERNET_BLOCK).*SRC=(?P<src_ip>[\d.]+)\s+DST=(?P<dst_ip>[\d.]+)'
+            - labels:
+                block_type:
+                src_ip:
+                dst_ip:
+            # Descarta el resto de kern.log que no sea un bloqueo nuestro.
+            - drop:
+                expression: '.*'
+                source: block_type
+                value: ''

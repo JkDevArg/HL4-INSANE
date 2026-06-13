@@ -1,0 +1,127 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "tags": ["ctf", "vpn", "siem"],
+  "templating": {
+    "list": [
+      {
+        "name": "team",
+        "label": "Equipo",
+        "type": "custom",
+        "query": "all,team_01,team_02,team_03,team_04,team_05,team_06,team_07,team_08,team_09,team_10",
+        "current": { "text": "all", "value": "all" },
+        "includeAll": false,
+        "options": []
+      }
+    ]
+  },
+  "time": { "from": "now-6h", "to": "now" },
+  "title": "VPN Activity",
+  "uid": "ctf-vpn-activity",
+  "version": 1,
+  "panels": [
+    {
+      "id": 1,
+      "type": "timeseries",
+      "title": "Conexiones VPN por equipo (rate)",
+      "datasource": { "type": "loki", "uid": "loki" },
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 0 },
+      "fieldConfig": { "defaults": { "custom": { "drawStyle": "bars" } }, "overrides": [] },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "loki", "uid": "loki" },
+          "expr": "sum by (team_id) (count_over_time({source=\"vpn\", event_type=\"vpn_connect\"} [5m]))",
+          "legendFormat": "{{team_id}}"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "Desconexiones VPN por equipo (rate)",
+      "datasource": { "type": "loki", "uid": "loki" },
+      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 0 },
+      "fieldConfig": { "defaults": { "custom": { "drawStyle": "bars" } }, "overrides": [] },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "loki", "uid": "loki" },
+          "expr": "sum by (team_id) (count_over_time({source=\"vpn\", event_type=\"vpn_disconnect\"} [5m]))",
+          "legendFormat": "{{team_id}}"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Contador de desconexiones (total por equipo)",
+      "datasource": { "type": "loki", "uid": "loki" },
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 9 },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value", "graphMode": "none" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "loki", "uid": "loki" },
+          "expr": "sum by (team_id) (count_over_time({source=\"vpn\", event_type=\"vpn_disconnect\"} [$__range]))",
+          "legendFormat": "{{team_id}}"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "BANS (vpn_ban)",
+      "description": "Equipos baneados por 3 desconexiones (politica 6.2)",
+      "datasource": { "type": "loki", "uid": "loki" },
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 9 },
+      "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "steps": [ { "color": "green", "value": null }, { "color": "red", "value": 1 } ] } }, "overrides": [] },
+      "options": { "reduceOptions": { "calcs": ["sum"] }, "colorMode": "background", "graphMode": "none" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "loki", "uid": "loki" },
+          "expr": "sum by (team_id) (count_over_time({source=\"vpn\", event_type=\"vpn_ban\"} [$__range]))",
+          "legendFormat": "{{team_id}}"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "type": "logs",
+      "title": "Eventos de ban (detalle)",
+      "datasource": { "type": "loki", "uid": "loki" },
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 9 },
+      "options": { "showTime": true, "wrapLogMessage": true, "sortOrder": "Descending" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "loki", "uid": "loki" },
+          "expr": "{source=\"vpn\", event_type=\"vpn_ban\"}"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "type": "logs",
+      "title": "Flujo de conexiones/desconexiones (vpn-events)",
+      "datasource": { "type": "loki", "uid": "loki" },
+      "gridPos": { "h": 9, "w": 24, "x": 0, "y": 17 },
+      "options": { "showTime": true, "wrapLogMessage": true, "sortOrder": "Descending" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "loki", "uid": "loki" },
+          "expr": "{job=\"vpn-events\"}"
+        }
+      ]
+    }
+  ]
+}

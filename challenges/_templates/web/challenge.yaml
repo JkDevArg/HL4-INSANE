@@ -1,0 +1,11 @@
+id: web-CAMBIAME-NN
+category: web
+name: "CAMBIAME"
+difficulty: insane
+type: per-team          # flag dinamica por equipo
+serve: http
+flag_via: flag-service  # la flag la genera flag-service e inyecta por env FLAG
+points: 500
+ports: [8080]
+siem: true              # emite eventos al collector
+description: "CAMBIAME: describe el reto sin spoilear la solucion."

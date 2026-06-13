@@ -1,0 +1,41 @@
+# web-ssrf-02 — Metadata Mirage. Parametrizable por equipo: TEAM_ID + FLAG + TEAM_N + CHAL_NET.
+#   Lanzado por infra/launch-team-challenges.sh:
+#     TEAM_ID=team_03 TEAM_N=3 FLAG="flag{...}" CHAL_NET=ctf_team_03 \
+#       docker compose -p ctf_team_03_web_ssrf_02 up -d --build
+#
+# AISLAMIENTO: ambos servicios viven SOLO en la red del equipo (172.30.N.0/24),
+# sin publicar puertos al host. El jugador alcanza el portal por la VPN; el
+# metadata interno NO es alcanzable directamente, solo vía el SSRF del portal.
+#   - portal:   PixelForge (avatar importer, SSRF)        -> .12:8080
+#   - metadata: endpoint de metadata interno simulado     -> .13:8080
+networks:
+  team_net:
+    external: true
+    name: ${CHAL_NET:-ctf_local}
+
+services:
+  metadata:
+    build: ./metadata
+    image: web-ssrf-02-metadata
+    environment:
+      FLAG: "${FLAG:-flag{EJEMPLO_LOCAL}}"
+    networks:
+      team_net:
+        ipv4_address: 172.30.${TEAM_N:-99}.13
+    restart: unless-stopped
+
+  portal:
+    build: .
+    image: web-ssrf-02-portal
+    depends_on:
+      - metadata
+    environment:
+      FLAG: "${FLAG:-flag{EJEMPLO_LOCAL}}"
+      TEAM_ID: "${TEAM_ID:-team_local}"
+      CHALLENGE_ID: "web-ssrf-02"
+      METADATA_HOST: "metadata"
+      COLLECTOR_URL: "${COLLECTOR_URL:-http://collector:9000}"
+    networks:
+      team_net:
+        ipv4_address: 172.30.${TEAM_N:-99}.12
+    restart: unless-stopped

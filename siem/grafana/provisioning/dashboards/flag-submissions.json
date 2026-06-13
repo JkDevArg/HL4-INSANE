@@ -1,0 +1,133 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "tags": ["ctf", "flags", "anticheat", "siem"],
+  "templating": {
+    "list": [
+      {
+        "name": "team",
+        "label": "Equipo",
+        "type": "custom",
+        "query": "all,team_01,team_02,team_03,team_04,team_05,team_06,team_07,team_08,team_09,team_10",
+        "current": { "text": "all", "value": "all" },
+        "includeAll": false,
+        "options": []
+      }
+    ]
+  },
+  "time": { "from": "now-6h", "to": "now" },
+  "title": "Flag Submissions",
+  "uid": "ctf-flag-submissions",
+  "version": 1,
+  "panels": [
+    {
+      "id": 1,
+      "type": "timeseries",
+      "title": "Submits OK vs FAIL (rate global)",
+      "datasource": { "type": "loki", "uid": "loki" },
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 0 },
+      "fieldConfig": { "defaults": { "custom": { "drawStyle": "bars" } }, "overrides": [] },
+      "targets": [
+        {
+          "refId": "OK",
+          "datasource": { "type": "loki", "uid": "loki" },
+          "expr": "sum (count_over_time({source=\"platform\", event_type=\"flag_ok\"} [5m]))",
+          "legendFormat": "flag_ok"
+        },
+        {
+          "refId": "FAIL",
+          "datasource": { "type": "loki", "uid": "loki" },
+          "expr": "sum (count_over_time({source=\"platform\", event_type=\"flag_fail\"} [5m]))",
+          "legendFormat": "flag_fail"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "Submits OK por equipo",
+      "datasource": { "type": "loki", "uid": "loki" },
+      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "loki", "uid": "loki" },
+          "expr": "sum by (team_id) (count_over_time({source=\"platform\", event_type=\"flag_ok\"} [5m]))",
+          "legendFormat": "{{team_id}}"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "title": "Rate de submits (todos: submit/flag_ok/flag_fail)",
+      "datasource": { "type": "loki", "uid": "loki" },
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 9 },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "loki", "uid": "loki" },
+          "expr": "sum by (event_type) (rate({source=\"platform\", event_type=~\"submit|flag_ok|flag_fail\"} [5m]))",
+          "legendFormat": "{{event_type}}"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Intentos de flag-share (CHEAT)",
+      "description": "cheat_flag_share: equipo envia flag de otro (anti-cheat seccion 6.3)",
+      "datasource": { "type": "loki", "uid": "loki" },
+      "gridPos": { "h": 9, "w": 6, "x": 12, "y": 9 },
+      "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "steps": [ { "color": "green", "value": null }, { "color": "red", "value": 1 } ] } }, "overrides": [] },
+      "options": { "reduceOptions": { "calcs": ["sum"] }, "colorMode": "background", "graphMode": "none" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "loki", "uid": "loki" },
+          "expr": "sum by (team_id) (count_over_time({event_type=\"cheat_flag_share\"} [$__range]))",
+          "legendFormat": "{{team_id}}"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "Ratio FAIL/OK por equipo (rango)",
+      "description": "Muchos FAIL pueden indicar fuzzing de flags",
+      "datasource": { "type": "loki", "uid": "loki" },
+      "gridPos": { "h": 9, "w": 6, "x": 18, "y": 9 },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value", "graphMode": "none" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "loki", "uid": "loki" },
+          "expr": "sum by (team_id) (count_over_time({source=\"platform\", event_type=\"flag_fail\"} [$__range]))",
+          "legendFormat": "{{team_id}}"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "type": "logs",
+      "title": "Intentos de flag-share (detalle CHEAT)",
+      "datasource": { "type": "loki", "uid": "loki" },
+      "gridPos": { "h": 9, "w": 24, "x": 0, "y": 18 },
+      "options": { "showTime": true, "wrapLogMessage": true, "sortOrder": "Descending" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "loki", "uid": "loki" },
+          "expr": "{event_type=\"cheat_flag_share\"} | json"
+        }
+      ]
+    }
+  ]
+}

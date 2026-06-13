@@ -1,0 +1,124 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "tags": ["ctf", "challenges", "siem"],
+  "templating": {
+    "list": [
+      {
+        "name": "team",
+        "label": "Equipo",
+        "type": "custom",
+        "query": "all,team_01,team_02,team_03,team_04,team_05,team_06,team_07,team_08,team_09,team_10",
+        "current": { "text": "all", "value": "all" },
+        "includeAll": false,
+        "options": []
+      }
+    ]
+  },
+  "time": { "from": "now-6h", "to": "now" },
+  "title": "Challenge Traffic",
+  "uid": "ctf-challenge-traffic",
+  "version": 1,
+  "panels": [
+    {
+      "id": 1,
+      "type": "timeseries",
+      "title": "Eventos por equipo (rate)",
+      "datasource": { "type": "loki", "uid": "loki" },
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "loki", "uid": "loki" },
+          "expr": "sum by (team_id) (count_over_time({source=\"challenge\"} [5m]))",
+          "legendFormat": "{{team_id}}"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "Eventos por reto (challenge_id via json)",
+      "datasource": { "type": "loki", "uid": "loki" },
+      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "loki", "uid": "loki" },
+          "expr": "sum by (challenge_id) (count_over_time({source=~\"challenge|platform\"} | json | challenge_id != \"\" [5m]))",
+          "legendFormat": "{{challenge_id}}"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "title": "Solves (flag_ok) por equipo",
+      "datasource": { "type": "loki", "uid": "loki" },
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 9 },
+      "fieldConfig": { "defaults": { "custom": { "drawStyle": "bars" } }, "overrides": [] },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "loki", "uid": "loki" },
+          "expr": "sum by (team_id) (count_over_time({source=\"platform\", event_type=\"flag_ok\"} [5m]))",
+          "legendFormat": "{{team_id}}"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Total solves por equipo (rango)",
+      "datasource": { "type": "loki", "uid": "loki" },
+      "gridPos": { "h": 9, "w": 6, "x": 12, "y": 9 },
+      "options": { "reduceOptions": { "calcs": ["sum"] }, "colorMode": "value", "graphMode": "none" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "loki", "uid": "loki" },
+          "expr": "sum by (team_id) (count_over_time({source=\"platform\", event_type=\"flag_ok\"} [$__range]))",
+          "legendFormat": "{{team_id}}"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "Solves por reto (rango)",
+      "datasource": { "type": "loki", "uid": "loki" },
+      "gridPos": { "h": 9, "w": 6, "x": 18, "y": 9 },
+      "options": { "reduceOptions": { "calcs": ["sum"] }, "colorMode": "value", "graphMode": "none" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "loki", "uid": "loki" },
+          "expr": "sum by (challenge_id) (count_over_time({source=\"platform\", event_type=\"flag_ok\"} | json [$__range]))",
+          "legendFormat": "{{challenge_id}}"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "type": "logs",
+      "title": "Tráfico/eventos de retos (detalle)",
+      "datasource": { "type": "loki", "uid": "loki" },
+      "gridPos": { "h": 9, "w": 24, "x": 0, "y": 18 },
+      "options": { "showTime": true, "wrapLogMessage": true, "sortOrder": "Descending" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "loki", "uid": "loki" },
+          "expr": "{source=\"challenge\"}"
+        }
+      ]
+    }
+  ]
+}

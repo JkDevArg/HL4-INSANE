@@ -1,0 +1,11 @@
+id: api-CAMBIAME-NN
+category: api
+name: "CAMBIAME"
+difficulty: insane
+type: per-team
+serve: http
+flag_via: flag-service
+points: 500
+ports: [8080]
+siem: true
+description: "CAMBIAME: describe el reto sin spoilear la solucion."

@@ -1,0 +1,69 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body {
+  background-color: #0a0f0d;
+  color: #d7e6df;
+}
+
+body {
+  /* Rejilla sutil estilo terminal de fondo. */
+  background-image:
+    linear-gradient(rgba(57, 255, 20, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(57, 255, 20, 0.025) 1px, transparent 1px);
+  background-size: 38px 38px;
+  min-height: 100vh;
+}
+
+/* Foco accesible y consistente en toda la app. */
+:focus-visible {
+  outline: 2px solid #39ff14;
+  outline-offset: 2px;
+}
+
+/* Scrollbar discreta acorde al tema. */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: #0a0f0d;
+}
+::-webkit-scrollbar-thumb {
+  background: #1c2a24;
+  border-radius: 6px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #2bd40f;
+}
+
+@layer components {
+  /* Boton primario neon reutilizable. */
+  .btn-neon {
+    @apply inline-flex items-center justify-center gap-2 rounded-md border border-neon/60 bg-neon/10 px-4 py-2 font-mono text-sm font-semibold text-neon transition;
+  }
+  .btn-neon:hover:not(:disabled) {
+    @apply bg-neon/20 shadow-neon;
+  }
+  .btn-neon:disabled {
+    @apply cursor-not-allowed opacity-50;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-md border border-line px-3 py-1.5 font-mono text-xs text-muted transition hover:border-neon/50 hover:text-neon;
+  }
+
+  .input-term {
+    @apply w-full rounded-md border border-line bg-black/40 px-3 py-2 font-mono text-sm text-neon placeholder:text-muted/60 transition focus:border-neon/70;
+  }
+
+  .card {
+    @apply rounded-lg border border-line bg-bg-panel p-4 transition;
+  }
+}

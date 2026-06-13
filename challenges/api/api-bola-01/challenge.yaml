@@ -1,0 +1,15 @@
+id: api-bola-01
+category: api
+name: "Broken Object Ledger"
+difficulty: insane
+type: per-team
+serve: http
+flag_via: flag-service
+points: 500
+ports: [8080]
+siem: true
+description: >
+  API de banca "LedgerX". Maneja usuarios, cuentas y notas internas. La cuenta
+  de admin guarda un secreto corporativo. Empieza registrando un usuario en
+  http://<host>:8080/docs ... aunque /docs está deshabilitado en prod. Encuentra
+  la cadena que te lleva de usuario raso a leer el secreto del admin.

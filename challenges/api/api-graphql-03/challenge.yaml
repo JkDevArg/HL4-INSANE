@@ -1,0 +1,16 @@
+id: api-graphql-03
+category: api
+name: "Introspection Abyss"
+difficulty: insane
+type: per-team
+serve: http
+flag_via: flag-service
+points: 550
+ports: [8080]
+siem: true
+description: >
+  "NebulaGraph", la API GraphQL interna de una startup. La introspección está
+  "desactivada" en producción, así que no puedes volcar el esquema. Pero el
+  servidor es amable con sus mensajes de error... Filtra el esquema vía field
+  suggestions, abusa de alias batching para enumerar, y encuentra el campo de
+  admin que entrega la flag. Endpoint: POST http://<host>:8080/graphql

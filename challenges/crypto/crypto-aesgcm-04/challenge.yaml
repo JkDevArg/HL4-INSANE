@@ -1,0 +1,16 @@
+id: crypto-aesgcm-04
+category: crypto
+name: "Nonce Reuse Roulette"
+difficulty: insane
+type: per-team
+serve: tcp
+flag_via: flag-service
+points: 650
+ports: [9999]
+siem: true
+description: >
+  Servicio TCP "VaultGCM" que firma comandos con AES-GCM. Te deja cifrar
+  comandos arbitrarios y te entrega ciphertext+tag... reusando SIEMPRE el mismo
+  nonce. Reusar el nonce en GCM es fatal: permite recuperar la clave de
+  autenticación H y forjar tags válidos. Forja el comando de admin y el servidor
+  te dará la flag. Conéctate con `nc <host> 9999`.

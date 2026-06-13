@@ -1,0 +1,144 @@
+%YAML 1.1
+---
+# Suricata — configuración MÍNIMA de IDS para el CTF (CTFHL4-INSANE).
+#
+# Objetivo: IDS PASIVO sobre la interfaz VPN `tun0` (contrato sección 3:
+# "suricata — host (tun0) — IDS pasivo sobre VPN").
+#
+# Solo se incluye lo necesario para:
+#   - leer paquetes de tun0 en modo IDS (af-packet),
+#   - cargar nuestras reglas locales (custom.rules),
+#   - emitir alertas a eve.json (que Promtail recoge → Loki → Grafana).
+#
+# Para producción real se ajustarían más knobs; aquí buscamos algo simple
+# y reproducible.
+
+##
+## Variables de red — adaptadas al plan de red (contrato sección 2)
+##
+vars:
+  address-groups:
+    # Toda la red VPN del CTF.
+    HOME_NET: "[10.10.0.0/16]"
+    # "Externo" = todo lo que no es la VPN (incluye los retos Docker).
+    EXTERNAL_NET: "!$HOME_NET"
+
+    HTTP_SERVERS: "$HOME_NET"
+    SMTP_SERVERS: "$HOME_NET"
+    SQL_SERVERS: "$HOME_NET"
+    DNS_SERVERS: "[10.10.100.2]"
+    TELNET_SERVERS: "$HOME_NET"
+
+  port-groups:
+    HTTP_PORTS: "[80,8000,8080,8443,443]"
+    SHELLCODE_PORTS: "!80"
+    SSH_PORTS: "22"
+    DNS_PORTS: "53"
+
+##
+## Captura — modo IDS sobre tun0 (interfaz de la VPN)
+##
+# af-packet escucha pasivamente; no inyecta ni dropea (IDS, no IPS).
+af-packet:
+  - interface: tun0
+    # cluster-type/cluster-id para multi-hilo si la VM tiene varios cores.
+    cluster-id: 99
+    cluster-type: cluster_flow
+    defrag: yes
+    # use-mmap mejora el rendimiento de captura.
+    use-mmap: yes
+    tpacket-v3: yes
+
+# Detección sobre tráfico ya reensamblado.
+detect-engine:
+  - profile: medium
+
+##
+## Logging — eve.json es la salida que consume el SIEM
+##
+default-log-dir: /var/log/suricata
+
+outputs:
+  # eve.json: salida estructurada JSON. Promtail la parsea (job=suricata).
+  - eve-log:
+      enabled: yes
+      filetype: regular
+      filename: eve.json
+      types:
+        - alert:
+            payload: no
+            payload-printable: yes
+            packet: no
+            metadata: yes
+            http-body: no
+        - http:
+            extended: yes
+        - dns:
+            query: yes
+            answer: yes
+        - tls:
+            extended: yes
+        - flow
+        - stats:
+            totals: yes
+            threads: no
+
+  # Log clásico de Suricata (arranque, errores de carga de reglas, etc.).
+  - stats:
+      enabled: yes
+      filename: stats.log
+      interval: 30
+
+# Salida de log del propio motor.
+logging:
+  default-log-level: notice
+  outputs:
+    - console:
+        enabled: yes
+    - file:
+        enabled: yes
+        level: info
+        filename: /var/log/suricata/suricata.log
+
+##
+## Reglas — solo cargamos nuestras reglas locales del CTF
+##
+default-rule-path: /etc/suricata/rules
+rule-files:
+  - custom.rules
+
+# Clasificaciones / referencias estándar (si existen en la imagen).
+classification-file: /etc/suricata/classification.config
+reference-config-file: /etc/suricata/reference.config
+
+##
+## App-layer: habilitamos parsers usados por nuestras reglas (http, dns, tls, ssh)
+##
+app-layer:
+  protocols:
+    http:
+      enabled: yes
+    tls:
+      enabled: yes
+    dns:
+      tcp:
+        enabled: yes
+      udp:
+        enabled: yes
+    ssh:
+      enabled: yes
+
+##
+## Flow / stream — defaults razonables
+##
+flow:
+  memcap: 128mb
+  hash-size: 65536
+  prealloc: 10000
+
+stream:
+  memcap: 64mb
+  checksum-validation: no   # tun0 no calcula checksums L4 → desactivar
+  reassembly:
+    memcap: 128mb
+    depth: 1mb

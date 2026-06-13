@@ -1,0 +1,70 @@
+# Loki — almacenamiento de logs del SIEM (CTFHL4-INSANE)
+# Contrato sección 3: loki — 10.10.200.20 — puerto 3100 — solo SIEM.
+# Modo single-binary, almacenamiento en filesystem (suficiente para el CTF).
+auth_enabled: false
+
+server:
+  http_listen_port: 3100
+  grpc_listen_port: 9095
+  # Permite líneas de log grandes (eve.json de Suricata puede ser verboso).
+  grpc_server_max_recv_msg_size: 8388608
+  grpc_server_max_send_msg_size: 8388608
+
+# Coordinación interna en memoria (single-node, sin Consul/etcd).
+common:
+  ring:
+    kvstore:
+      store: inmemory
+  replication_factor: 1
+  path_prefix: /loki
+
+ingester:
+  lifecycler:
+    ring:
+      kvstore:
+        store: inmemory
+      replication_factor: 1
+  chunk_idle_period: 5m
+  chunk_retain_period: 30s
+
+schema_config:
+  configs:
+    - from: 2024-01-01
+      store: boltdb-shipper
+      object_store: filesystem
+      schema: v11
+      index:
+        prefix: index_
+        period: 24h
+
+storage_config:
+  boltdb_shipper:
+    active_index_directory: /loki/index
+    cache_location: /loki/cache
+  filesystem:
+    directory: /loki/chunks
+
+limits_config:
+  reject_old_samples: true
+  reject_old_samples_max_age: 168h
+  # Permite labels que usamos desde el collector y Promtail.
+  max_label_names_per_series: 20
+  # Ingesta holgada para los picos durante el CTF.
+  ingestion_rate_mb: 16
+  ingestion_burst_size_mb: 32
+  # Permite consultar hasta 7 días hacia atrás en Grafana.
+  max_query_lookback: 168h
+
+# Compactador: limpia y mantiene el índice boltdb-shipper.
+compactor:
+  working_directory: /loki/compactor
+  compaction_interval: 10m
+
+# Sin reporte de uso anónimo a Grafana Labs.
+analytics:
+  reporting_enabled: false
+
+# Retención de 7 días (suficiente para el evento y post-mortem).
+table_manager:
+  retention_deletes_enabled: true
+  retention_period: 168h

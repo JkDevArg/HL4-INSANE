@@ -1,0 +1,17 @@
+id: web-ssrf-02
+category: web
+name: "Metadata Mirage"
+difficulty: insane
+type: per-team
+serve: http
+flag_via: flag-service
+points: 500
+ports: [8080]
+siem: true
+description: >
+  "PixelForge", un servicio de avatares que descarga y re-procesa imágenes
+  desde una URL que tú le das. El equipo de seguridad "ya bloqueó" el acceso a
+  la red interna y al endpoint de metadata del cloud. Encadena un bypass del
+  filtro (DNS rebinding / redirect / IPv6 / decimal) para alcanzar el metadata
+  interno (169.254.169.254 simulado), lee el rol del nodo y obtén la flag.
+  Empieza por http://<host>:8080/

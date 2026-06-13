@@ -1,0 +1,27 @@
+# PKI / Certificados — NUNCA commitear
+vpn/keys/
+*.key
+*.pem
+*.crt
+*.p12
+
+# Secretos
+.env
+.env.*
+*secret*
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Node
+node_modules/
+.next/
+
+# Docker
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
