@@ -1,0 +1,19 @@
+id: web-proto-03
+category: web
+name: "Prototype of Doom"
+difficulty: insane
+type: per-team
+serve: http
+flag_via: flag-service
+points: 600
+ports: [8080]
+siem: true
+description: >
+  "Doom Templates", un editor de plantillas de correo (Node + Express) donde tus
+  "preferencias" se fusionan sobre tu perfil con un merge recursivo. El render
+  avanzado (/admin/render) solo es para administradores y compila plantillas EJS
+  del lado servidor. Contamina el prototipo a través del merge inseguro, escala a
+  bypass de autorización y encadena el gadget de EJS hasta RCE para leer la flag
+  (/flag.txt). No basta con poner isAdmin:true: hay que encontrar el endpoint de
+  merge, el gadget correcto (outputFunctionName) y encadenarlo. Empieza por
+  http://<host>:8080/

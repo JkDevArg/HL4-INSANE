@@ -1,0 +1,17 @@
+id: web-jwt-04
+category: web
+name: "Forged Crown"
+difficulty: insane
+type: per-team
+serve: http
+flag_via: flag-service
+points: 550
+ports: [8080]
+siem: true
+description: >
+  "Royal Console", la consola de administracion del Reino, autentica por JWT
+  (RS256). Cualquier subdito obtiene un token de invitado, pero la corona
+  (/admin/crown) esta reservada a la realeza: exige role=admin y linaje real.
+  La clave publica del Reino esta a la vista (/jwks.json y /pubkey). El
+  verificador de tokens, en cambio, no es tan noble como parece. Forja un token
+  con privilegios de admin y reclama la corona. Empieza por http://<host>:8080/

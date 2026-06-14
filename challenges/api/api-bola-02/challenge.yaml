@@ -1,0 +1,18 @@
+id: api-bola-02
+category: api
+name: "Mass Assignment Heist"
+difficulty: insane
+type: per-team
+serve: http
+flag_via: flag-service
+points: 550
+ports: [8080]
+siem: true
+description: >
+  API de facturación B2B "LedgerPay". Las cuentas tienen un nivel (tier) y un
+  rol de organización; la clave maestra del ledger corporativo solo la ve un
+  org_admin en http://<host>:8080/api/v1/org/secrets. Te das de alta como
+  cuenta free/member. Edita tu perfil con PATCH /api/v1/accounts/me (solo
+  name/email... ¿seguro?) y encuentra la cadena que te asciende: del perfil a
+  enterprise, de enterprise al flujo de aprobación de facturas, y de ahí a
+  org_admin. Encadena los mass assignments y léete el secreto.

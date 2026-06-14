@@ -137,7 +137,7 @@ export function ChallengeCard({
             type="text"
             value={flag}
             onChange={(e) => setFlag(e.target.value)}
-            placeholder={solved ? 'Reto resuelto' : 'flag{…}'}
+            placeholder={solved ? 'Reto resuelto' : 'HL4{…}'}
             className="input-term"
             aria-label={`Flag para ${challenge.name}`}
             autoComplete="off"

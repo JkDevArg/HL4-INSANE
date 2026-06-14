@@ -1,0 +1,17 @@
+id: api-cache-05
+category: api
+name: "Poisoned Edge"
+difficulty: insane
+type: per-team
+serve: http
+flag_via: flag-service
+points: 600
+ports: [8080]
+siem: true
+description: >
+  "EdgeNews" es un portal de noticias servido tras un CDN de borde que cachea
+  agresivamente los recursos estaticos. Empiezas como lector raso en
+  http://<host>:8080/ y tu perfil esta en /api/v1/profile. El editor jefe del
+  diario revisa con su propia sesion cada enlace que le compartes en
+  /api/v1/share?url=... La flag vive en /api/v1/admin/flag y solo la ve el admin.
+  El edge confia demasiado en las extensiones de URL. Envenena su cache.

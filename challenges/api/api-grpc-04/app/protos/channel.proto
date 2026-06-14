@@ -1,0 +1,46 @@
+// channel.proto — Servicio PÚBLICO "SilentChannel".
+//
+// Este es el ÚNICO servicio que la reflexión gRPC anuncia. Es la superficie
+// visible del reto. Sus mensajes de error y su método GetServerInfo filtran
+// pistas sobre un servicio administrativo OCULTO (no listado por reflexión).
+syntax = "proto3";
+
+package channel;
+
+service SilentChannel {
+  // Eco simple. Si el mensaje contiene ciertas palabras clave, el servidor
+  // responde con trazas de diagnóstico verbosas (fuga de información).
+  rpc Echo (EchoRequest) returns (EchoReply) {}
+
+  // Devuelve metadata del servidor. Incluye la lista de canales "públicos"
+  // y un aviso sobre un canal silencioso reservado a operadores.
+  rpc GetServerInfo (ServerInfoRequest) returns (ServerInfoReply) {}
+
+  // Estado de salud trivial.
+  rpc Ping (PingRequest) returns (PingReply) {}
+}
+
+message EchoRequest {
+  string message = 1;
+}
+
+message EchoReply {
+  string message = 1;
+  // Cuando el diagnóstico se dispara, aquí van trazas internas verbosas.
+  repeated string diagnostics = 2;
+}
+
+message ServerInfoRequest {}
+
+message ServerInfoReply {
+  string server = 1;
+  string version = 2;
+  repeated string channels = 3;
+  string notice = 4;
+}
+
+message PingRequest {}
+
+message PingReply {
+  string pong = 1;
+}

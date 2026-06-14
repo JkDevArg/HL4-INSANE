@@ -10,9 +10,11 @@ MASTER_SECRET = os.environ["MASTER_SECRET"]
 
 
 def generate_flag(team_id: str, challenge_id: str) -> str:
+    # Formato HL4{...}, único por (equipo, reto) vía HMAC -> cada equipo recibe
+    # una flag distinta para el mismo reto; compartirla dispara el anti-cheat.
     key = f"{MASTER_SECRET}:{team_id}:{challenge_id}".encode()
     digest = hmac.new(MASTER_SECRET.encode(), key, hashlib.sha256).hexdigest()
-    return f"flag{{{digest[:20]}}}"
+    return f"HL4{{{digest[:20]}}}"
 
 
 class ValidateRequest(BaseModel):

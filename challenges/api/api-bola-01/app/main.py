@@ -27,41 +27,58 @@ from reqlog import reqlog_http
 app = FastAPI(title="LedgerX API", docs_url=None, redoc_url=None, openapi_url=None)
 
 
-@app.middleware("http")
-async def _log_request(request: Request, call_next):
-    """Middleware ASGI: loguea CADA petición COMPLETA (método, ruta, query,
-    headers, body) para el SIEM del stream.
+# Middleware ASGI PURO para loguear cada petición COMPLETA (línea CTFREQ).
+# Implementado a nivel ASGI (no @app.middleware("http")) porque el override de
+# request._receive sobre BaseHTTPMiddleware rompe el body bajo starlette 0.37.x.
+class ReqLogMiddleware:
+    def __init__(self, app):
+        self.app = app
 
-    Lee el body ANTES de pasar al handler y vuelve a inyectar el stream
-    `receive` para que los endpoints sigan leyéndolo con normalidad.
-    """
-    try:
-        raw = await request.body()
+    async def __call__(self, scope, receive, send):
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+        chunks: list[bytes] = []
+        more = True
+        while more:
+            message = await receive()
+            if message["type"] == "http.request":
+                chunks.append(message.get("body", b"") or b"")
+                more = message.get("more_body", False)
+            elif message["type"] == "http.disconnect":
+                more = False
+        raw = b"".join(chunks)
+        try:
+            headers = {k.decode("latin-1"): v.decode("latin-1") for k, v in scope.get("headers", [])}
+            src_ip = headers.get("x-forwarded-for")
+            if src_ip and "," in src_ip:
+                src_ip = src_ip.split(",")[0].strip()
+            if not src_ip:
+                client = scope.get("client")
+                src_ip = client[0] if client else "?"
+            reqlog_http(
+                src_ip=src_ip,
+                method=scope.get("method", "?"),
+                path=scope.get("path", "/"),
+                query=(scope.get("query_string") or b"").decode("latin-1"),
+                headers=headers,
+                body=raw,
+            )
+        except Exception:
+            pass
+        _sent = False
 
         async def _receive():
-            return {"type": "http.request", "body": raw, "more_body": False}
+            nonlocal _sent
+            if not _sent:
+                _sent = True
+                return {"type": "http.request", "body": raw, "more_body": False}
+            return {"type": "http.disconnect"}
 
-        # Re-inyecta el body consumido para los handlers aguas abajo.
-        request._receive = _receive
+        await self.app(scope, _receive, send)
 
-        src_ip = request.headers.get("x-forwarded-for")
-        if src_ip and "," in src_ip:
-            src_ip = src_ip.split(",")[0].strip()
-        if not src_ip:
-            src_ip = request.client.host if request.client else "?"
 
-        reqlog_http(
-            src_ip=src_ip,
-            method=request.method,
-            path=request.url.path,
-            query=request.url.query,
-            headers=dict(request.headers),
-            body=raw,
-        )
-    except Exception:
-        # El logging jamás debe tumbar el reto.
-        pass
-    return await call_next(request)
+app.add_middleware(ReqLogMiddleware)
 
 FLAG = os.environ.get("FLAG", "flag{EJEMPLO_LOCAL}")
 JWT_SECRET = os.environ.get("JWT_SECRET", secrets.token_hex(16))

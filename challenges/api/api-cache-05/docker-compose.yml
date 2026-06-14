@@ -1,0 +1,41 @@
+# api-cache-05 — Poisoned Edge. Parametrizable por equipo: TEAM_ID + FLAG + TEAM_N + CHAL_NET.
+#   Lanzado por infra/launch-team-challenges.sh:
+#     TEAM_ID=team_03 TEAM_N=3 FLAG="flag{...}" CHAL_NET=ctf_team_03 \
+#       docker compose -p ctf_team_03_api_cache_05 up -d --build
+#
+# DOS servicios:
+#   - cache (nginx): el CDN/edge. PUNTO DE ENTRADA del jugador en .24:8080.
+#                    No publica puertos al host; accesible por la VPN del equipo.
+#   - api (FastAPI): backend EdgeNews tras el edge. Sin puerto expuesto; el edge
+#                    hace proxy a api:8000 por nombre de servicio.
+#
+# AISLAMIENTO: ambos viven SOLO en la red del equipo (172.30.N.0/24).
+networks:
+  team_net:
+    external: true
+    name: ${CHAL_NET:-ctf_local}
+
+services:
+  cache:
+    build: ./nginx
+    image: api-cache-05-edge
+    depends_on:
+      - api
+    networks:
+      team_net:
+        ipv4_address: 172.30.${TEAM_N:-99}.24
+    restart: unless-stopped
+
+  api:
+    build: .
+    image: api-cache-05-api
+    environment:
+      FLAG: "${FLAG:-flag{EJEMPLO_LOCAL}}"
+      TEAM_ID: "${TEAM_ID:-team_local}"
+      CHALLENGE_ID: "api-cache-05"
+      COLLECTOR_URL: "${COLLECTOR_URL:-http://collector:9000}"
+      EDGE_BASE: "http://cache:8080"
+    networks:
+      team_net:
+        ipv4_address: 172.30.${TEAM_N:-99}.124
+    restart: unless-stopped

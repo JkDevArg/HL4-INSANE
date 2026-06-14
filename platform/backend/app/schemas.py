@@ -35,7 +35,7 @@ class ChallengeOut(BaseModel):
 
 
 class SubmitRequest(BaseModel):
-    flag: str = Field(..., examples=["flag{0123456789abcdef0123}"])
+    flag: str = Field(..., examples=["HL4{0123456789abcdef0123}"])
 
 
 class SubmitResponse(BaseModel):

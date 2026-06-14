@@ -1,0 +1,18 @@
+id: api-grpc-04
+category: api
+name: "Silent Channel"
+difficulty: insane
+type: per-team
+serve: grpc
+flag_via: flag-service
+points: 600
+ports: [8080]
+siem: true
+description: >
+  "SilentChannel", un servidor gRPC interno. La reflexión gRPC está habilitada,
+  así que puedes listar sus servicios... pero lo que ves no es todo lo que hay.
+  Existe un canal de operador "silencioso" que la reflexión NO anuncia. El
+  servicio público es demasiado hablador: sus mensajes y diagnósticos filtran
+  el .proto del servicio administrativo oculto y la clave del canal. Reconstruye
+  el método admin, fórjale la metadata correcta e invócalo. Endpoint gRPC
+  (HTTP/2): <host>:8080

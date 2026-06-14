@@ -1,0 +1,26 @@
+# web-race-05 — Double Spend. Parametrizable por equipo: TEAM_ID + FLAG + TEAM_N + CHAL_NET.
+#   Lanzado por infra/launch-team-challenges.sh:
+#     TEAM_ID=team_03 TEAM_N=3 FLAG="flag{...}" CHAL_NET=ctf_team_03 \
+#       docker compose -p ctf_team_03_web_race_05 up -d --build
+#
+# AISLAMIENTO: el servicio vive SOLO en la red del equipo (172.30.N.0/24), sin
+# publicar puertos al host. El jugador alcanza el "Coin Vault" por la VPN.
+#   - vault: Coin Vault (coupon exchange, TOCTOU/race) -> .15:8080
+networks:
+  team_net:
+    external: true
+    name: ${CHAL_NET:-ctf_local}
+
+services:
+  vault:
+    build: .
+    image: web-race-05-vault
+    environment:
+      FLAG: "${FLAG:-flag{EJEMPLO_LOCAL}}"
+      TEAM_ID: "${TEAM_ID:-team_local}"
+      CHALLENGE_ID: "web-race-05"
+      COLLECTOR_URL: "${COLLECTOR_URL:-http://collector:9000}"
+    networks:
+      team_net:
+        ipv4_address: 172.30.${TEAM_N:-99}.15
+    restart: unless-stopped

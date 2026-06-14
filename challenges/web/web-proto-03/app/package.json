@@ -1,0 +1,14 @@
+{
+  "name": "doom-templates",
+  "version": "1.0.0",
+  "private": true,
+  "description": "web-proto-03 — Doom Templates (Prototype Pollution -> auth bypass + RCE via EJS gadget). INSANE.",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "dependencies": {
+    "express": "4.18.2",
+    "ejs": "3.1.6"
+  }
+}

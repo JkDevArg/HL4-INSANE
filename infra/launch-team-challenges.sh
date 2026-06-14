@@ -29,8 +29,14 @@ TEAM_NET="ctf_${TEAM}"                 # red docker aislada del equipo
 CHALLENGES=(
     "web/web-supply-01"
     "web/web-ssrf-02"
+    "web/web-jwt-04"
+    "web/web-race-05"
+    "web/web-proto-03"
     "api/api-bola-01"
+    "api/api-bola-02"
     "api/api-graphql-03"
+    "api/api-grpc-04"
+    "api/api-cache-05"
     "crypto/crypto-oracle-01"
     "crypto/crypto-aesgcm-04"
 )

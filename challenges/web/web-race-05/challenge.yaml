@@ -1,0 +1,19 @@
+id: web-race-05
+category: web
+name: "Double Spend"
+difficulty: insane
+type: per-team
+serve: http
+flag_via: flag-service
+points: 600
+ports: [8080]
+siem: true
+description: >
+  "Coin Vault" es un canjeador de cupones: tu boveda arranca con un puñado de
+  cupones y cada canje en /redeem gasta 1 cupon y te acredita coins. El maximo
+  que puedes acumular jugando en serie esta acotado, y la camara del tesoro
+  (/treasure) solo abre con un saldo que ese maximo nunca alcanza. Pero el
+  canje no es atomico: entre comprobar el saldo y descontarlo hay una ventana.
+  Dispara muchas peticiones concurrentes, gasta el mismo cupon varias veces
+  (double spend) y supera el umbral para que el tesoro suelte la flag.
+  Empieza por http://<host>:8080/

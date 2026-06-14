@@ -1,0 +1,31 @@
+// vault.proto — Servicio ADMINISTRATIVO OCULTO "vault.AdminService".
+//
+// IMPORTANTE (diseño del reto):
+//   Este servicio SÍ está registrado y atendiendo en el servidor gRPC, pero
+//   NO se expone por reflexión. La reflexión solo anuncia channel.SilentChannel.
+//   El jugador debe RECONSTRUIR este .proto a partir de las pistas filtradas
+//   por el servicio público y luego invocar GetVault con la metadata correcta.
+//
+//   El reto NO entrega este archivo al jugador.
+syntax = "proto3";
+
+package vault;
+
+service AdminService {
+  // Devuelve el contenido del vault (la FLAG) SOLO si la llamada incluye la
+  // metadata gRPC "x-channel-key" con el valor correcto y el campo
+  // confirm == true.
+  rpc GetVault (VaultRequest) returns (VaultReply) {}
+}
+
+message VaultRequest {
+  // Identificador del vault a abrir. El operador usa "primary".
+  string vault_id = 1;
+  // Confirmación explícita; debe ser true.
+  bool confirm = 2;
+}
+
+message VaultReply {
+  string flag = 1;
+  string message = 2;
+}
