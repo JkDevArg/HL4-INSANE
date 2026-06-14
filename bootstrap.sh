@@ -107,6 +107,7 @@ MASTER_SECRET=$(openssl rand -hex 32)
 JWT_SECRET=$(openssl rand -hex 32)
 POSTGRES_PASSWORD=$(openssl rand -hex 16)
 GRAFANA_PASSWORD=$(openssl rand -hex 12)
+ADMIN_PASSWORD=$(openssl rand -hex 24)
 DISCORD_WEBHOOK_URL=
 CTF_NAME=CTFHL4-INSANE
 EOF
@@ -118,7 +119,10 @@ fi
 # ---------------------------------------------------------------------------
 # 3) Plataforma + SIEM (docker compose) + seed
 # ---------------------------------------------------------------------------
-step "3/9 Construyendo y levantando plataforma + SIEM"
+step "3/9 Construyendo y levantando plataforma + SIEM + monitoreo"
+# 'up -d --build' levanta TODOS los servicios del compose: plataforma, flag-service,
+# SIEM (loki/promtail/grafana/collector/caster), y monitoreo (cadvisor/prometheus/
+# admin-panel). El DNS del daemon Docker (paso 1) permite que los builds resuelvan.
 ( cd infra && docker compose up -d --build )
 echo "[*] Esperando a que la API esté lista..."
 for i in $(seq 1 30); do
@@ -223,12 +227,17 @@ fi
 # Resumen
 # ---------------------------------------------------------------------------
 GP="$(grep '^GRAFANA_PASSWORD=' infra/.env | cut -d= -f2)"
+AP="$(grep '^ADMIN_PASSWORD=' infra/.env | cut -d= -f2)"
 step "DESPLIEGUE COMPLETO"
 cat <<RESUMEN
 
   Plataforma (jugadores, vía VPN) : http://10.10.100.10
   SIEM público (comentaristas)    : http://${SERVER_IP}:8090   (NO desde la VPN)
-  Grafana admin (túnel SSH)       : ssh -L 3000:127.0.0.1:3000 <user>@${SERVER_IP}  -> http://localhost:3000  (admin / ${GP})
+
+  --- Solo admin (túnel SSH; nada de esto es accesible para jugadores/internet) ---
+  ssh -L 8091:127.0.0.1:8091 -L 3000:127.0.0.1:3000 <user>@${SERVER_IP}
+  Panel recursos+control (ON/OFF)  : http://localhost:8091   (password: ${AP})
+  Grafana (SIEM + recursos)        : http://localhost:3000   (admin / ${GP})
 
   Certificados .ovpn              : /etc/openvpn/clients/  (team_NN_p1..p4 = 1 por integrante)
   Credenciales de equipos         : impresas arriba por seed.py (+ credentials.txt en el contenedor)
