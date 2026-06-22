@@ -60,7 +60,7 @@ def anonymize_payload(s) -> str:
 # ----------------------------------------------------------------------------
 LOKI_URL = os.environ.get("LOKI_URL", "http://loki:3100").rstrip("/")
 WINDOW_MIN = int(os.environ.get("WINDOW_MIN", "15"))
-CTF_NAME = os.environ.get("CTF_NAME", "CTFHL4-INSANE")
+CTF_NAME = os.environ.get("CTF_NAME", "CTF HACKL4BS")
 
 STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
 
@@ -116,23 +116,10 @@ REQ_DEDUP_SEC = 8
 # de la red de retos a su nombre legible para narrar "qué reto atacan".
 # ----------------------------------------------------------------------------
 CHALLENGE_MAP = {
-    10: "web-supply-01 · Poisoned Pipeline",
-    11: "web-supply-01 · registry (PyPI)",
-    12: "web-ssrf-02 · Metadata Mirage",
-    13: "web-ssrf-02 · metadata interno",
-    14: "web-jwt-04",
-    15: "web-race-05",
-    16: "web-proto-03",
-    20: "api-bola-01 · Tenant Trespass",
-    21: "api-bola-02",
-    22: "api-graphql-03 · Introspection Abyss",
-    23: "api-grpc-04",
-    24: "api-cache-05",
-    30: "crypto-oracle-01 · Padding Whisperer",
-    31: "crypto-lattice-02",
-    32: "crypto-rsa-03",
-    33: "crypto-aesgcm-04 · Nonce Reuse Roulette",
-    34: "crypto-prng-05",
+    10: "Reto Web",
+    20: "Reto API",
+    30: "Reto Cripto",
+    40: "Reto Reversing",
 }
 
 _CHALLENGE_NET = ipaddress.ip_network("172.30.0.0/16")
@@ -381,15 +368,17 @@ def map_vpn(ts_ns, line, labels):
     if not isinstance(detail, dict):
         detail = {}
 
+    src_ip = ev.get("src_ip") or detail.get("src_ip") or ""
     team = team_from_team_id(ev.get("team_id") or labels.get("team_id"))
     if not team:
-        team = team_from_ip(ev.get("src_ip") or detail.get("src_ip") or "")
+        team = team_from_ip(src_ip)
     team = team or "Equipo ?"
+    who = _who(team, src_ip)  # añade "· Jugador N" si la IP VPN lo identifica
 
     if etype == "vpn_connect":
-        return _item(ts_ns, team, "vpn_connect", "info", f"{team} se conectó a la VPN", priority=2)
+        return _item(ts_ns, team, "vpn_connect", "info", f"{who} se conectó a la VPN", priority=2)
     if etype == "vpn_disconnect":
-        return _item(ts_ns, team, "vpn_disconnect", "info", f"{team} se desconectó de la VPN", priority=2)
+        return _item(ts_ns, team, "vpn_disconnect", "info", f"{who} se desconectó de la VPN", priority=2)
     if etype == "vpn_ban":
         return _item(
             ts_ns, team, "ban", "critical",
@@ -1065,11 +1054,11 @@ async def collect_scoreboard():
 # ----------------------------------------------------------------------------
 # Estado por equipo (conexiones VPN, puntos, status) y violaciones
 # ----------------------------------------------------------------------------
-TEAM_IDS = [f"team_{i:02d}" for i in range(1, 11)]
+TEAM_IDS = [f"team_{i:02d}" for i in range(1, 6)]
 
 
 def _team_id_to_label(team_id: str) -> str:
-    """'team_03' -> 'Equipo 03' (para los 10 equipos fijos)."""
+    """'team_03' -> 'DARKHIVE' (para los 5 equipos del CTF)."""
     return team_from_team_id(team_id) or anonymize(team_id)
 
 

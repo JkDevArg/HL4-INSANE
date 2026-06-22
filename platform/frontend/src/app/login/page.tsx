@@ -65,10 +65,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         <div className="mb-6 text-center">
           <div className="font-mono text-3xl font-bold tracking-tight text-neon">
-            <span className="text-neon-cyan">&gt;_</span> CTFHL4
-            <span className="ml-2 rounded border border-danger/60 px-2 py-0.5 align-middle text-xs font-bold uppercase tracking-widest text-danger">
-              insane
-            </span>
+            <span className="text-neon-cyan">&gt;_</span> CTF HACKL4BS
           </div>
           <p className="mt-2 font-mono text-sm text-muted">Plataforma de retos — HackL4bs</p>
         </div>

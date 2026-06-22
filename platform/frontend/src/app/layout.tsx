@@ -15,7 +15,7 @@ const sans = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'CTFHL4-INSANE',
+  title: 'CTF HACKL4BS',
   description: 'Plataforma del CTF HackL4bs — acceso exclusivo vía VPN.',
 };
 

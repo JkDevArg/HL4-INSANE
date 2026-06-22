@@ -31,10 +31,18 @@ _IP_RE = re.compile(
     r"(?![\w.])"
 )
 
+TEAM_NAMES = {
+    1: "Bytreach",
+    2: "MoodySploiters",
+    3: "DARKHIVE",
+    4: "Threat Hunters",
+    5: "Capa 8",
+}
+
 
 def _team_label(n: int) -> str:
-    """team N -> 'Equipo NN' (dos dígitos)."""
-    return f"Equipo {n:02d}"
+    """team N -> nombre del equipo (o 'Equipo NN' como fallback)."""
+    return TEAM_NAMES.get(n, f"Equipo {n:02d}")
 
 
 def anonymize_ip(ip: str) -> str:
@@ -100,10 +108,11 @@ def team_from_ip(ip: str):
 
 
 def team_from_team_id(team_id):
-    """team_03 -> 'Equipo 03'. Cualquier otra cosa -> None."""
+    """team_03 / team_01_p2 -> nombre del equipo. Cualquier otra cosa -> None."""
     if not team_id:
         return None
-    m = re.fullmatch(r"team_?(\d{1,2})", str(team_id).strip(), re.IGNORECASE)
+    # Acepta team_NN y también team_NN_pX (certs por jugador).
+    m = re.match(r"team_?(\d{1,2})(?:_p\d+)?$", str(team_id).strip(), re.IGNORECASE)
     if not m:
         return None
     return _team_label(int(m.group(1)))
@@ -123,8 +132,8 @@ def anonymize(text: str) -> str:
 if __name__ == "__main__":
     # ---- Tests rápidos de privacidad ----
     cases_ip = [
-        ("10.10.3.4", "Equipo 03"),
-        ("10.10.1.100", "Equipo 01"),
+        ("10.10.3.4", "DARKHIVE"),
+        ("10.10.1.100", "Bytreach"),
         ("10.10.10.250", "Equipo 10"),
         ("10.10.100.10", "plataforma"),
         ("10.10.100.2", "plataforma"),
@@ -132,7 +141,7 @@ if __name__ == "__main__":
         ("10.10.200.30", "siem"),
         ("10.10.0.5", "interno"),
         ("10.10.55.5", "interno"),
-        ("172.30.3.5", "reto(Equipo 03)"),
+        ("172.30.3.5", "reto(DARKHIVE)"),
         ("172.30.10.9", "reto(Equipo 10)"),
         ("172.30.99.9", "reto"),
         ("192.168.1.5", "interno"),
@@ -152,11 +161,11 @@ if __name__ == "__main__":
     cases_text = [
         (
             "blocked 10.10.3.4 -> 10.10.100.10 dns 8.8.8.8",
-            "blocked Equipo 03 -> plataforma dns externo",
+            "blocked DARKHIVE -> plataforma dns externo",
         ),
         (
-            "Equipo 03 intentó resolver chat.openai.com desde 10.10.3.4",
-            "Equipo 03 intentó resolver chat.openai.com desde Equipo 03",
+            "DARKHIVE intentó resolver chat.openai.com desde 10.10.3.4",
+            "DARKHIVE intentó resolver chat.openai.com desde DARKHIVE",
         ),
         (
             "nmap scan 10.10.7.22 hacia 172.30.7.10",
