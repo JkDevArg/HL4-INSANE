@@ -1,0 +1,16 @@
+id: api-cloudconnect
+category: api
+name: "CloudConnect OAuth API"
+difficulty: insane
+type: per-team
+serve: http
+flag_via: flag-service
+points: 500
+ports: [5002]
+siem: true
+description: >
+  "CloudConnect", API de integración cloud con autenticación OAuth2/JWT.
+  El servicio implementa RS256 para tokens seguros y expone sus claves públicas
+  en /jwks.json según el estándar. Algo en la validación de algoritmos permite
+  escalar privilegios sin tener la clave privada.
+  Endpoint: http://<host>:5002

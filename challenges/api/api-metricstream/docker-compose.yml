@@ -1,0 +1,19 @@
+# api-metricstream — MetricStream (header injection). Red aislada del equipo.
+networks:
+  team_net:
+    external: true
+    name: ${CHAL_NET:-ctf_local}
+
+services:
+  api:
+    build: .
+    image: api-metricstream
+    environment:
+      FLAG: "${FLAG:-flag{EJEMPLO_LOCAL}}"
+      TEAM_ID: "${TEAM_ID:-team_local}"
+      CHALLENGE_ID: "api-metricstream"
+      COLLECTOR_URL: "${COLLECTOR_URL:-http://collector:9000}"
+    networks:
+      team_net:
+        ipv4_address: 172.30.${TEAM_N:-99}.20
+    restart: unless-stopped

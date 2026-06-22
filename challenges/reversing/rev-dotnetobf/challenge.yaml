@@ -1,0 +1,22 @@
+id: rev-dotnetobf
+name: "DotNetObf"
+category: reversing
+difficulty: insane
+type: per-team
+serve: http
+flag_via: flag-service
+points: 500
+ports: [6005]
+siem: true
+description: >
+  Un validador de licencias distribuido como bytecode Python compilado (.pyc).
+  El nombre evoca .NET pero el reto es ingenieria inversa de bytecode CPython 3.11.
+  Las variables han sido renombradas a identificadores crípticos (__0, __1, __2...)
+  y la clave esta embebida como una tupla de enteros con una capa de XOR decoy.
+  Descarga el .pyc desde /binary, decompila con uncompyle6 / pycdc / dis y
+  extrae la clave de 14 caracteres.
+connection_info: "http://{HOST}:6005"
+author: "HL4bs"
+flags:
+  - type: static
+    value: "HL4{d0tnet_0bf_pyc_r3v3rs3d}"

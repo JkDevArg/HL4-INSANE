@@ -1,0 +1,16 @@
+id: api-hrmpro
+category: api
+name: "HRMPro Human Resources API"
+difficulty: insane
+type: per-team
+serve: http
+flag_via: flag-service
+points: 500
+ports: [5005]
+siem: true
+description: >
+  "HRMPro", plataforma de gestión de recursos humanos con API REST. Los
+  empleados pueden actualizar su perfil (email, departamento, teléfono) pero
+  ciertos campos privilegiados están protegidos por una lista blanca. Los
+  registros de nómina de nivel EJECUTIVO contienen información clasificada.
+  Endpoint: http://<host>:5005

@@ -71,7 +71,7 @@ deepseek.com
 chat.deepseek.com
 api.deepseek.com
 
-# --- Otros motores frecuentes (ampliable) ---
+# --- Otros motores frecuentes ---
 you.com
 phind.com
 character.ai
@@ -86,14 +86,70 @@ pi.ai
 blackbox.ai
 chat.lmsys.org
 lmarena.ai
+inflection.ai
+ai21.com
+api.ai21.com
+aleph-alpha.com
+forefront.ai
+nat.dev
+ora.sh
+quillbot.com
+writesonic.com
+jasper.ai
+copy.ai
 
-# --- Microsoft Copilot / Office AI (incluye ecs.office.com pedido) ---
+# --- Herramientas de codificación IA (IDE assistants) ---
+cursor.sh
+api.cursor.sh
+codeium.com
+api.codeium.com
+continue.dev
+tabnine.com
+codestral.mistral.ai
+cody.sourcegraph.com
+sourcegraph.com
+replit.com
+ghostwriter.replit.com
+
+# --- GitHub Copilot (endpoints adicionales) ---
+githubcopilot.com
+copilot-proxy.githubusercontent.com
+api.github.com
+uploads.github.com
+
+# --- Microsoft Copilot / Bing AI / Office AI ---
 ecs.office.com
 copilot.cloud.microsoft
 m365.cloud.microsoft
 substrate.office.com
 edgeservices.bing.com
-www.bing.com/chat
+www.bing.com
+bing.com
+sydney.bing.com
+copilot.bing.com
+r.bing.com
+
+# --- Azure OpenAI (endpoint de corporativos que usan Azure) ---
+openai.azure.com
+cognitiveservices.azure.com
+api.cognitive.microsoft.com
+
+# --- Vertex AI / Google Cloud AI ---
+us-central1-aiplatform.googleapis.com
+aiplatform.googleapis.com
+vertexai.googleapis.com
+ml.googleapis.com
+
+# --- Amazon Bedrock ---
+bedrock.us-east-1.amazonaws.com
+bedrock-runtime.us-east-1.amazonaws.com
+bedrock.us-west-2.amazonaws.com
+bedrock-runtime.us-west-2.amazonaws.com
+
+# --- Wolfram Alpha (ayuda en crypto/math) ---
+wolframalpha.com
+api.wolframalpha.com
+www.wolframalpha.com
 
 # --- Proveedores DoH (DNS-over-HTTPS): bloquearlos evita evadir el sinkhole ---
 # Nota: 1.1.1.1 / 8.8.8.8 por IP no se bloquean vía DNS; ver ai-ip-blocklist.sh.
@@ -105,3 +161,5 @@ dns.quad9.net
 doh.opendns.com
 dns.nextdns.io
 doh.cleanbrowsing.org
+doh.dns.apple.com
+doh.alidns.com

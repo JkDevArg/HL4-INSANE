@@ -1,0 +1,15 @@
+id: crypto-lengthext
+name: "Hash Extension Heist"
+category: crypto
+difficulty: insane
+type: per-team
+serve: http
+flag_via: flag-service
+points: 600
+ports: [9999]
+siem: true
+description: >
+  Sistema de autenticacion basado en MAC = MD5(secreto || mensaje). El secreto
+  tiene 16 bytes (te lo dicen). Tienes un MAC valido para "role=user". Forja
+  un MAC valido para un mensaje extendido que contenga "role=admin" sin conocer
+  el secreto. La extension de longitud MD5 es tu arma. `curl http://<host>:9999/info`

@@ -1,5 +1,6 @@
 """Esquemas Pydantic de request/response de la API publica."""
 from datetime import datetime
+from typing import Literal
 
 from pydantic import BaseModel, Field
 
@@ -24,14 +25,15 @@ class MeResponse(BaseModel):
 
 # --- Challenges ---
 class ChallengeOut(BaseModel):
-    id: str                      # challenge_id (p.ej. web-supply-01)
+    id: str
     category: str
     name: str
     difficulty: str
     points: int
     description: str
     connection_info: str
-    solved: bool                 # si el equipo actual ya lo resolvio
+    solved: bool
+    instance_status: str = "stopped"
 
 
 class SubmitRequest(BaseModel):
@@ -45,6 +47,16 @@ class SubmitResponse(BaseModel):
     message: str
 
 
+# --- Instances ---
+InstanceStatus = Literal["stopped", "starting", "running", "error"]
+
+
+class InstanceOut(BaseModel):
+    challenge_id: str
+    status: InstanceStatus
+    message: str = ""
+
+
 # --- Scoreboard ---
 class ScoreboardEntry(BaseModel):
     rank: int
@@ -52,7 +64,7 @@ class ScoreboardEntry(BaseModel):
     display_name: str
     points: int
     solves: int
-    last_solve: datetime | None = None  # para desempate (mas temprano gana)
+    last_solve: datetime | None = None
 
 
 class ScoreboardResponse(BaseModel):

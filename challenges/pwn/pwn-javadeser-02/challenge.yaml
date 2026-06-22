@@ -1,0 +1,17 @@
+id: pwn-javadeser-02
+category: pwn
+name: "Equicore"
+difficulty: insane
+type: per-team
+serve: http
+flag_via: flag-service
+points: 750
+ports: [8080]
+siem: true
+description: >
+  "Equicore" es un buro de credito. Su portal interno de analistas (Java) te
+  recibe como invitado en http://<host>:8080/ y "recuerda" tu sesion guardando
+  un blob que puedes restaurar en /api/session/restore. El servidor confia en
+  ese blob mas de la cuenta. Mira que hay en el classpath del servicio, entiende
+  como restaura tu sesion, y llega a ejecutar codigo en el servidor para leer la
+  flag. Es la misma clase de bug que costo ~$1.4 mil millones en una brecha real.

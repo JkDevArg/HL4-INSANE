@@ -1,0 +1,22 @@
+id: rev-packeddelta
+name: "PackedDelta"
+category: reversing
+difficulty: insane
+type: per-team
+serve: http
+flag_via: flag-service
+points: 500
+ports: [6004]
+siem: true
+description: >
+  Un binario con capa de "empaquetado" XOR: la contrasena correcta esta
+  almacenada cifrada en el segmento de datos usando una clave de 4 bytes
+  embebida. Ademas, el binario calcula un checksum de si mismo al arrancar
+  para aparentar proteccion anti-tampering. Descarga, analiza la logica de
+  descifrado XOR, extrae la clave y el target cifrado, y recupera la
+  contrasena en texto plano.
+connection_info: "http://{HOST}:6004"
+author: "HL4bs"
+flags:
+  - type: static
+    value: "HL4{d3lta_xor_pack_d3crypt3d}"

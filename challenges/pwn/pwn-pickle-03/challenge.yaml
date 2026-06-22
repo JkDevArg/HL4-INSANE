@@ -1,0 +1,18 @@
+id: pwn-pickle-03
+category: pwn
+name: "Phantom Cache"
+difficulty: insane
+type: per-team
+serve: http
+flag_via: flag-service
+points: 700
+ports: [8080]
+siem: true
+description: >
+  "Phantom Cache": un store de sesiones SSO distribuido. Tu token de sesión ES
+  tu estado serializado y firmado (formato '<payload_b64>.<hmac_sha256>'). El
+  servidor verifica la firma y rehidrata tu sesión en cada petición. La firma
+  parece blindar todo... pero ¿qué pasa si filtras la clave? Empieza por
+  http://<host>:8080/ — el servicio arrastra restos de un .git y un endpoint de
+  debug heredado. Encadena fuga-de-clave + forja de token firmado para pasar de
+  "guest" a ejecución de código y leer la flag.

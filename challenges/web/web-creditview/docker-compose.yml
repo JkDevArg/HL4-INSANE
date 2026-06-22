@@ -1,0 +1,25 @@
+# web-creditview — CreditView API. Parametrizable por equipo: TEAM_ID + FLAG + TEAM_N + CHAL_NET.
+#   Lanzado por infra/launch-team-challenges.sh:
+#     TEAM_ID=team_01 TEAM_N=1 FLAG="flag{...}" CHAL_NET=ctf_team_01 \
+#       docker compose -p ctf_team_01_web_creditview up -d --build
+#
+# AISLAMIENTO: el servicio vive SOLO en la red del equipo (172.30.N.0/24).
+#   - app: CreditView API (pickle deserialization) -> .10:8080
+networks:
+  team_net:
+    external: true
+    name: ${CHAL_NET:-ctf_local}
+
+services:
+  app:
+    build: .
+    image: web-creditview-app
+    environment:
+      FLAG: "${FLAG:-flag{EJEMPLO_LOCAL}}"
+      TEAM_ID: "${TEAM_ID:-team_local}"
+      CHALLENGE_ID: "web-creditview"
+      COLLECTOR_URL: "${COLLECTOR_URL:-http://collector:9000}"
+    networks:
+      team_net:
+        ipv4_address: 172.30.${TEAM_N:-99}.10
+    restart: unless-stopped

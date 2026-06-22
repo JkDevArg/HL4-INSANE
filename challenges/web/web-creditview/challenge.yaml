@@ -1,0 +1,21 @@
+id: web-creditview
+category: web
+name: "CreditView — Deuda de Legado"
+difficulty: insane
+type: per-team
+serve: http
+flag_via: flag-service
+points: 700
+ports: [8080]
+siem: true
+description: >
+  Portal de historial crediticio de una fintech. El endpoint /api/report acepta
+  un formato binario propietario "CreditView Filter" (Content-Type:
+  application/x-creditview-filter). El parser tiene un problema de seguridad
+  que los auditores no encontraron: internamente deserializa pickle.
+  El formato tiene magic bytes, version, longitud, CRC32 y payload.
+  Un filtro "avanzado" con report_type=CONFIDENTIAL desbloquea datos sensibles.
+  El deserializador tiene una lista negra, pero incompleta.
+  Analiza el código fuente expuesto, reversa el formato binario,
+  construye un payload válido y bypasea la lista negra.
+  Empieza por http://<host>:8080/

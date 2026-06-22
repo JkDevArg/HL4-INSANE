@@ -1,0 +1,19 @@
+id: web-taskflow
+category: web
+name: "TaskFlow — Deserialización en Backup"
+difficulty: insane
+type: per-team
+serve: http
+flag_via: flag-service
+points: 750
+ports: [8080]
+siem: true
+description: >
+  Gestor de proyectos con módulo de backup. Puedes exportar e importar
+  proyectos como archivos .tar.gz. El importador extrae el archivo y
+  procesa el archivo de metadatos interno (__metadata__.pkl).
+  La importación valida una clave derivada: SERVER_IMPORT_KEY está
+  ofuscada en el código fuente como hex XOR'd. Un filtro bloquea
+  módulos peligrosos obvios. Encuentra el bypass y forja un backup
+  malicioso que te entregue la flag al ser importado.
+  Empieza por http://<host>:8080/

@@ -1,0 +1,15 @@
+id: crypto-hastad
+name: "Broadcast Intercept"
+category: crypto
+difficulty: insane
+type: per-team
+serve: http
+flag_via: flag-service
+points: 650
+ports: [9999]
+siem: true
+description: >
+  Tres servidores RSA-1024 con e=3 cifran el mismo mensaje (la flag) con
+  tres claves publicas distintas. Usando el Teorema Chino del Resto y raiz
+  cubica entera, recupera el plaintext sin factorizar ningun modulo.
+  El ataque de Hastad sobre broadcast RSA. `curl http://<host>:9999/ciphertexts`

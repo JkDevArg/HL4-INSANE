@@ -1,0 +1,17 @@
+id: pwn-pgrce-01
+category: pwn
+name: "MoneyPipe"
+difficulty: insane
+type: per-team
+serve: http
+flag_via: flag-service
+points: 700
+ports: [8080]
+siem: true
+description: >
+  "MoneyPipe" es el pipeline de reportes financieros de una fintech. La API de
+  reportes vive en http://<host>:8080/ y filtra transacciones del data warehouse
+  via GET /api/v1/reports?filter=... El motor de consultas confia demasiado en
+  ese filtro. El warehouse (PostgreSQL) corre con un rol mal configurado: la flag
+  no esta en la base ni en la API, solo en el servidor de la base de datos.
+  Convierte la inyeccion en algo mas que leer filas.

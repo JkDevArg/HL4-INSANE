@@ -1,7 +1,5 @@
-// Tipos que reflejan EXACTAMENTE el contrato de la platform-api.
-// Ver docs/ARCHITECTURE.md y backend/app/schemas.py.
-
-export type Category = 'web' | 'api' | 'crypto';
+export type Category = 'web' | 'api' | 'crypto' | 'reversing';
+export type InstanceStatus = 'stopped' | 'starting' | 'running' | 'error';
 
 export interface TokenResponse {
   access_token: string;
@@ -16,14 +14,21 @@ export interface MeResponse {
 }
 
 export interface Challenge {
-  id: string; // p.ej. web-supply-01
+  id: string;
   category: Category;
   name: string;
-  difficulty: string; // siempre "insane" en este evento
+  difficulty: string;
   points: number;
   description: string;
-  connection_info: string; // host:puerto de la instancia del equipo
+  connection_info: string;
   solved: boolean;
+  instance_status: InstanceStatus;
+}
+
+export interface InstanceOut {
+  challenge_id: string;
+  status: InstanceStatus;
+  message?: string;
 }
 
 export interface SubmitResponse {
@@ -39,7 +44,7 @@ export interface ScoreboardEntry {
   display_name: string;
   points: number;
   solves: number;
-  last_solve: string | null; // ISO datetime
+  last_solve: string | null;
 }
 
 export interface ScoreboardResponse {

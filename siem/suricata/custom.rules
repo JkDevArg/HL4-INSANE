@@ -103,9 +103,80 @@ alert http any any -> $HOME_NET $HTTP_PORTS (msg:"[WEB-EXPLOIT] Herramienta ofen
 
 
 # -----------------------------------------------------------------------------
-# 5) EXTRA — pistas de exfiltración / túneles (opcional, comentado)
+# 5) DETECCIÓN DE USO DE IA  [AI-DETECT]
 # -----------------------------------------------------------------------------
-# Descomenta y ajusta si quieres detectar resolución masiva de DNS (posible
-# tunneling) hacia el resolver interno.
+# Detectamos intentos de uso de LLMs/IA desde la VPN del CTF.
+# Capas de detección:
+#   a) TLS SNI (ClientHello — sin descifrar el tráfico)
+#   b) HTTP Host header (tráfico no cifrado o tras proxy)
+#   c) HTTP User-Agent (SDKs de IA conocidos)
+#   d) DNS queries para dominios de IA
 #
-# alert dns any any -> $DNS_SERVERS 53 (msg:"[DNS] Tasa de consultas DNS anormal (posible tunneling)"; threshold:type both, track by_src, count 100, seconds 10; classtype:bad-unknown; sid:1000040; rev:1;)
+# NOTA: el sinkhole dnsmasq (0.0.0.0) bloquea la mayoría. Estas reglas ALERTAN
+# incluso si el sinkhole falla (cliente con DNS propio / IP directa).
+# Todas las alertas van a eve.json → Loki → Grafana (dashboard ai-alerts).
+
+# 5.1 TLS SNI — OpenAI / ChatGPT
+alert tls $HOME_NET any -> any any (msg:"[AI-DETECT] TLS SNI OpenAI/ChatGPT detectado"; flow:to_server,established; tls.sni; content:"openai.com"; nocase; classtype:policy-violation; sid:1000050; rev:1;)
+alert tls $HOME_NET any -> any any (msg:"[AI-DETECT] TLS SNI ChatGPT detectado"; flow:to_server,established; tls.sni; content:"chatgpt.com"; nocase; classtype:policy-violation; sid:1000051; rev:1;)
+
+# 5.2 TLS SNI — Anthropic / Claude
+alert tls $HOME_NET any -> any any (msg:"[AI-DETECT] TLS SNI Anthropic/Claude detectado"; flow:to_server,established; tls.sni; content:"anthropic.com"; nocase; classtype:policy-violation; sid:1000052; rev:1;)
+alert tls $HOME_NET any -> any any (msg:"[AI-DETECT] TLS SNI Claude.ai detectado"; flow:to_server,established; tls.sni; content:"claude.ai"; nocase; classtype:policy-violation; sid:1000053; rev:1;)
+
+# 5.3 TLS SNI — Google Gemini / Bard / Vertex AI
+alert tls $HOME_NET any -> any any (msg:"[AI-DETECT] TLS SNI Google Gemini detectado"; flow:to_server,established; tls.sni; content:"gemini.google.com"; nocase; classtype:policy-violation; sid:1000054; rev:1;)
+alert tls $HOME_NET any -> any any (msg:"[AI-DETECT] TLS SNI Google AI Studio detectado"; flow:to_server,established; tls.sni; content:"generativelanguage.googleapis.com"; nocase; classtype:policy-violation; sid:1000055; rev:1;)
+alert tls $HOME_NET any -> any any (msg:"[AI-DETECT] TLS SNI Vertex AI detectado"; flow:to_server,established; tls.sni; content:"aiplatform.googleapis.com"; nocase; classtype:policy-violation; sid:1000056; rev:1;)
+
+# 5.4 TLS SNI — Microsoft Copilot / Bing AI / Azure OpenAI
+alert tls $HOME_NET any -> any any (msg:"[AI-DETECT] TLS SNI Microsoft Copilot detectado"; flow:to_server,established; tls.sni; content:"copilot.microsoft.com"; nocase; classtype:policy-violation; sid:1000057; rev:1;)
+alert tls $HOME_NET any -> any any (msg:"[AI-DETECT] TLS SNI Azure OpenAI detectado"; flow:to_server,established; tls.sni; content:"openai.azure.com"; nocase; classtype:policy-violation; sid:1000058; rev:1;)
+alert tls $HOME_NET any -> any any (msg:"[AI-DETECT] TLS SNI Bing AI detectado"; flow:to_server,established; tls.sni; content:"sydney.bing.com"; nocase; classtype:policy-violation; sid:1000059; rev:1;)
+
+# 5.5 TLS SNI — Perplexity / Poe / DeepSeek / Mistral / xAI
+alert tls $HOME_NET any -> any any (msg:"[AI-DETECT] TLS SNI Perplexity AI detectado"; flow:to_server,established; tls.sni; content:"perplexity.ai"; nocase; classtype:policy-violation; sid:1000060; rev:1;)
+alert tls $HOME_NET any -> any any (msg:"[AI-DETECT] TLS SNI DeepSeek detectado"; flow:to_server,established; tls.sni; content:"deepseek.com"; nocase; classtype:policy-violation; sid:1000061; rev:1;)
+alert tls $HOME_NET any -> any any (msg:"[AI-DETECT] TLS SNI Mistral AI detectado"; flow:to_server,established; tls.sni; content:"mistral.ai"; nocase; classtype:policy-violation; sid:1000062; rev:1;)
+alert tls $HOME_NET any -> any any (msg:"[AI-DETECT] TLS SNI xAI/Grok detectado"; flow:to_server,established; tls.sni; content:"x.ai"; nocase; classtype:policy-violation; sid:1000063; rev:1;)
+
+# 5.6 TLS SNI — AI coding assistants
+alert tls $HOME_NET any -> any any (msg:"[AI-DETECT] TLS SNI Cursor AI detectado"; flow:to_server,established; tls.sni; content:"cursor.sh"; nocase; classtype:policy-violation; sid:1000064; rev:1;)
+alert tls $HOME_NET any -> any any (msg:"[AI-DETECT] TLS SNI Codeium detectado"; flow:to_server,established; tls.sni; content:"codeium.com"; nocase; classtype:policy-violation; sid:1000065; rev:1;)
+alert tls $HOME_NET any -> any any (msg:"[AI-DETECT] TLS SNI GitHub Copilot proxy detectado"; flow:to_server,established; tls.sni; content:"copilot-proxy.githubusercontent.com"; nocase; classtype:policy-violation; sid:1000066; rev:1;)
+
+# 5.7 HTTP Host header — APIs de IA (tráfico plano o tras proxy)
+alert http $HOME_NET any -> any any (msg:"[AI-DETECT] HTTP Host OpenAI API detectado"; flow:to_server,established; http.header; content:"Host: api.openai.com"; nocase; classtype:policy-violation; sid:1000070; rev:1;)
+alert http $HOME_NET any -> any any (msg:"[AI-DETECT] HTTP Host Anthropic API detectado"; flow:to_server,established; http.header; content:"Host: api.anthropic.com"; nocase; classtype:policy-violation; sid:1000071; rev:1;)
+alert http $HOME_NET any -> any any (msg:"[AI-DETECT] HTTP Host Google Generative AI detectado"; flow:to_server,established; http.header; content:"generativelanguage.googleapis.com"; nocase; classtype:policy-violation; sid:1000072; rev:1;)
+
+# 5.8 HTTP User-Agent — SDKs de IA conocidos
+alert http $HOME_NET any -> any any (msg:"[AI-DETECT] SDK Python OpenAI detectado (User-Agent)"; flow:to_server,established; http.user_agent; content:"openai-python"; nocase; classtype:policy-violation; sid:1000080; rev:1;)
+alert http $HOME_NET any -> any any (msg:"[AI-DETECT] SDK Anthropic Python detectado (User-Agent)"; flow:to_server,established; http.user_agent; content:"anthropic-sdk-python"; nocase; classtype:policy-violation; sid:1000081; rev:1;)
+alert http $HOME_NET any -> any any (msg:"[AI-DETECT] SDK LangChain detectado (User-Agent)"; flow:to_server,established; http.user_agent; content:"langchain"; nocase; classtype:policy-violation; sid:1000082; rev:1;)
+alert http $HOME_NET any -> any any (msg:"[AI-DETECT] API call con Bearer hacia IA (Authorization + /v1/chat)"; flow:to_server,established; http.uri; content:"/v1/chat/completions"; nocase; classtype:policy-violation; sid:1000083; rev:1;)
+alert http $HOME_NET any -> any any (msg:"[AI-DETECT] API call OpenAI /v1/completions"; flow:to_server,established; http.uri; content:"/v1/completions"; nocase; classtype:policy-violation; sid:1000084; rev:1;)
+alert http $HOME_NET any -> any any (msg:"[AI-DETECT] API call Anthropic /v1/messages"; flow:to_server,established; http.uri; content:"/v1/messages"; http.header; content:"anthropic"; nocase; classtype:policy-violation; sid:1000085; rev:1;)
+
+# 5.9 DNS queries directas hacia dominios de IA (refuerzo del sinkhole)
+alert dns $HOME_NET any -> any 53 (msg:"[AI-DETECT] DNS query a openai.com"; dns.query; content:"openai.com"; nocase; classtype:policy-violation; sid:1000090; rev:1;)
+alert dns $HOME_NET any -> any 53 (msg:"[AI-DETECT] DNS query a anthropic.com"; dns.query; content:"anthropic.com"; nocase; classtype:policy-violation; sid:1000091; rev:1;)
+alert dns $HOME_NET any -> any 53 (msg:"[AI-DETECT] DNS query a deepseek.com"; dns.query; content:"deepseek.com"; nocase; classtype:policy-violation; sid:1000092; rev:1;)
+alert dns $HOME_NET any -> any 53 (msg:"[AI-DETECT] DNS query a perplexity.ai"; dns.query; content:"perplexity.ai"; nocase; classtype:policy-violation; sid:1000093; rev:1;)
+alert dns $HOME_NET any -> any 53 (msg:"[AI-DETECT] DNS query a mistral.ai"; dns.query; content:"mistral.ai"; nocase; classtype:policy-violation; sid:1000094; rev:1;)
+alert dns $HOME_NET any -> any 53 (msg:"[AI-DETECT] DNS query a gemini.google.com"; dns.query; content:"gemini.google.com"; nocase; classtype:policy-violation; sid:1000095; rev:1;)
+
+# 5.10 DNS-over-HTTPS evasion — peticiones DoH a proveedores externos
+alert http $HOME_NET any -> any 443 (msg:"[AI-DETECT] Peticion DoH a dns.google (evasion sinkhole)"; flow:to_server,established; http.host; content:"dns.google"; nocase; classtype:policy-violation; sid:1000096; rev:1;)
+alert http $HOME_NET any -> any 443 (msg:"[AI-DETECT] Peticion DoH a cloudflare-dns.com (evasion sinkhole)"; flow:to_server,established; http.host; content:"cloudflare-dns.com"; nocase; classtype:policy-violation; sid:1000097; rev:1;)
+
+
+# -----------------------------------------------------------------------------
+# 6) EXTRA — pistas de exfiltración / túneles
+# -----------------------------------------------------------------------------
+
+# 6.1 DNS tunneling: tasa de consultas anormalmente alta desde un mismo src.
+alert dns $HOME_NET any -> any 53 (msg:"[DNS] Tasa de consultas DNS anormal (posible tunneling)"; threshold:type both, track by_src, count 100, seconds 10; classtype:bad-unknown; sid:1000040; rev:1;)
+
+# 6.2 Consulta DNS con payload muy largo (FQDN > 100 chars) — señal de tunneling.
+alert dns any any -> any 53 (msg:"[DNS] FQDN largo en consulta DNS (posible DNS tunneling)"; dns.query; pcre:"/.{100,}/"; classtype:bad-unknown; sid:1000041; rev:1;)

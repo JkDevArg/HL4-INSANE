@@ -1,0 +1,20 @@
+id: rev-customvm
+name: "CustomVM Crackme"
+category: reversing
+difficulty: insane
+type: per-team
+serve: http
+flag_via: flag-service
+points: 500
+ports: [6001]
+siem: true
+description: >
+  Sistema de control de acceso basado en una maquina virtual propietaria de 8 instrucciones.
+  El firmware esta disponible para descarga desde el endpoint /binary.
+  Analiza el interprete de la VM, traza la ejecucion del bytecode embebido
+  y extrae la contrasena correcta. Solo los verdaderos ingenieros inversos pasan.
+connection_info: "http://{HOST}:6001"
+author: "HL4bs"
+flags:
+  - type: static
+    value: "HL4{customvm_r3v3rs3r_pwn3d}"

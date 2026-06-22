@@ -1,0 +1,15 @@
+id: crypto-ecdsanonce
+name: "Lattice Signatures"
+category: crypto
+difficulty: insane
+type: per-team
+serve: http
+flag_via: flag-service
+points: 800
+ports: [9999]
+siem: true
+description: >
+  Servidor de firma ECDSA secp256k1. Firma cualquier mensaje que quieras,
+  pero los nonces tienen un sesgo fatal: los 8 bits superiores siempre son
+  cero. Con 40+ firmas y reducción de bases de red (LLL), recupera la clave
+  privada y firma como admin para obtener la flag. `curl http://<host>:9999/pubkey`

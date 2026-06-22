@@ -1,0 +1,19 @@
+id: pwn-binary-05
+category: pwn
+name: "ColdVault Firmware"
+difficulty: insane
+type: per-team
+serve: tcp
+flag_via: flag-service
+points: 750
+ports: [9999]
+siem: true
+description: >
+  "ColdVault" es el firmware de una boveda de almacenamiento en frio (cold
+  storage) para IoT. Expone una consola de mantenimiento por serie, puenteada a
+  TCP: conectate con `nc <host> 9999`. La consola entiende `status`, `diag
+  <texto>` y `label <texto>`. El firmware esta compilado en C con canario de
+  stack, PIE y NX activos. El auto-diagnostico confia demasiado en el texto del
+  operador, y el registro de etiquetas de inventario no respeta el tamano real
+  del buffer. Filtra lo que necesitas, desborda lo que sobra y libera la llave
+  maestra de emergencia. La flag solo aparece cuando la boveda se desbloquea.

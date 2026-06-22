@@ -42,9 +42,9 @@ code=$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3000/api/health 2
 [ "$code" = "200" ] && ok "grafana /api/health (localhost)" || bad "grafana /api/health (got $code)"
 
 echo "== 3. Flag dinámica (HMAC por equipo) =="
-f1=$(docker run --rm --network infra_net_platform curlimages/curl:8.10.1 -s "http://flag-service:8001/flag?team_id=team_01&challenge_id=web-supply-01" | jq -r .flag 2>/dev/null)
-f2=$(docker run --rm --network infra_net_platform curlimages/curl:8.10.1 -s "http://flag-service:8001/flag?team_id=team_02&challenge_id=web-supply-01" | jq -r .flag 2>/dev/null)
-[[ "$f1" =~ ^flag\{ && "$f1" != "$f2" ]] && ok "flags distintas por equipo ($f1 != $f2)" || bad "flags por equipo (f1=$f1 f2=$f2)"
+f1=$(docker run --rm --network infra_net_platform curlimages/curl:8.10.1 -s "http://flag-service:8001/flag?team_id=team_01&challenge_id=web-creditview" | jq -r .flag 2>/dev/null)
+f2=$(docker run --rm --network infra_net_platform curlimages/curl:8.10.1 -s "http://flag-service:8001/flag?team_id=team_02&challenge_id=web-reportgen" | jq -r .flag 2>/dev/null)
+[[ "$f1" =~ ^HL4\{ && "$f1" != "$f2" ]] && ok "flags distintas por equipo ($f1 != $f2)" || bad "flags por equipo (f1=$f1 f2=$f2)"
 
 echo "== 4. Aislamiento: ningún reto publica puertos al host =="
 # Excluye _templates (son scaffolds, no se lanzan).

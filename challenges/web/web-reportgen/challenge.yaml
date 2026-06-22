@@ -1,0 +1,17 @@
+id: web-reportgen
+category: web
+name: "ReportGen — Template Injection WAF"
+difficulty: insane
+type: per-team
+serve: http
+flag_via: flag-service
+points: 650
+ports: [8080]
+siem: true
+description: >
+  Generador de reportes corporativos en Flask/Jinja2. El sistema permite
+  personalizar plantillas de reporte. El WAF intercepta peticiones con
+  patrones sospechosos antes de renderizar. Los bypasses estándar están
+  bloqueados. Encuentra el punto de inyección, identifica las reglas
+  exactas del WAF y encadena filtros Jinja2 para ejecutar código.
+  Empieza por http://<host>:8080/

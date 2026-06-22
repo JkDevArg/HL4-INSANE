@@ -1,0 +1,21 @@
+id: rev-gobinary
+name: "Go License Kracker"
+category: reversing
+difficulty: insane
+type: per-team
+serve: http
+flag_via: flag-service
+points: 500
+ports: [6002]
+siem: true
+description: >
+  Un sistema de activacion de licencias fue compilado en Go con todas las
+  symbols stripeadas. El binario valida una clave de 17 caracteres mediante
+  un cifrado XOR rotante derivado de una constante magica embebida.
+  Descarga el binario desde /binary, analiza el algoritmo de validacion
+  y recupera la clave de licencia valida.
+connection_info: "http://{HOST}:6002"
+author: "HL4bs"
+flags:
+  - type: static
+    value: "HL4{g0_xor_l1c3ns3_crack3d}"

@@ -1,0 +1,21 @@
+# rev-customvm — CustomVM Crackme
+# Lanzado por infra/launch-team-challenges.sh:
+#   TEAM_ID=team_01 TEAM_N=1 FLAG="HL4{...}" CHAL_NET=ctf_team_01 \
+#     docker compose -p ctf_team_01_rev_customvm up -d --build
+version: "3.9"
+services:
+  app:
+    build: .
+    container_name: "ctf_${TEAM_ID:-local}_rev-customvm"
+    environment:
+      - FLAG=${FLAG:-HL4{placeholder}}
+      - TEAM_ID=${TEAM_ID:-local}
+    networks:
+      challenge_net:
+        ipv4_address: 172.30.${TEAM_N:-99}.40
+    restart: unless-stopped
+
+networks:
+  challenge_net:
+    external: true
+    name: ${CHAL_NET:-ctf_local}

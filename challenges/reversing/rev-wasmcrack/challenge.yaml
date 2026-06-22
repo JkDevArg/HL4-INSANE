@@ -1,0 +1,21 @@
+id: rev-wasmcrack
+name: "WASMcrack"
+category: reversing
+difficulty: insane
+type: per-team
+serve: http
+flag_via: flag-service
+points: 500
+ports: [6003]
+siem: true
+description: >
+  Un validador de contrasena compilado en Rust con optimizaciones agresivas
+  y symbols stripeados. El nombre del binario es un engano: "wasmcrack" es un
+  ELF x86-64, no un modulo WASM. El algoritmo aplica una transformacion de
+  3 pasos (rotate-left, XOR, wrapping-add) a cada byte antes de comparar
+  con un hash embebido de 12 bytes. Descarga, analiza y recupera la contrasena.
+connection_info: "http://{HOST}:6003"
+author: "HL4bs"
+flags:
+  - type: static
+    value: "HL4{r3v_w4sm_rust_h4sh_cr4ck3d}"

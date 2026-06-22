@@ -1,0 +1,54 @@
+# pwn-pgrce-01 — MoneyPipe. Parametrizable por equipo: TEAM_ID + FLAG + TEAM_N + CHAL_NET.
+#   Lanzado por infra/launch-team-challenges.sh:
+#     TEAM_ID=team_03 TEAM_N=3 FLAG="flag{...}" CHAL_NET=ctf_team_03 \
+#       docker compose -p ctf_team_03_pwn_pgrce_01 up -d --build
+#
+# DOS servicios:
+#   - api (FastAPI): API de reportes "MoneyPipe". PUNTO DE ENTRADA del jugador
+#                    en .40:8080. No publica puertos al host; accesible por la
+#                    VPN del equipo.
+#   - db  (postgres 16): el data warehouse. IP interna .140, SIN puerto
+#                        expuesto. El api conecta por nombre 'db:5432' con un
+#                        rol SUPERUSER (vulnerable -> RCE via COPY TO PROGRAM).
+#
+# AISLAMIENTO: ambos viven SOLO en la red del equipo (172.30.N.0/24).
+networks:
+  team_net:
+    external: true
+    name: ${CHAL_NET:-ctf_local}
+
+services:
+  api:
+    build: .
+    image: pwn-pgrce-01-api
+    depends_on:
+      - db
+    environment:
+      FLAG: "${FLAG:-flag{EJEMPLO_LOCAL}}"
+      TEAM_ID: "${TEAM_ID:-team_local}"
+      CHALLENGE_ID: "pwn-pgrce-01"
+      COLLECTOR_URL: "${COLLECTOR_URL:-http://collector:9000}"
+      DB_HOST: "db"
+      DB_PORT: "5432"
+      DB_NAME: "moneypipe"
+      DB_USER: "moneypipe_etl"
+      DB_PASSWORD: "etl_pipe_2024"
+    networks:
+      team_net:
+        ipv4_address: 172.30.${TEAM_N:-99}.40
+    restart: unless-stopped
+
+  db:
+    build: ./db
+    image: pwn-pgrce-01-db
+    environment:
+      # FLAG la escribe el entrypoint en /flag.txt (objetivo del RCE).
+      FLAG: "${FLAG:-flag{EJEMPLO_LOCAL}}"
+      # Bootstrap del contenedor postgres (el rol de la app se crea en init.sql).
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "bootstrap_only"
+      POSTGRES_DB: "postgres"
+    networks:
+      team_net:
+        ipv4_address: 172.30.${TEAM_N:-99}.140
+    restart: unless-stopped

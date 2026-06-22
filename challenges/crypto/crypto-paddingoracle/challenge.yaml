@@ -1,0 +1,15 @@
+id: crypto-paddingoracle
+name: "Noisy Confessions"
+category: crypto
+difficulty: insane
+type: per-team
+serve: tcp
+flag_via: flag-service
+points: 750
+ports: [9999]
+siem: true
+description: >
+  AES-256-CBC con oráculo de padding... pero el servidor miente el 5% de
+  las veces. Debes implementar análisis estadístico para filtrar el ruido
+  y recuperar el plaintext byte a byte. Un oráculo perfecto es demasiado
+  fácil. Conéctate con `nc <host> 9999`.

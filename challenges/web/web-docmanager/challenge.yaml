@@ -1,0 +1,17 @@
+id: web-docmanager
+category: web
+name: "DocManager — XXE en SOAP"
+difficulty: insane
+type: per-team
+serve: http
+flag_via: flag-service
+points: 700
+ports: [8080]
+siem: true
+description: >
+  Sistema de gestión documental con API SOAP. Procesa documentos XML para
+  indexación y almacenamiento. El parser XML tiene DTD processing habilitado.
+  El endpoint SOAP real no está en la ruta obvia — explora la documentación.
+  Inyecta una entidad externa XXE para leer archivos del sistema.
+  El endpoint requiere una firma HMAC derivable del código fuente.
+  Empieza por http://<host>:8080/

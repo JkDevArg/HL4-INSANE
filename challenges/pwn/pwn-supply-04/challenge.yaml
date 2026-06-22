@@ -1,0 +1,18 @@
+id: pwn-supply-04
+category: pwn
+name: "Poisoned Pipeline"
+difficulty: insane
+type: per-team
+serve: http
+flag_via: flag-service
+points: 700
+ports: [8080]
+siem: true
+description: >
+  CI del vendor "Forgewright" (forge-runner). El pipeline reconstruye builds de
+  clientes: subes un manifiesto (package.json) y, si quieres, un lockfile, y el
+  runner ejecuta `npm install` contra el registro npm INTERNO del vendor para
+  validar que las librerias del scope @forge cargan. El registro interno permite
+  publicar paquetes sin firma ni revision. La flag es un secreto de CI que vive
+  en el entorno del runner. Empieza por http://<host>:8080/ — ¿puedes envenenar
+  la cadena de suministro y ejecutar codigo DURANTE el build para leerla?

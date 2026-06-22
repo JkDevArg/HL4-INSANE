@@ -1,0 +1,39 @@
+# pwn-supply-04 — Poisoned Pipeline. Parametrizable por equipo: TEAM_ID + FLAG + TEAM_N + CHAL_NET.
+#   Lanzado por infra/launch-team-challenges.sh:
+#     TEAM_ID=team_03 TEAM_N=3 FLAG="flag{...}" CHAL_NET=ctf_team_03 \
+#       docker compose -p ctf_team_03_pwn_supply_04 up -d --build
+#
+# AISLAMIENTO: ambos servicios viven SOLO en la red del equipo (172.30.N.0/24),
+# sin publicar puertos al host. El jugador los alcanza por la VPN (nftables enruta
+# 10.10.N.0/24 -> 172.30.N.0/24). Dos equipos NO colisionan ni se ven entre si.
+#   - forge:    CI / build runner que corre `npm install` (con lifecycle scripts) -> .43:8080
+#   - registry: registro npm interno con publish ANONIMO (la vuln de supply chain) -> .45:8080
+networks:
+  team_net:
+    external: true
+    name: ${CHAL_NET:-ctf_local}
+
+services:
+  registry:
+    build: ./registry
+    image: pwn-supply-04-registry
+    networks:
+      team_net:
+        ipv4_address: 172.30.${TEAM_N:-99}.45
+    restart: unless-stopped
+
+  forge:
+    build: ./forge
+    image: pwn-supply-04-forge
+    depends_on:
+      - registry
+    environment:
+      FLAG: "${FLAG:-flag{EJEMPLO_LOCAL}}"
+      TEAM_ID: "${TEAM_ID:-team_local}"
+      CHALLENGE_ID: "pwn-supply-04"
+      REGISTRY_URL: "http://registry:8080"
+      COLLECTOR_URL: "${COLLECTOR_URL:-http://collector:9000}"
+    networks:
+      team_net:
+        ipv4_address: 172.30.${TEAM_N:-99}.43
+    restart: unless-stopped

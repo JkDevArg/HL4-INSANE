@@ -24,7 +24,8 @@ build:
 seed:
 	# exec (no run): siembra dentro del contenedor ya corriendo. 'run' crearia
 	# un contenedor nuevo que choca con la IP fija 10.10.100.12 de platform-api.
-	$(COMPOSE) exec platform-api python seed.py
+	# Usa --reset para recrear todas las tablas (incluye TeamChallengeAssignment).
+	$(COMPOSE) exec platform-api python seed.py --reset
 
 down:
 	$(COMPOSE) down

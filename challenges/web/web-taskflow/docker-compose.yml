@@ -1,0 +1,19 @@
+# web-taskflow — TaskFlow Phar-like Deserialization. Parametrizable por equipo.
+networks:
+  team_net:
+    external: true
+    name: ${CHAL_NET:-ctf_local}
+
+services:
+  app:
+    build: .
+    image: web-taskflow-app
+    environment:
+      FLAG: "${FLAG:-flag{EJEMPLO_LOCAL}}"
+      TEAM_ID: "${TEAM_ID:-team_local}"
+      CHALLENGE_ID: "web-taskflow"
+      COLLECTOR_URL: "${COLLECTOR_URL:-http://collector:9000}"
+    networks:
+      team_net:
+        ipv4_address: 172.30.${TEAM_N:-99}.10
+    restart: unless-stopped

@@ -1,0 +1,17 @@
+id: web-coinswap
+category: web
+name: "CoinSwap — Race Condition en Retiros"
+difficulty: insane
+type: per-team
+serve: http
+flag_via: flag-service
+points: 600
+ports: [8080]
+siem: true
+description: >
+  Exchange de criptomonedas. Tu cartera arranca con 100 COIN_A y 0 COIN_B.
+  El swap COIN_A->COIN_B verifica saldo, duerme 80ms, luego descuenta y acredita.
+  La ventana de verificacion-a-descuento es tu punto de entrada.
+  Logra un saldo de 10000 o mas en cualquier moneda para desbloquear la boveda.
+  Jugar en serie solo llega a 100 COIN_B maximo. Necesitas concurrencia.
+  Empieza por http://<host>:8080/

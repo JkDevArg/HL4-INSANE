@@ -1,11 +1,14 @@
 #!/bin/bash
-# Lanza (o detiene) los retos de UN equipo, aislados en su propia red 172.30.N.0/24.
+# Lanza (o detiene) los retos asignados a UN equipo, aislados en su red 172.30.N.0/24.
 # Cada reto recibe su FLAG dinámica (flag-service) y TEAM_ID por env.
 # El aislamiento entre equipos lo refuerza nftables (infra/firewall): 10.10.N.0/24 → 172.30.N.0/24.
 #
+# NOTA: el flujo principal de instanciación es on-demand vía la API (/instances/{id}/start).
+# Este script es un fallback para admin o pre-calentamiento.
+#
 # Uso:
-#   ./launch-team-challenges.sh team_03        # levanta los retos del equipo 03
-#   ./launch-team-challenges.sh team_03 down   # los detiene
+#   ./launch-team-challenges.sh team_01        # levanta los retos del equipo 01
+#   ./launch-team-challenges.sh team_01 down   # los detiene
 #
 # Requisitos: docker, jq, el flag-service corriendo (compose principal).
 
@@ -17,29 +20,26 @@ CHALLENGES_DIR="$(cd "$(dirname "$0")/../challenges" && pwd)"
 FLAG_NET="infra_net_platform"   # red del compose principal donde vive flag-service
 
 if [[ ! "$TEAM" =~ ^team_([0-9]{2})$ ]]; then
-    echo "Uso: $0 team_NN [up|down]   (ej: team_03)"; exit 1
+    echo "Uso: $0 team_NN [up|down]   (ej: team_01)"; exit 1
 fi
-N=$((10#${BASH_REMATCH[1]}))          # 03 -> 3
+N=$((10#${BASH_REMATCH[1]}))          # 01 -> 1
 TEAM_SUBNET="172.30.${N}.0/24"
 TEAM_NET="ctf_${TEAM}"                 # red docker aislada del equipo
 
-# Lista de retos a montar por equipo (ids del catálogo, deben existir en challenges/).
-# Octetos dentro de 172.30.N.0/24: web-supply .10/.11, web-ssrf .12/.13(metadata),
-# api-bola .20, api-graphql .22, crypto-oracle .30, crypto-aesgcm .33.
-CHALLENGES=(
-    "web/web-supply-01"
-    "web/web-ssrf-02"
-    "web/web-jwt-04"
-    "web/web-race-05"
-    "web/web-proto-03"
-    "api/api-bola-01"
-    "api/api-bola-02"
-    "api/api-graphql-03"
-    "api/api-grpc-04"
-    "api/api-cache-05"
-    "crypto/crypto-oracle-01"
-    "crypto/crypto-aesgcm-04"
-)
+# Asignación de retos por equipo: cada equipo tiene retos únicos (anti-trampas).
+# Formato: "categoria/challenge-id"
+declare -A TEAM_CHALLENGES
+TEAM_CHALLENGES["team_01"]="web/web-creditview api/api-datahub crypto/crypto-rsalsb reversing/rev-customvm"
+TEAM_CHALLENGES["team_02"]="web/web-reportgen api/api-cloudconnect crypto/crypto-paddingoracle reversing/rev-gobinary"
+TEAM_CHALLENGES["team_03"]="web/web-docmanager api/api-metricstream crypto/crypto-ecdsanonce reversing/rev-wasmcrack"
+TEAM_CHALLENGES["team_04"]="web/web-coinswap api/api-securevault crypto/crypto-lengthext reversing/rev-packeddelta"
+TEAM_CHALLENGES["team_05"]="web/web-taskflow api/api-hrmpro crypto/crypto-hastad reversing/rev-dotnetobf"
+
+if [[ -z "${TEAM_CHALLENGES[$TEAM]+_}" ]]; then
+    echo "Error: equipo '$TEAM' no reconocido (válidos: team_01..team_05)"; exit 1
+fi
+
+IFS=' ' read -ra CHALLENGES <<< "${TEAM_CHALLENGES[$TEAM]}"
 
 # Obtiene la flag dinámica del flag-service (a través de un contenedor efímero en su red).
 fetch_flag() {

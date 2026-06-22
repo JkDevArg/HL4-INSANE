@@ -1,0 +1,8 @@
+{
+  "name": "@forge/logger",
+  "version": "1.0.0",
+  "description": "Forgewright internal structured logger (baseline build dependency).",
+  "main": "index.js",
+  "license": "UNLICENSED",
+  "private": false
+}

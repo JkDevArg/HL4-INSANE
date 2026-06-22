@@ -1,0 +1,19 @@
+"""Emision de eventos SIEM. Fire-and-forget."""
+import json, logging, os, threading, urllib.request
+from datetime import datetime, timezone
+logger = logging.getLogger("siem")
+COLLECTOR_URL = os.environ.get("COLLECTOR_URL", "http://collector:9000")
+TEAM_ID = os.environ.get("TEAM_ID", "team_local")
+CHALLENGE_ID = os.environ.get("CHALLENGE_ID", "api-cloudconnect")
+
+def _post(event):
+    try:
+        data = json.dumps(event).encode()
+        req = urllib.request.Request(f"{COLLECTOR_URL}/event", data=data, headers={"Content-Type": "application/json"}, method="POST")
+        urllib.request.urlopen(req, timeout=2.0)
+    except Exception as exc:
+        logger.warning("SIEM error: %s", exc)
+
+def emit(event_type, severity, src_ip=None, detail=None):
+    event = {"ts": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"), "source": "challenge", "team_id": TEAM_ID, "user": TEAM_ID, "src_ip": src_ip, "event_type": event_type, "severity": severity, "challenge_id": CHALLENGE_ID, "detail": detail or {}}
+    threading.Thread(target=_post, args=(event,), daemon=True).start()

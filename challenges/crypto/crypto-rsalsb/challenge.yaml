@@ -1,0 +1,15 @@
+id: crypto-rsalsb
+name: "RSA LSB Oracle"
+category: crypto
+difficulty: insane
+type: per-team
+serve: tcp
+flag_via: flag-service
+points: 700
+ports: [9999]
+siem: true
+description: >
+  El servidor de reportes financieros expone un oráculo de descifrado RSA-2048.
+  Solo revela el bit menos significativo del texto plano descifrado. Con 2048
+  consultas cuidadosamente construidas puedes recuperar el mensaje completo sin
+  conocer la clave privada. Conéctate con `nc <host> 9999`.

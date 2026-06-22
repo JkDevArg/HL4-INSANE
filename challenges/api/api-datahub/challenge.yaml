@@ -1,0 +1,15 @@
+id: api-datahub
+category: api
+name: "DataHub Analytics API"
+difficulty: insane
+type: per-team
+serve: http
+flag_via: flag-service
+points: 500
+ports: [5001]
+siem: true
+description: >
+  "DataHub", plataforma de análisis de datos empresariales con API GraphQL.
+  El equipo de desarrollo implementó un sistema de filtros personalizados con
+  una directiva @filter no documentada. Algo en la implementación no quedó bien.
+  Endpoint: POST http://<host>:5001/graphql

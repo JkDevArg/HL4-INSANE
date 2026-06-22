@@ -1,0 +1,16 @@
+id: api-securevault
+category: api
+name: "SecureVault Secrets API"
+difficulty: insane
+type: per-team
+serve: http
+flag_via: flag-service
+points: 500
+ports: [5004]
+siem: true
+description: >
+  "SecureVault", API para almacenamiento seguro de secretos corporativos con
+  autenticación JWT y gestión de claves por ID (kid). El servidor carga la
+  clave de verificación desde el sistema de archivos según el kid del token.
+  Un secreto especial requiere permisos de administrador para accederse.
+  Endpoint: http://<host>:5004

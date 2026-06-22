@@ -1,26 +1,28 @@
 'use client';
 
-// Pagina principal: retos agrupados por categoria (web / api / crypto).
-// Muestra puntaje total del equipo (suma de retos resueltos) y refresca al resolver.
-
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { api, ApiError } from '@/lib/api';
-import type { Category, Challenge } from '@/lib/types';
+import type { Category, Challenge, InstanceStatus } from '@/lib/types';
 import { ChallengeCard } from '@/components/ChallengeCard';
 import { Spinner } from '@/components/Spinner';
 
-// Orden de presentacion de las categorias.
-const CATEGORY_ORDER: Category[] = ['web', 'api', 'crypto'];
+const CATEGORY_ORDER: Category[] = ['web', 'api', 'crypto', 'reversing'];
 const CATEGORY_LABEL: Record<Category, string> = {
   web: 'Web',
   api: 'API',
   crypto: 'Crypto',
+  reversing: 'Reversing',
 };
+
+const POLL_INTERVAL_MS = 6000;
 
 export default function ChallengesPage() {
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  // Local override map: challengeId → status (merges on top of backend data)
+  const [instanceOverrides, setInstanceOverrides] = useState<Record<string, InstanceStatus>>({});
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -38,8 +40,49 @@ export default function ChallengesPage() {
     load();
   }, [load]);
 
-  // Al resolver: marcamos localmente como solved y recargamos desde el backend
-  // para tener el estado autoritativo (puntos, etc.).
+  // Merge backend instance_status with local overrides
+  const challengesWithStatus = useMemo(
+    () =>
+      challenges.map((c) => ({
+        ...c,
+        instance_status: instanceOverrides[c.id] ?? c.instance_status,
+      })),
+    [challenges, instanceOverrides],
+  );
+
+  // IDs of challenges currently "starting" — poll until they transition
+  const startingIds = useMemo(
+    () => challengesWithStatus.filter((c) => c.instance_status === 'starting').map((c) => c.id),
+    [challengesWithStatus],
+  );
+
+  useEffect(() => {
+    if (startingIds.length === 0) {
+      if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
+      return;
+    }
+    if (pollRef.current) return;
+
+    pollRef.current = setInterval(async () => {
+      const updates: Record<string, InstanceStatus> = {};
+      await Promise.allSettled(
+        startingIds.map(async (id) => {
+          try {
+            const res = await api.instanceStatus(id);
+            updates[id] = res.status;
+          } catch { /* keep current */ }
+        }),
+      );
+      if (Object.keys(updates).length > 0) {
+        setInstanceOverrides((prev) => ({ ...prev, ...updates }));
+      }
+    }, POLL_INTERVAL_MS);
+
+    return () => {
+      if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
+    };
+  }, [startingIds]);
+
   const handleSolved = useCallback(
     (id: string) => {
       setChallenges((prev) => prev.map((c) => (c.id === id ? { ...c, solved: true } : c)));
@@ -48,25 +91,27 @@ export default function ChallengesPage() {
     [load],
   );
 
-  // Puntaje total = suma de puntos de retos resueltos.
+  const handleInstanceChange = useCallback((id: string, status: InstanceStatus) => {
+    setInstanceOverrides((prev) => ({ ...prev, [id]: status }));
+  }, []);
+
   const { totalPoints, solvedCount } = useMemo(() => {
-    const solved = challenges.filter((c) => c.solved);
+    const solved = challengesWithStatus.filter((c) => c.solved);
     return {
       totalPoints: solved.reduce((acc, c) => acc + c.points, 0),
       solvedCount: solved.length,
     };
-  }, [challenges]);
+  }, [challengesWithStatus]);
 
-  // Agrupa por categoria respetando el orden definido.
   const grouped = useMemo(() => {
     const map = new Map<Category, Challenge[]>();
-    for (const c of challenges) {
+    for (const c of challengesWithStatus) {
       const list = map.get(c.category) ?? [];
       list.push(c);
       map.set(c.category, list);
     }
     return map;
-  }, [challenges]);
+  }, [challengesWithStatus]);
 
   if (loading) {
     return (
@@ -91,7 +136,7 @@ export default function ChallengesPage() {
           </div>
           <div className="font-mono text-2xl font-bold text-neon">{totalPoints}</div>
           <div className="font-mono text-[11px] text-muted">
-            {solvedCount}/{challenges.length} resueltos
+            {solvedCount}/{challengesWithStatus.length} resueltos
           </div>
         </div>
       </div>
@@ -102,7 +147,7 @@ export default function ChallengesPage() {
         </p>
       )}
 
-      {!error && challenges.length === 0 && (
+      {!error && challengesWithStatus.length === 0 && (
         <p className="font-mono text-sm text-muted">No hay retos disponibles por ahora.</p>
       )}
 
@@ -121,7 +166,12 @@ export default function ChallengesPage() {
             </div>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
               {items.map((c) => (
-                <ChallengeCard key={c.id} challenge={c} onSolved={handleSolved} />
+                <ChallengeCard
+                  key={c.id}
+                  challenge={c}
+                  onSolved={handleSolved}
+                  onInstanceChange={handleInstanceChange}
+                />
               ))}
             </div>
           </section>
