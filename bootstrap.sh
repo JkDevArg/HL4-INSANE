@@ -109,7 +109,7 @@ POSTGRES_PASSWORD=$(openssl rand -hex 16)
 GRAFANA_PASSWORD=$(openssl rand -hex 12)
 ADMIN_PASSWORD=$(openssl rand -hex 24)
 DISCORD_WEBHOOK_URL=
-CTF_NAME=CTFHL4-INSANE
+CTF_NAME=CTF-HackL4BS
 EOF
     echo "[*] .env creado."
 else
