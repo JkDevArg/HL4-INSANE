@@ -1,0 +1,10 @@
+{
+  "name": "config-api",
+  "version": "1.0.0",
+  "dependencies": {
+    "express": "^4.18.2",
+    "ejs": "^3.1.9",
+    "body-parser": "^1.20.2",
+    "express-session": "^1.17.3"
+  }
+}

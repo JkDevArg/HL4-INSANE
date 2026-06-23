@@ -1,0 +1,13 @@
+id: pwn-uaf-chain
+name: "UAF Chain"
+category: pwn
+difficulty: insane
+points: 500
+port: 9998
+description: |
+  A C++ animal shelter with virtual dispatch.
+  Use-after-free lets you fake a vtable pointer.
+  Hijack virtual function dispatch to execute arbitrary code.
+  Techniques: UAF + vtable hijacking + heap feng shui
+flag_format: HL4{...}
+author: HL4bs

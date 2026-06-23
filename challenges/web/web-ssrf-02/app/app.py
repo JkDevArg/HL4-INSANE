@@ -1,4 +1,4 @@
-"""PixelForge — web-ssrf-02 (Web INSANE).
+﻿"""PixelForge — web-ssrf-02 (Web INSANE).
 
 Vulnerabilidad central: SSRF CIEGO con bypass de filtro hasta un endpoint de
 metadata interno (estilo cloud metadata 169.254.169.254, aquí simulado en la
@@ -66,7 +66,7 @@ def _log_request():
     except Exception:
         pass
 
-FLAG = os.environ.get("FLAG", "flag{EJEMPLO_LOCAL}")
+FLAG = os.environ.get("FLAG", "HL4{EJEMPLO_LOCAL}")
 # Host interno del servicio de metadata (otro contenedor del MISMO equipo).
 METADATA_HOST = os.environ.get("METADATA_HOST", "metadata")
 

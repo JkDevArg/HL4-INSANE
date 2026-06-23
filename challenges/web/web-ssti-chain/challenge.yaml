@@ -1,0 +1,15 @@
+id: web-ssti-chain
+category: web
+name: "SSTI Sandbox Escape"
+difficulty: insane
+type: per-team
+serve: http
+flag_via: flag-service
+points: 900
+ports: [8080]
+siem: true
+description: >
+  Una plataforma de reportes empresariales permite a los usuarios personalizar
+  plantillas para sus informes. El sistema usa un motor de plantillas con un
+  sandbox de seguridad personalizado que bloquea los accesos más conocidos.
+  El equipo de seguridad revisó los vectores más comunes de SSTI... ¿Todos?

@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}FacturaPro — Iniciar Sesión{% endblock %}
+{% block content %}
+<div class="row justify-content-center mt-5">
+  <div class="col-md-4">
+    <div class="card">
+      <div class="card-header text-center py-3">
+        <i class="bi bi-person-lock fs-3 text-primary"></i>
+        <h5 class="mt-1 mb-0">Acceso al Sistema</h5>
+      </div>
+      <div class="card-body p-4">
+        {% if error %}
+        <div class="alert alert-danger py-2">{{ error }}</div>
+        {% endif %}
+        <form method="post">
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Usuario</label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="bi bi-person"></i></span>
+              <input type="text" name="username" class="form-control" placeholder="usuario" required autofocus>
+            </div>
+          </div>
+          <div class="mb-4">
+            <label class="form-label fw-semibold">Contraseña</label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="bi bi-key"></i></span>
+              <input type="password" name="password" class="form-control" placeholder="contraseña" required>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary w-100">Ingresar</button>
+        </form>
+      </div>
+    </div>
+    <p class="text-center text-muted small mt-3">FacturaPro v2.4.1 — Sistema de Facturación Corporativa</p>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,17 @@
+networks:
+  team_net:
+    external: true
+    name: ${CHAL_NET:-ctf_local}
+
+services:
+  app:
+    build: .
+    image: crypto-tls-downgrade-app
+    environment:
+      FLAG: "${FLAG:-HL4{test_flag_local}}"
+      TEAM_ID: "${TEAM_ID:-team_local}"
+      CHALLENGE_ID: "crypto-tls-downgrade"
+    networks:
+      team_net:
+        ipv4_address: 172.30.${TEAM_N:-99}.22
+    restart: unless-stopped

@@ -1,4 +1,4 @@
-# Solución — api-bola-02 · Mass Assignment Heist
+﻿# Solución — api-bola-02 · Mass Assignment Heist
 
 **Categoría:** api · **Dificultad:** insane · **Puntos:** 550
 **Vuln central:** Mass Assignment encadenado (2 saltos) + escalada de privilegios sobre el flujo de facturación de "LedgerPay".
@@ -53,7 +53,7 @@ assignments y entender el flujo de negocio que los conecta.
 5. **Leer la flag**:
    ```
    GET /api/v1/org/secrets   (Bearer <token>)
-   -> {"org_secrets":{"ledger_master_key":"flag{...}", ...}}
+   -> {"org_secrets":{"ledger_master_key":"HL4{...}", ...}}
    ```
 
 Exploit completo: `python solution/exploit.py http://<host>:8080`.

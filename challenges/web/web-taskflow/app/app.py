@@ -1,4 +1,4 @@
-"""TaskFlow — web-taskflow (Web INSANE) · "Deserialización en Backup".
+﻿"""TaskFlow — web-taskflow (Web INSANE) · "Deserialización en Backup".
 
 Vulnerabilidad: Deserialización insegura de pickle en un archivo __metadata__.pkl
 dentro de un backup .tar.gz importado por el usuario.
@@ -34,7 +34,7 @@ from reqlog import reqlog_http
 
 app = Flask(__name__)
 
-FLAG = os.environ.get("FLAG", "flag{EJEMPLO_LOCAL}")
+FLAG = os.environ.get("FLAG", "HL4{EJEMPLO_LOCAL}")
 
 # Escribir flag a disco
 try:

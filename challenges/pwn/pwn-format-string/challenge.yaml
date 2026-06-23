@@ -1,0 +1,12 @@
+id: pwn-format-string
+name: "Format String"
+category: pwn
+difficulty: insane
+points: 500
+port: 9998
+description: |
+  A logging service with a classic format string vulnerability.
+  PIE + ASLR makes it tricky. Leak addresses, then write to gain control.
+  Techniques: %p leak -> PIE/libc base -> %n arbitrary write
+flag_format: HL4{...}
+author: HL4bs

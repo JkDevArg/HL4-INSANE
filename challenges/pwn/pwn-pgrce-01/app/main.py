@@ -1,4 +1,4 @@
-"""MoneyPipe API — pwn-pgrce-01 (PWN INSANE · "MoneyPipe").
+﻿"""MoneyPipe API — pwn-pgrce-01 (PWN INSANE · "MoneyPipe").
 
 VULN central: SQL INJECTION en un endpoint de reportes financieros que se
 ESCALA a RCE EN EL SERVIDOR DE BASE DE DATOS via `COPY ... TO/FROM PROGRAM`
@@ -50,7 +50,7 @@ from reqlog import reqlog_http
 
 app = FastAPI(title="MoneyPipe API", docs_url=None, redoc_url=None, openapi_url=None)
 
-FLAG = os.environ.get("FLAG", "flag{EJEMPLO_LOCAL}")
+FLAG = os.environ.get("FLAG", "HL4{EJEMPLO_LOCAL}")
 
 DB_HOST = os.environ.get("DB_HOST", "db")
 DB_PORT = int(os.environ.get("DB_PORT", "5432"))

@@ -1,4 +1,4 @@
-# Templates de retos — CTFHL4-INSANE
+﻿# Templates de retos — CTFHL4-INSANE
 
 Plantillas base para crear retos nuevos respetando el **contrato** de
 `docs/ARCHITECTURE.md` (secciones 4, 6.3, 7 y 8).
@@ -23,10 +23,10 @@ Flujo (decisión de diseño, ver `ARCHITECTURE.md §4`):
 
 1. El orquestador pide la flag al flag-service:
    `GET http://flag-service:8001/flag?team_id=team_03&challenge_id=web-supply-01`
-   → `{"flag": "flag{ab12...}"}`.
+   → `{"flag": "HL4{ab12...}"}`.
 2. El orquestador lanza el contenedor del equipo pasando esa flag por env:
    ```bash
-   TEAM_ID=team_03 FLAG="flag{ab12...}" docker compose -p web-supply-01__team_03 up -d
+   TEAM_ID=team_03 FLAG="HL4{ab12...}" docker compose -p web-supply-01__team_03 up -d
    ```
 3. El reto lee `os.environ["FLAG"]` al arrancar.
 
@@ -41,11 +41,11 @@ Todos los `docker-compose.yml` son parametrizables:
 
 ```yaml
 environment:
-  FLAG: "${FLAG:-flag{EJEMPLO_LOCAL}}"   # inyectada por equipo
+  FLAG: "${FLAG:-HL4{EJEMPLO_LOCAL}}"   # inyectada por equipo
   TEAM_ID: "${TEAM_ID:-team_local}"
 ```
 
-Si lanzas en local sin pasar `FLAG`, cae al valor `flag{EJEMPLO_LOCAL}` para
+Si lanzas en local sin pasar `FLAG`, cae al valor `HL4{EJEMPLO_LOCAL}` para
 que el reto siga siendo jugable en desarrollo.
 
 ---
@@ -69,7 +69,7 @@ Luego:
    anti-cheat (por qué el reto resiste compartir).
 5. Prueba en local:
    ```bash
-   FLAG="flag{EJEMPLO}" TEAM_ID=team_01 docker compose up --build
+   FLAG="HL4{EJEMPLO}" TEAM_ID=team_01 docker compose up --build
    ```
 
 ---
@@ -84,7 +84,7 @@ Luego:
 - [ ] Contenedor nombrable como `<challenge_id>__team_NN` (`§7`).
 - [ ] Si `siem: true`: emite eventos al collector con el esquema `§5`.
 - [ ] `solution/` con writeup reproducible + nota anti-cheat.
-- [ ] La flag de ejemplo en `solution/` es `flag{EJEMPLO}`, nunca una real.
+- [ ] La flag de ejemplo en `solution/` es `HL4{EJEMPLO}`, nunca una real.
 
 ---
 

@@ -1,4 +1,4 @@
-# Solución — pwn-binary-05 · ColdVault Firmware
+﻿# Solución — pwn-binary-05 · ColdVault Firmware
 
 **Categoría:** pwn (binario clásico en C) · **Dificultad:** insane · **Puntos:** 750
 **Vuln central:** corrupción de memoria → cadena *format-string leak* → *stack overflow* → *ret2win*.
@@ -161,7 +161,7 @@ python3 solution/exploit.py <host> 9999
 # [+] base PIE       : 0x...000
 # [+] unlock_vault() : 0x...2bb
 # [!!!] COLD VAULT UNLOCKED — emergency master key released
-# [FLAG] flag{...}
+# [FLAG] HL4{...}
 ```
 
 > Validado end-to-end: format-string leak (canario + base PIE) → overflow →

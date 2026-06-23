@@ -1,4 +1,4 @@
-"""RSALeak — crypto-rsalsb (Crypto INSANE, servido por TCP).
+﻿"""RSALeak — crypto-rsalsb (Crypto INSANE, servido por TCP).
 
 Vulnerabilidad central: RSA LSB ORACLE (bit de paridad).
 
@@ -32,7 +32,7 @@ from Crypto.Util.number import getPrime, inverse, long_to_bytes, bytes_to_long
 from siem import emit
 from reqlog import reqlog_tcp
 
-FLAG = os.environ.get("FLAG", "flag{EJEMPLO_LOCAL}").encode()
+FLAG = os.environ.get("FLAG", "HL4{EJEMPLO_LOCAL}").encode()
 HOST = "0.0.0.0"
 PORT = int(os.environ.get("PORT", "9999"))
 

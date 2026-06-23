@@ -1,4 +1,4 @@
-"""Coin Vault — web-race-05 (Web INSANE) · "Double Spend".
+﻿"""Coin Vault — web-race-05 (Web INSANE) · "Double Spend".
 
 Vulnerabilidad central: CONDICION DE CARRERA / TOCTOU (Time-of-Check
 Time-of-Use) en un flujo de canje de cupones por "coins".
@@ -53,7 +53,7 @@ from reqlog import reqlog_http
 
 app = Flask(__name__)
 
-FLAG = os.environ.get("FLAG", "flag{EJEMPLO_LOCAL}")
+FLAG = os.environ.get("FLAG", "HL4{EJEMPLO_LOCAL}")
 
 # --- Reglas economicas del vault ------------------------------------------
 COUPONS_START = 5          # cupones iniciales por sesion

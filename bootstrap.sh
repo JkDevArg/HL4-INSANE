@@ -44,16 +44,18 @@ if [[ -z "$SERVER_IP" || "$SERVER_IP" == --* ]]; then
 fi
 shift || true
 
-TEAMS=10
+TEAMS=5
 LAUNCH_CHALLENGES=1
 VPN_PROTO="udp"
 VPN_PORT="1194"
+TEAMS_CONFIG=""       # path a teams.json con nombres reales de jugadores
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        --teams) TEAMS="$2"; shift 2 ;;
+        --teams)         TEAMS="$2"; shift 2 ;;
+        --teams-config)  TEAMS_CONFIG="$2"; shift 2 ;;
         --no-challenges) LAUNCH_CHALLENGES=0; shift ;;
-        --vpn-proto) VPN_PROTO="$2"; shift 2 ;;
-        --vpn-port) VPN_PORT="$2"; shift 2 ;;
+        --vpn-proto)     VPN_PROTO="$2"; shift 2 ;;
+        --vpn-port)      VPN_PORT="$2"; shift 2 ;;
         *) echo "Opción desconocida: $1" >&2; exit 1 ;;
     esac
 done
@@ -152,7 +154,11 @@ cp vpn/scripts/on-connect.sh vpn/scripts/on-disconnect.sh vpn/scripts/ban-team.s
    vpn/scripts/unban.sh vpn/scripts/revoke-team.sh vpn/scripts/gen-team-cert.sh /etc/openvpn/scripts/
 chmod +x /etc/openvpn/scripts/*.sh
 # IPs fijas por equipo y por miembro (client-config-dir).
-bash vpn/scripts/setup-ccd.sh
+if [[ -n "$TEAMS_CONFIG" && -f "$TEAMS_CONFIG" ]]; then
+    bash vpn/scripts/setup-ccd.sh --config "$TEAMS_CONFIG"
+else
+    bash vpn/scripts/setup-ccd.sh --teams "$TEAMS"
+fi
 systemctl restart openvpn@server
 sleep 2
 ip -br a show tun0 || { echo "ERROR: tun0 no levantó"; exit 1; }
@@ -182,16 +188,41 @@ mkdir -p /var/log/suricata && chmod 777 /var/log/suricata
 # ---------------------------------------------------------------------------
 # 7) Certificados por miembro (4 por equipo)
 # ---------------------------------------------------------------------------
-step "7/9 Generando certificados (.ovpn) — equipo + 4 miembros"
-for n in $(seq 1 "$TEAMS"); do
-    t="team_$(printf '%02d' "$n")"
-    [[ -f "/etc/openvpn/clients/${t}.ovpn" ]] || bash vpn/scripts/gen-team-cert.sh "$t" "$SERVER_IP" "$VPN_PORT" "$VPN_PROTO" /etc/openvpn/clients >/dev/null 2>&1
-    for m in 1 2 3 4; do
-        [[ -f "/etc/openvpn/clients/${t}_p${m}.ovpn" ]] || \
-            bash vpn/scripts/gen-team-cert.sh "${t}_p${m}" "$SERVER_IP" "$VPN_PORT" "$VPN_PROTO" /etc/openvpn/clients >/dev/null 2>&1
+step "7/9 Generando certificados (.ovpn) por jugador"
+if [[ -n "$TEAMS_CONFIG" && -f "$TEAMS_CONFIG" ]]; then
+    # Modo con names reales: lee teams.json
+    echo "[*] Usando teams.json: $TEAMS_CONFIG"
+    TEAMS=$(jq '.teams | length' "$TEAMS_CONFIG")
+    for idx in $(seq 0 $((TEAMS-1))); do
+        n=$(jq -r ".teams[$idx].id" "$TEAMS_CONFIG")
+        t="team_$(printf '%02d' "$n")"
+        # Cert de equipo
+        [[ -f "/etc/openvpn/clients/${t}.ovpn" ]] || \
+            bash vpn/scripts/gen-team-cert.sh "$t" "$SERVER_IP" "$VPN_PORT" "$VPN_PROTO" /etc/openvpn/clients >/dev/null 2>&1
+        # Certs por jugador (nombre real)
+        players=$(jq -r ".teams[$idx].players[]" "$TEAMS_CONFIG")
+        while IFS= read -r player; do
+            cn="${t}_${player}"
+            [[ -f "/etc/openvpn/clients/${cn}.ovpn" ]] || \
+                bash vpn/scripts/gen-team-cert.sh "$cn" "$SERVER_IP" "$VPN_PORT" "$VPN_PROTO" /etc/openvpn/clients >/dev/null 2>&1
+            echo "    .ovpn generado: ${cn}"
+        done <<< "$players"
+        echo "[*] $t: certs de equipo + jugadores listos"
     done
-    echo "[*] $t: certs listos"
-done
+else
+    # Modo genérico: team_NN + team_NN_p1..p4
+    echo "[*] Modo genérico: $TEAMS equipos, 4 miembros (p1..p4)"
+    for n in $(seq 1 "$TEAMS"); do
+        t="team_$(printf '%02d' "$n")"
+        [[ -f "/etc/openvpn/clients/${t}.ovpn" ]] || \
+            bash vpn/scripts/gen-team-cert.sh "$t" "$SERVER_IP" "$VPN_PORT" "$VPN_PROTO" /etc/openvpn/clients >/dev/null 2>&1
+        for m in 1 2 3 4; do
+            [[ -f "/etc/openvpn/clients/${t}_p${m}.ovpn" ]] || \
+                bash vpn/scripts/gen-team-cert.sh "${t}_p${m}" "$SERVER_IP" "$VPN_PORT" "$VPN_PROTO" /etc/openvpn/clients >/dev/null 2>&1
+        done
+        echo "[*] $t: certs listos"
+    done
+fi
 
 # ---------------------------------------------------------------------------
 # 8) Retos por equipo (opcional)

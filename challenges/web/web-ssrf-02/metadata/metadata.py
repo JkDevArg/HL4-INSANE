@@ -1,4 +1,4 @@
-"""Metadata interno simulado — web-ssrf-02.
+﻿"""Metadata interno simulado — web-ssrf-02.
 
 Emula el endpoint de metadata de un proveedor cloud (estilo
 http://169.254.169.254/latest/meta-data/). NO está publicado al host: vive solo
@@ -22,7 +22,7 @@ import json
 import os
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
-FLAG = os.environ.get("FLAG", "flag{EJEMPLO_LOCAL}")
+FLAG = os.environ.get("FLAG", "HL4{EJEMPLO_LOCAL}")
 PORT = int(os.environ.get("PORT", "8080"))
 ROLE = "pixelforge-node-role"
 INTERNAL_UA_MARK = "PixelForge-Fetcher"

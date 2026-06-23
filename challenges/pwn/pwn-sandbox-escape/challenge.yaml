@@ -1,0 +1,17 @@
+id: pwn-sandbox-escape
+category: pwn
+name: "Sandbox Escape"
+difficulty: insane
+type: per-team
+serve: tcp
+flag_via: flag-service
+points: 875
+ports: [9998]
+siem: true
+description: >
+  Servidor Python con un eval() "seguro": builtins=None, globals restringidos,
+  y filtro activo que bloquea cualquier expresión que contenga "__" literalmente.
+  El sandbox también bloquea: import, open, os, sys, exec, eval por nombre.
+  Escapa usando el modelo de objetos de Python: subclases, MRO, getattr dinámico
+  con chr() para construir los nombres de dunder sin escribirlos directamente.
+  Lee /home/ctf/flag.txt sin usar ningún builtin prohibido directamente.

@@ -65,12 +65,21 @@ BAN_SCRIPT="${BAN_SCRIPT:-${SCRIPT_DIR}/ban-team.sh}"
 # ---------------------------------------------------------------------------
 # Datos de la sesion
 # ---------------------------------------------------------------------------
-TEAM="${common_name:-unknown}"
+CN="${common_name:-unknown}"
 VPN_IP="${ifconfig_pool_remote_ip:-?}"
 REAL_IP="${trusted_ip:-${untrusted_ip:-?}}"
 DURATION="${time_duration:-0}"
 SIGNAL="${signal:-}"
 TS="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
+# Extrae team_id del CN: "team_01_alice" → "team_01"
+if [[ "$CN" =~ ^(team_[0-9]{2})(_(.+))?$ ]]; then
+    TEAM="${BASH_REMATCH[1]}"
+    PLAYER="${BASH_REMATCH[3]:-}"
+else
+    TEAM="$CN"
+    PLAYER=""
+fi
 
 # DURATION debe ser numerico para la comparacion; saneamos.
 DURATION="$(echo "$DURATION" | tr -dc '0-9')"
@@ -80,7 +89,7 @@ emit_siem() {
     local event_type="$1" severity="$2" detail="$3"
     local payload
     payload=$(cat <<JSON
-{"ts":"${TS}","source":"vpn","team_id":"${TEAM}","user":"${TEAM}","src_ip":"${VPN_IP}","event_type":"${event_type}","severity":"${severity}","detail":${detail}}
+{"ts":"${TS}","source":"vpn","team_id":"${TEAM}","user":"${CN}","player":"${PLAYER}","src_ip":"${VPN_IP}","event_type":"${event_type}","severity":"${severity}","detail":${detail}}
 JSON
 )
     curl -s -o /dev/null --max-time 3 \

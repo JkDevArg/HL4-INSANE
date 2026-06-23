@@ -1,0 +1,13 @@
+id: pwn-race-condition
+name: "Race Condition"
+category: pwn
+difficulty: insane
+points: 500
+port: 9998
+description: |
+  A file reader service with a TOCTOU vulnerability.
+  The access() check and fopen() call are separated by a sleep().
+  Race to swap a symlink between the check and the open.
+  The flag is in /root/flag.txt — only root can read it.
+flag_format: HL4{...}
+author: HL4bs

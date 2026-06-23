@@ -1,0 +1,29 @@
+{
+  "teams": [
+    {
+      "id": 1,
+      "name": "Bytreach",
+      "players": ["gorje (Captain)", "sh4dowxz", "AlarmW", "kincito"]
+    },
+    {
+      "id": 2,
+      "name": "MoodySploiters",
+      "players": ["quimichin (Captain)", "Aulloaal", "Marinex", "NA787"]
+    },
+    {
+      "id": 3,
+      "name": "DARKHIVE",
+      "players": ["ast4x (Captain)", "NoTtrebor", ".Italo", "Onhubxx"]
+    },
+    {
+      "id": 4,
+      "name": "Threat Hunters",
+      "players": ["vulc4nx (Captain)", "APT404", "m4thv", "K4w0rU2"]
+    },
+    {
+      "id": 5,
+      "name": "Capa 8",
+      "players": ["SonyB0t (Captain)", "rafooo_6", "Fetuccini", "Michi"]
+    }
+  ]
+}

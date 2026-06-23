@@ -1,0 +1,19 @@
+# pwn-off-by-one — off-by-one heap → tcache poisoning → arbitrary write
+# TEAM_ID=team_04 TEAM_N=4 FLAG="HL4{...}" CHAL_NET=ctf_team_04 docker compose up -d --build
+networks:
+  team_net:
+    external: true
+    name: ${CHAL_NET:-ctf_local}
+
+services:
+  app:
+    build: .
+    image: pwn-off-by-one-app
+    environment:
+      FLAG: "${FLAG:-HL4{f4ke_0ff_by_0n3}}"
+      TEAM_ID: "${TEAM_ID:-team_local}"
+      CHALLENGE_ID: "pwn-off-by-one"
+    networks:
+      team_net:
+        ipv4_address: 172.30.${TEAM_N:-99}.31
+    restart: unless-stopped

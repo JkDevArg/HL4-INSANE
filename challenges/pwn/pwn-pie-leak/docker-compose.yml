@@ -1,0 +1,17 @@
+networks:
+  team_net:
+    external: true
+    name: ${CHAL_NET:-ctf_local}
+
+services:
+  app:
+    build: .
+    image: pwn-pie-leak-app
+    environment:
+      FLAG: "${FLAG:-HL4{f4ke_fl4g_p13_l34k}}"
+      TEAM_ID: "${TEAM_ID:-team_local}"
+      CHALLENGE_ID: "pwn-pie-leak"
+    networks:
+      team_net:
+        ipv4_address: 172.30.${TEAM_N:-99}.31
+    restart: unless-stopped

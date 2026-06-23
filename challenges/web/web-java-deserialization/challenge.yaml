@@ -1,0 +1,16 @@
+id: web-java-deserialization
+category: web
+name: "Java Deserialization RCE"
+difficulty: insane
+type: per-team
+serve: http
+flag_via: flag-service
+points: 950
+ports: [8080]
+siem: true
+description: >
+  Una aplicación empresarial Java acepta importación de objetos serializados
+  para sincronización de datos entre sistemas legacy. El classpath incluye
+  librerías de procesamiento de colecciones ampliamente utilizadas.
+  El endpoint de importación acepta objetos Java serializados en base64.
+  La magia de la reflexión Java puede hacer cosas inesperadas.

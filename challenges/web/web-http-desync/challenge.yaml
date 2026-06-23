@@ -1,0 +1,15 @@
+id: web-http-desync
+category: web
+name: "HTTP Request Smuggling"
+difficulty: insane
+type: per-team
+serve: http
+flag_via: flag-service
+points: 950
+ports: [8080]
+siem: true
+description: >
+  Una aplicación corporativa usa HAProxy como frontend para balancear carga
+  hacia su backend Python. El sistema maneja autenticación basada en tokens
+  y tiene un panel de administración. El equipo de infraestructura confía en
+  que el proxy filtra las peticiones maliciosas... ¿Lo hace realmente?

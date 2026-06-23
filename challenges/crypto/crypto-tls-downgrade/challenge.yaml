@@ -1,0 +1,14 @@
+id: crypto-tls-downgrade
+category: crypto
+name: "Smooth Operator"
+difficulty: insane
+type: per-team
+serve: tcp
+flag_via: flag-service
+points: 900
+ports: [9999]
+siem: true
+description: >
+  Un protocolo de intercambio de claves custom basado en Diffie-Hellman protege
+  las comunicaciones de este servidor. Los parámetros DH son "estándar del
+  sector". Hay algo sospechoso en la elección de los parámetros del grupo.

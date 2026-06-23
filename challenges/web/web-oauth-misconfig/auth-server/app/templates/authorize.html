@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Autorizar — AuthServer Corp</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <style>
+    body { background: #0f172a; color: #e2e8f0; min-height:100vh; display:flex; align-items:center; justify-content:center; }
+    .auth-card { background: #1e293b; border: 1px solid #334155; border-radius:12px; width:100%; max-width:440px; }
+    .scope-badge { display:inline-block; background:#1e3a5f; color:#60a5fa; padding:.25rem .7rem; border-radius:4px; font-size:.82rem; margin:.1rem; }
+    .app-icon { width:56px; height:56px; background: linear-gradient(135deg,#3b82f6,#1d4ed8); border-radius:12px; display:flex; align-items:center; justify-content:center; }
+    label.form-label { color:#cbd5e1; }
+    .form-control { background:#0f172a; border:1px solid #334155; color:#e2e8f0; }
+    .form-control:focus { background:#0f172a; color:#e2e8f0; border-color:#3b82f6; box-shadow:0 0 0 2px rgba(59,130,246,.2); }
+  </style>
+</head>
+<body>
+<div class="auth-card p-4 mx-auto">
+  <div class="text-center mb-4">
+    <div class="app-icon mx-auto mb-3">
+      <i class="bi bi-app-indicator fs-3 text-white"></i>
+    </div>
+    <h5 class="fw-bold mb-1">{{ client.name }}</h5>
+    <p class="text-muted small mb-0">{{ client.description }}</p>
+  </div>
+
+  <div class="mb-3 p-3" style="background:#0f172a; border-radius:8px;">
+    <p class="small text-muted mb-2">Esta aplicación solicita acceso a:</p>
+    <div>
+      {% for s in scope.split() %}
+        <span class="scope-badge"><i class="bi bi-check-circle me-1"></i>{{ s }}</span>
+      {% endfor %}
+    </div>
+    <div class="mt-2 pt-2" style="border-top:1px solid #334155;">
+      <small class="text-muted">Client ID: <code class="text-primary">{{ client_id }}</code></small>
+      {% if redirect_uri %}
+      <br><small class="text-muted">Redirect: <code>{{ redirect_uri }}</code></small>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if error %}
+  <div class="alert alert-danger py-2 small mb-3">{{ error }}</div>
+  {% endif %}
+
+  <p class="small text-muted text-center mb-3">Ingrese sus credenciales para autorizar el acceso:</p>
+
+  <form method="post">
+    <input type="hidden" name="client_id" value="{{ client_id }}">
+    <input type="hidden" name="redirect_uri" value="{{ redirect_uri }}">
+    <input type="hidden" name="scope" value="{{ scope }}">
+    <input type="hidden" name="state" value="{{ state }}">
+    <input type="hidden" name="response_type" value="{{ response_type }}">
+    <input type="hidden" name="action" value="approve">
+
+    <div class="mb-3">
+      <label class="form-label small fw-semibold">Usuario</label>
+      <input type="text" name="username" class="form-control" placeholder="usuario" required autofocus>
+    </div>
+    <div class="mb-4">
+      <label class="form-label small fw-semibold">Contraseña</label>
+      <input type="password" name="password" class="form-control" placeholder="contraseña" required>
+    </div>
+    <div class="d-grid gap-2">
+      <button type="submit" class="btn btn-primary">Autorizar acceso</button>
+      <button type="submit" name="action" value="deny" class="btn btn-outline-secondary btn-sm">Denegar</button>
+    </div>
+  </form>
+
+  <p class="text-center text-muted mt-3 mb-0" style="font-size:.75rem;">
+    <i class="bi bi-shield-check me-1"></i>AuthServer Corp v2.1 — OAuth 2.0 Seguro
+  </p>
+</div>
+</body>
+</html>

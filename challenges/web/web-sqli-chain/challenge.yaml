@@ -1,0 +1,15 @@
+id: web-sqli-chain
+category: web
+name: "SQLi Chain ERP"
+difficulty: insane
+type: per-team
+serve: http
+flag_via: flag-service
+points: 850
+ports: [8080]
+siem: true
+description: >
+  Un sistema ERP corporativo gestiona pedidos, inventario y usuarios.
+  El equipo de seguridad implementó un WAF básico para bloquear inyecciones SQL.
+  El sistema tiene un panel de administración con funcionalidad de backup.
+  ¿Puede el WAF defender contra todos los vectores de ataque?

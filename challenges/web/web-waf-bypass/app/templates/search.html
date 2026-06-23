@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}Search - Corporate Portal{% endblock %}
+{% block content %}
+<div class="row">
+  <div class="col-md-12 mb-3">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <form action="/search" method="GET" class="row g-2 align-items-end">
+          <div class="col-md-6">
+            <label class="form-label small fw-bold">Search Products</label>
+            <input type="text" name="q" class="form-control" value="{{ query }}" placeholder="Product name...">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label small fw-bold">Category</label>
+            <select name="cat" class="form-select">
+              <option value="">All Categories</option>
+              <option value="Electronics" {% if category == 'Electronics' %}selected{% endif %}>Electronics</option>
+              <option value="Furniture" {% if category == 'Furniture' %}selected{% endif %}>Furniture</option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <button type="submit" class="btn btn-primary w-100">Search</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  {% if error %}
+  <div class="col-12">
+    <div class="alert alert-danger">
+      <strong>Error:</strong> {{ error }}
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="col-12">
+    {% if results %}
+    <div class="card shadow">
+      <div class="card-header d-flex justify-content-between">
+        <h6 class="mb-0">Search Results</h6>
+        <span class="badge bg-primary">{{ results|length }} found</span>
+      </div>
+      <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+          <thead class="table-dark">
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Category</th>
+              <th>Description</th>
+              <th>Price</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in results %}
+            <tr>
+              <td>{{ r.id }}</td>
+              <td>{{ r.name }}</td>
+              <td><span class="badge bg-secondary">{{ r.category }}</span></td>
+              <td>{{ r.description }}</td>
+              <td>${{ r.price }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% elif query or category %}
+    <div class="alert alert-info">No results found for your search.</div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

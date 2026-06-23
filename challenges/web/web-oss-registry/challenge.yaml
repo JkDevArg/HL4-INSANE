@@ -1,0 +1,15 @@
+id: web-oss-registry
+category: web
+name: "Supply Chain Registry"
+difficulty: insane
+type: per-team
+serve: http
+flag_via: flag-service
+points: 900
+ports: [8080]
+siem: true
+description: >
+  Una empresa usa un registry privado de paquetes para su pipeline de CI/CD.
+  El sistema tiene un portal web para gestionar paquetes, un runner de CI que
+  instala automáticamente los paquetes publicados, y un build server donde
+  se ejecutan las builds. Algo huele mal en el proceso de publicación...

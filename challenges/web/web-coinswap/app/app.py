@@ -1,4 +1,4 @@
-"""CoinSwap Exchange — web-coinswap (Web INSANE) · "Race Condition en Retiros".
+﻿"""CoinSwap Exchange — web-coinswap (Web INSANE) · "Race Condition en Retiros".
 
 Vulnerabilidad central: CONDICION DE CARRERA / TOCTOU en el flujo de swap
 de criptomonedas. El check de saldo y el descuento ocurren en momentos
@@ -36,7 +36,7 @@ from reqlog import reqlog_http
 
 app = Flask(__name__)
 
-FLAG = os.environ.get("FLAG", "flag{EJEMPLO_LOCAL}")
+FLAG = os.environ.get("FLAG", "HL4{EJEMPLO_LOCAL}")
 
 # --- Parametros del exchange ---
 COIN_A_START = 100      # saldo inicial COIN_A

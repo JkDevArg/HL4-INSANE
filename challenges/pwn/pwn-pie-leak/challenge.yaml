@@ -1,0 +1,12 @@
+id: pwn-pie-leak
+name: "PIE Leak"
+category: pwn
+difficulty: insane
+points: 500
+port: 9998
+description: |
+  A PIE binary with a restricted format string (only %p works, %n is filtered).
+  You have 5 chances to leak addresses before the connection closes.
+  Then use the small overflow to redirect execution.
+flag_format: HL4{...}
+author: HL4bs

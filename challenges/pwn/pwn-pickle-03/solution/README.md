@@ -1,4 +1,4 @@
-# Solución — pwn-pickle-03 · Phantom Cache
+﻿# Solución — pwn-pickle-03 · Phantom Cache
 
 **Categoría:** pwn · **Dificultad:** insane · **Puntos:** 700 ·
 **Vuln central:** deserialización insegura de **pickle** (RCE) encadenada con una
@@ -76,7 +76,7 @@ Content-Type: application/json
 
   -> el server verifica el HMAC (cuadra), hace pickle.loads(),
      ejecuta el gadget, y refleja la salida:
-  {"status":"ok","session":"flag{...}\n"}
+  {"status":"ok","session":"HL4{...}\n"}
 ```
 
 Exploit completo (los 3 eslabones automatizados):

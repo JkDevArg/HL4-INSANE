@@ -1,4 +1,4 @@
-# Solución — api-graphql-03 · Introspection Abyss
+﻿# Solución — api-graphql-03 · Introspection Abyss
 
 **Categoría:** api · **Dificultad:** insane · **Vuln central:** fuga de esquema GraphQL vía **field suggestions** con introspección desactivada + **alias batching abuse** para forzar el PIN del admin.
 
@@ -61,7 +61,7 @@ instancia**. No se puede leer del código ni adivinar; hay que forzarlo.
      }
    }
    ```
-   El alias cuyo valor empieza por `flag{` revela a la vez el PIN y la flag.
+   El alias cuyo valor empieza por `HL4{` revela a la vez el PIN y la flag.
 
 Exploit automatizado: `solution/exploit.py http://<host>:8080`.
 

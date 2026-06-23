@@ -1,12 +1,12 @@
-# Template WEB. Parametrizable por equipo: TEAM_ID + FLAG.
+﻿# Template WEB. Parametrizable por equipo: TEAM_ID + FLAG.
 # Lanzar por equipo:
-#   TEAM_ID=team_03 FLAG="flag{...}" docker compose -p web-CAMBIAME-NN__team_03 up -d
+#   TEAM_ID=team_03 FLAG="HL4{...}" docker compose -p web-CAMBIAME-NN__team_03 up -d
 services:
   web:
     build: .
     image: web-cambiame-nn
     environment:
-      FLAG: "${FLAG:-flag{EJEMPLO_LOCAL}}"
+      FLAG: "${FLAG:-HL4{EJEMPLO_LOCAL}}"
       TEAM_ID: "${TEAM_ID:-team_local}"
       CHALLENGE_ID: "web-CAMBIAME-NN"
       COLLECTOR_URL: "${COLLECTOR_URL:-http://collector:9000}"

@@ -1,0 +1,50 @@
+# web-cache-deception — Nginx caching proxy + Flask webapp + Admin bot
+# Launch: TEAM_ID=team_02 TEAM_N=2 FLAG="HL4{...}" CHAL_NET=ctf_team_02 docker compose -f challenges/web/web-cache-deception/docker-compose.yml up -d --build
+networks:
+  team_net:
+    external: true
+    name: ${CHAL_NET:-ctf_local}
+  internal_net:
+    driver: bridge
+    internal: true
+
+services:
+  nginx-proxy:
+    build:
+      context: .
+      dockerfile: nginx/Dockerfile
+    image: web-cache-deception-nginx-${TEAM_ID:-local}
+    networks:
+      team_net:
+        ipv4_address: 172.30.${TEAM_N:-99}.10
+      internal_net:
+    restart: unless-stopped
+    depends_on:
+      - webapp
+
+  webapp:
+    build:
+      context: .
+      dockerfile: webapp/Dockerfile
+    image: web-cache-deception-webapp-${TEAM_ID:-local}
+    environment:
+      FLAG: "${FLAG:-HL4{EJEMPLO_LOCAL}}"
+      SECRET_KEY: "cache-deception-secret-${TEAM_ID:-local}"
+    networks:
+      internal_net:
+    restart: unless-stopped
+
+  admin-bot:
+    build:
+      context: .
+      dockerfile: admin-bot/Dockerfile
+    image: web-cache-deception-admin-bot-${TEAM_ID:-local}
+    environment:
+      PROXY_URL: "http://nginx-proxy:8080"
+      ADMIN_PASSWORD: "adminpass123"
+    networks:
+      internal_net:
+    restart: unless-stopped
+    depends_on:
+      - nginx-proxy
+      - webapp

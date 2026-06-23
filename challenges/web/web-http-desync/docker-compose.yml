@@ -1,0 +1,50 @@
+# web-http-desync — HAProxy frontend + gunicorn backend + Admin bot
+# Launch: TEAM_ID=team_02 TEAM_N=2 FLAG="HL4{...}" CHAL_NET=ctf_team_02 docker compose -f challenges/web/web-http-desync/docker-compose.yml up -d --build
+networks:
+  team_net:
+    external: true
+    name: ${CHAL_NET:-ctf_local}
+  internal_net:
+    driver: bridge
+    internal: true
+
+services:
+  haproxy:
+    build:
+      context: .
+      dockerfile: haproxy/Dockerfile
+    image: web-http-desync-haproxy-${TEAM_ID:-local}
+    networks:
+      team_net:
+        ipv4_address: 172.30.${TEAM_N:-99}.11
+      internal_net:
+    restart: unless-stopped
+    depends_on:
+      - webapp-backend
+
+  webapp-backend:
+    build:
+      context: .
+      dockerfile: webapp-backend/Dockerfile
+    image: web-http-desync-webapp-${TEAM_ID:-local}
+    environment:
+      FLAG: "${FLAG:-HL4{EJEMPLO_LOCAL}}"
+      ADMIN_TOKEN: "secret-admin-token-xyz"
+    networks:
+      internal_net:
+    restart: unless-stopped
+
+  admin-bot:
+    build:
+      context: .
+      dockerfile: admin-bot/Dockerfile
+    image: web-http-desync-admin-bot-${TEAM_ID:-local}
+    environment:
+      HAPROXY_URL: "http://haproxy:8080"
+      ADMIN_TOKEN: "secret-admin-token-xyz"
+    networks:
+      internal_net:
+    restart: unless-stopped
+    depends_on:
+      - haproxy
+      - webapp-backend

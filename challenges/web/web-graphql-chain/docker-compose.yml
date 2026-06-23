@@ -1,0 +1,47 @@
+# web-graphql-chain — GraphQL Federation con mass assignment + rate limit bypass
+# Lanzar: TEAM_ID=team_03 TEAM_N=3 FLAG="HL4{...}" CHAL_NET=ctf_team_03 docker compose up -d --build
+networks:
+  team_net:
+    external: true
+    name: ${CHAL_NET:-ctf_local}
+  internal_net:
+    driver: bridge
+    internal: true
+
+services:
+  graphql-gateway:
+    build:
+      context: .
+      dockerfile: graphql-gateway/Dockerfile
+    image: web-graphql-gateway
+    environment:
+      FLAG: "${FLAG:-HL4{EJEMPLO_LOCAL}}"
+      TEAM_ID: "${TEAM_ID:-team_local}"
+      CHALLENGE_ID: "web-graphql-chain"
+      USERS_SUBGRAPH_URL: "http://users-subgraph:4001"
+      SECRETS_SUBGRAPH_URL: "http://secrets-subgraph:4002"
+    networks:
+      team_net:
+        ipv4_address: 172.30.${TEAM_N:-99}.11
+      internal_net:
+    restart: unless-stopped
+
+  users-subgraph:
+    build:
+      context: .
+      dockerfile: users-subgraph/Dockerfile
+    image: web-graphql-users
+    networks:
+      internal_net:
+    restart: unless-stopped
+
+  secrets-subgraph:
+    build:
+      context: .
+      dockerfile: secrets-subgraph/Dockerfile
+    image: web-graphql-secrets
+    environment:
+      FLAG: "${FLAG:-HL4{EJEMPLO_LOCAL}}"
+    networks:
+      internal_net:
+    restart: unless-stopped

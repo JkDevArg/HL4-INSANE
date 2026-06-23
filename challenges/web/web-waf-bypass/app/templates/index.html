@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Home - Corporate Portal{% endblock %}
+{% block content %}
+<div class="row">
+  <div class="col-md-8">
+    <div class="card shadow mb-4">
+      <div class="card-body py-4">
+        <h2 class="card-title fw-bold">Corporate Product Portal</h2>
+        <p class="card-text text-muted lead">Search our catalog of enterprise products and services.</p>
+        <form action="/search" method="GET" class="d-flex gap-2">
+          <input type="text" name="q" class="form-control" placeholder="Search products...">
+          <button type="submit" class="btn btn-primary px-4">Search</button>
+        </form>
+      </div>
+    </div>
+    <div class="row g-3">
+      <div class="col-md-6">
+        <div class="card h-100">
+          <div class="card-body">
+            <h5 class="text-primary">Electronics</h5>
+            <p class="small text-muted">Laptops, monitors, peripherals and more</p>
+            <a href="/search?cat=Electronics" class="btn btn-sm btn-outline-primary">Browse</a>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="card h-100">
+          <div class="card-body">
+            <h5 class="text-success">Furniture</h5>
+            <p class="small text-muted">Desks, chairs, and office accessories</p>
+            <a href="/search?cat=Furniture" class="btn btn-sm btn-outline-success">Browse</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card shadow border-success mb-3">
+      <div class="card-header bg-success text-white">
+        <h6 class="mb-0">Security Status</h6>
+      </div>
+      <div class="card-body">
+        <ul class="list-unstyled mb-0 small">
+          <li class="text-success">WAF Active (v2.0)</li>
+          <li class="text-success">SQL Injection: Blocked</li>
+          <li class="text-success">XSS: Monitored</li>
+          <li class="text-muted">Last scan: Today</li>
+        </ul>
+      </div>
+    </div>
+    <div class="card shadow">
+      <div class="card-header">
+        <h6 class="mb-0">API Docs</h6>
+      </div>
+      <div class="card-body">
+        <p class="small text-muted">REST API available:</p>
+        <code class="small">POST /api/search</code>
+        <p class="small text-muted mt-2">Accepts JSON body for programmatic access.</p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,4 +1,4 @@
-# Solucion — pwn-pgrce-01 · MoneyPipe
+﻿# Solucion — pwn-pgrce-01 · MoneyPipe
 
 **Categoria:** pwn · **Dificultad:** insane · **Puntos:** 700
 **Vuln central:** SQL injection en una API de reportes que se **escala a RCE
@@ -91,7 +91,7 @@ GET /api/v1/reports?filter=1=2 UNION SELECT 1, line, 'x','x',0,'x' FROM exfil-- 
 Respuesta:
 
 ```json
-{"rows":[{"id":1,"account":"flag{...}","region":"x","currency":"x","amount":0,"status":"x"}]}
+{"rows":[{"id":1,"account":"HL4{...}","region":"x","currency":"x","amount":0,"status":"x"}]}
 ```
 
 → **flag** en `account`.
@@ -103,7 +103,7 @@ python solution/exploit.py http://<host>:8080
 ```
 
 Hace recon (paso 0), el `COPY FROM PROGRAM` (paso 1) y la exfiltracion UNION
-(paso 2), e imprime `[+] FLAG: flag{...}`.
+(paso 2), e imprime `[+] FLAG: HL4{...}`.
 
 ## Verificacion manual (curl)
 

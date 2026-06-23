@@ -384,6 +384,10 @@
         <span>SIEM · SOC OVERLAY</span>
         <span class="clock" id="clock">--:--:--</span>
         <span class="conn" id="conn"><span class="led"></span><span id="connTxt">CONECTANDO</span></span>
+        <span style="display:flex;gap:6px;margin-left:10px">
+          <a href="/" style="color:var(--neon);border:1px solid var(--neon);padding:2px 10px;font-size:10px;letter-spacing:2px;text-decoration:none;background:rgba(0,255,156,0.1)">SIEM</a>
+          <a href="/streams" style="color:var(--dim);border:1px solid var(--grid);padding:2px 10px;font-size:10px;letter-spacing:2px;text-decoration:none">STREAMS</a>
+        </span>
       </div>
     </div>
     <div class="stats">
@@ -402,7 +406,7 @@
 
     <!-- EQUIPOS (grid de navegación) + DETALLE de equipo -->
     <div class="panel tech" id="panelTeams">
-      <h2 id="teamsH2">Equipos <span class="tag" id="teamsTag">0/10 online</span></h2>
+      <h2 id="teamsH2">Equipos <span class="tag" id="teamsTag">0/5 online</span></h2>
       <div class="teamtabs" id="teamTabs"></div>
       <div class="pbody">
         <div class="teams-grid" id="teams">
@@ -625,7 +629,9 @@ async function tickTeams() {
       if (t.connected > 0) online++;
       const cls = [status]; if (t.leader) cls.push("leader");
       const stTxt = status === "banned" ? "BANEADO" : status === "online" ? "ONLINE" : "OFFLINE";
-      const conn = (t.connected ?? 0) + "/4";
+      const connCount = t.connected ?? 0;
+      const playerList = (t.players || []).filter(p => p && p !== "—");
+      const connTxt = playerList.length ? playerList.join(", ") : connCount + "/4";
       const cur = t.current_challenge ? esc(t.current_challenge) : esc(t.last_action || "sin actividad");
       const n = teamNum(t.team);
       return `
@@ -636,7 +642,7 @@ async function tickTeams() {
             <span class="stbadge">${stTxt}</span>
           </div>
           <div class="trow">
-            <span class="conn">👥 ${esc(conn)}</span>
+            <span class="conn" style="font-size:11px">👥 ${esc(connTxt)}</span>
             <span class="pts">${esc(t.points ?? 0)}</span>
           </div>
           <div class="trow">
@@ -670,7 +676,10 @@ async function tickDetail() {
     sb.textContent = status === "banned" ? "BANEADO" : status === "online" ? "ONLINE" : "OFFLINE";
     document.getElementById("dPts").textContent = d.points ?? 0;
     document.getElementById("dSlv").textContent = d.solves ?? 0;
-    document.getElementById("dConn").textContent = (d.connected ?? 0) + "/4";
+    const dPlayers = (d.players || []).filter(p => p && p !== "—");
+    document.getElementById("dConn").textContent = dPlayers.length
+      ? dPlayers.join(", ")
+      : (d.connected ?? 0) + "/4";
     document.getElementById("dCurTxt").textContent = d.current_challenge || "sin reto activo";
     // Retos tocados (chips).
     const ch = document.getElementById("dChals");

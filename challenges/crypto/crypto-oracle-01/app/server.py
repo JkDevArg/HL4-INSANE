@@ -1,4 +1,4 @@
-"""SecureVault — crypto-oracle-01 (Crypto INSANE).
+﻿"""SecureVault — crypto-oracle-01 (Crypto INSANE).
 
 Vulnerabilidad central: PADDING ORACLE (AES-CBC + PKCS#7).
 
@@ -24,7 +24,7 @@ from Crypto.Random import get_random_bytes
 from siem import emit
 from reqlog import reqlog_tcp
 
-FLAG = os.environ.get("FLAG", "flag{EJEMPLO_LOCAL}").encode()
+FLAG = os.environ.get("FLAG", "HL4{EJEMPLO_LOCAL}").encode()
 HOST = "0.0.0.0"
 PORT = int(os.environ.get("PORT", "9999"))
 BLOCK = 16

@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}ReportEngine — Mis Plantillas{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h4 class="fw-bold mb-0">Plantillas Guardadas</h4>
+  <a href="/render" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg me-1"></i>Nueva Plantilla</a>
+</div>
+<div class="row g-3">
+  {% for t in templates %}
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between">
+        <span>{{ t.name }}</span>
+        <span class="badge bg-secondary">{{ t.author }}</span>
+      </div>
+      <div class="card-body">
+        <pre style="font-size:.8rem; max-height:100px; overflow:hidden; color:#6c757d;">{{ t.content }}</pre>
+        <a href="/render" class="btn btn-sm btn-outline-primary" onclick="return false;">Usar plantilla</a>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

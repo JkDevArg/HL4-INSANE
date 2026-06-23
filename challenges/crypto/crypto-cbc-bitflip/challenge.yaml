@@ -1,0 +1,14 @@
+id: crypto-cbc-bitflip
+category: crypto
+name: "Bit Surgeon"
+difficulty: insane
+type: per-team
+serve: tcp
+flag_via: flag-service
+points: 825
+ports: [9999]
+siem: true
+description: >
+  Un servicio de autenticación cifra tokens de sesión con AES-CBC. El token
+  incluye el rol del usuario en texto plano predecible. Modifica bits del
+  ciphertext para cambiar tu rol de "guest" a "admin" sin conocer la clave.

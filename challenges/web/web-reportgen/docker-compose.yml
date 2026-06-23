@@ -1,4 +1,4 @@
-# web-reportgen — ReportGen Template Injection. Parametrizable por equipo.
+﻿# web-reportgen — ReportGen Template Injection. Parametrizable por equipo.
 networks:
   team_net:
     external: true
@@ -9,7 +9,7 @@ services:
     build: .
     image: web-reportgen-app
     environment:
-      FLAG: "${FLAG:-flag{EJEMPLO_LOCAL}}"
+      FLAG: "${FLAG:-HL4{EJEMPLO_LOCAL}}"
       TEAM_ID: "${TEAM_ID:-team_local}"
       CHALLENGE_ID: "web-reportgen"
       COLLECTOR_URL: "${COLLECTOR_URL:-http://collector:9000}"

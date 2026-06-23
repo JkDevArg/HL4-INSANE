@@ -1,0 +1,29 @@
+{
+  "teams": [
+    {
+      "id": 1,
+      "name": "Bytreach",
+      "players": ["alice", "bob", "charlie", "diana"]
+    },
+    {
+      "id": 2,
+      "name": "MoodySploiters",
+      "players": ["marcos", "lucia", "jose", "sara"]
+    },
+    {
+      "id": 3,
+      "name": "DARKHIVE",
+      "players": ["kevin", "paula", "rodrigo", "ana"]
+    },
+    {
+      "id": 4,
+      "name": "Threat Hunters",
+      "players": ["daniel", "sofia", "miguel", "carla"]
+    },
+    {
+      "id": 5,
+      "name": "Capa 8",
+      "players": ["juan", "maria", "pedro", "elena"]
+    }
+  ]
+}

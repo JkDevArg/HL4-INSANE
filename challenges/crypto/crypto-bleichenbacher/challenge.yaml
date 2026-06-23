@@ -1,0 +1,15 @@
+id: crypto-bleichenbacher
+category: crypto
+name: "Million Messages"
+difficulty: insane
+type: per-team
+serve: tcp
+flag_via: flag-service
+points: 950
+ports: [9999]
+siem: true
+description: >
+  Un servidor RSA 1024-bit descifra mensajes PKCS#1 v1.5 y te dice si el
+  padding es válido o no. Este es el clásico ataque de Bleichenbacher (1998):
+  con ~1 millón de consultas puedes descifrar cualquier ciphertext. El flag
+  está cifrado con la clave pública del servidor.

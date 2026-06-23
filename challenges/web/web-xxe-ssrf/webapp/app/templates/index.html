@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}FacturaPro — Inicio{% endblock %}
+{% block content %}
+<div class="row justify-content-center mt-5">
+  <div class="col-md-8 text-center">
+    <div class="card p-5">
+      <i class="bi bi-receipt-cutoff display-1 text-primary mb-3"></i>
+      <h1 class="fw-bold mb-2">FacturaPro</h1>
+      <p class="text-muted mb-4">Portal corporativo de gestión y procesamiento de facturas XML.<br>Sistema integrado con servicios de validación de metadatos internos.</p>
+      {% if logged_in %}
+        <a href="/dashboard" class="btn btn-primary btn-lg">Ir al Dashboard</a>
+      {% else %}
+        <a href="/login" class="btn btn-primary btn-lg">Iniciar Sesión</a>
+      {% endif %}
+    </div>
+    <div class="row mt-4">
+      <div class="col-md-4"><div class="card p-3 text-center"><i class="bi bi-file-earmark-xml display-6 text-warning"></i><p class="mt-2 mb-0 small fw-semibold">Importación XML</p><p class="text-muted small">Soporte para facturas en formato XML estándar</p></div></div>
+      <div class="col-md-4"><div class="card p-3 text-center"><i class="bi bi-shield-check display-6 text-success"></i><p class="mt-2 mb-0 small fw-semibold">Validación Automática</p><p class="text-muted small">Verificación contra servicios internos de metadatos</p></div></div>
+      <div class="col-md-4"><div class="card p-3 text-center"><i class="bi bi-lock display-6 text-danger"></i><p class="mt-2 mb-0 small fw-semibold">Sistema Aislado</p><p class="text-muted small">Infraestructura completamente segmentada</p></div></div>
+    </div>
+  </div>
+</div>
+{% endblock %}

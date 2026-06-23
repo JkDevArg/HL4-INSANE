@@ -1,4 +1,4 @@
-"""EdgeNews API — api-cache-05 (API INSANE · "Poisoned Edge").
+﻿"""EdgeNews API — api-cache-05 (API INSANE · "Poisoned Edge").
 
 VULN central: WEB CACHE DECEPTION detras de un CDN/edge simulado (nginx).
 
@@ -46,7 +46,7 @@ from reqlog import reqlog_http
 
 app = FastAPI(title="EdgeNews API", docs_url=None, redoc_url=None, openapi_url=None)
 
-FLAG = os.environ.get("FLAG", "flag{EJEMPLO_LOCAL}")
+FLAG = os.environ.get("FLAG", "HL4{EJEMPLO_LOCAL}")
 
 # El bot admin pide URLs a traves del edge (nginx), no directo a la API, para
 # que el edge sea quien cachee. En la red de equipo el edge es "cache:8080".

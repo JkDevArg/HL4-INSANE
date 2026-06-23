@@ -1,11 +1,11 @@
-# Template API. Parametrizable por equipo: TEAM_ID + FLAG.
-#   TEAM_ID=team_03 FLAG="flag{...}" docker compose -p api-CAMBIAME-NN__team_03 up -d
+﻿# Template API. Parametrizable por equipo: TEAM_ID + FLAG.
+#   TEAM_ID=team_03 FLAG="HL4{...}" docker compose -p api-CAMBIAME-NN__team_03 up -d
 services:
   api:
     build: .
     image: api-cambiame-nn
     environment:
-      FLAG: "${FLAG:-flag{EJEMPLO_LOCAL}}"
+      FLAG: "${FLAG:-HL4{EJEMPLO_LOCAL}}"
       TEAM_ID: "${TEAM_ID:-team_local}"
       CHALLENGE_ID: "api-CAMBIAME-NN"
       COLLECTOR_URL: "${COLLECTOR_URL:-http://collector:9000}"

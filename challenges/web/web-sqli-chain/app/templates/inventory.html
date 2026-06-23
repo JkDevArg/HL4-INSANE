@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}ERP — Inventario{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h4 class="fw-bold mb-0">Control de Inventario</h4>
+    <p class="text-muted small mb-0">Stock y precios de productos</p>
+  </div>
+</div>
+<div class="card">
+  <div class="card-header"><i class="bi bi-boxes me-2"></i>Inventario</div>
+  <div class="card-body p-0">
+    <table class="table table-hover mb-0">
+      <thead class="table-light">
+        <tr><th>ID</th><th>Producto</th><th>Stock</th><th>Precio Unit. (PEN)</th></tr>
+      </thead>
+      <tbody>
+        {% for item in items %}
+        <tr>
+          <td>{{ item.id }}</td>
+          <td>{{ item.product }}</td>
+          <td>
+            <span class="badge {% if item.stock < 5 %}bg-danger{% elif item.stock < 15 %}bg-warning text-dark{% else %}bg-success{% endif %}">
+              {{ item.stock }} unidades
+            </span>
+          </td>
+          <td>S/ {{ "%.2f"|format(item.price|float) }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

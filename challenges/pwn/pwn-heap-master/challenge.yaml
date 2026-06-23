@@ -1,0 +1,27 @@
+id: pwn-heap-master
+name: "Heap Master"
+category: pwn
+difficulty: insane
+points: 975
+author: "HackL4bs"
+description: |
+  Un servicio de notas en memoria esconde múltiples vulnerabilidades en el heap.
+  Cada nota te lleva más adentro. La flag está en /home/ctf/flag.txt.
+
+  Conectar: nc <IP> 9999
+
+  Autor: HackL4bs — solo para Capa 8
+hints:
+  - "UAF no es solo leer lo que no deberías. A veces es escribir donde no puedes."
+  - "glibc 2.35: tcache key check existe pero hay formas de rodearlo."
+  - "Cuando un chunk pasa al unsorted bin, sus punteros apuntan a la arena."
+  - "Las tres fases: leak de libc, corromper tcache, escribir sobre __malloc_hook."
+connection:
+  type: tcp
+  port: 9999
+tags:
+  - heap
+  - uaf
+  - tcache-poisoning
+  - libc-leak
+  - glibc-2.35

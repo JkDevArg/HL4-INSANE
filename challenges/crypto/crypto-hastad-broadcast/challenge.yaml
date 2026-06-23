@@ -1,0 +1,14 @@
+id: crypto-hastad-broadcast
+category: crypto
+name: "Broadcast Attack"
+difficulty: insane
+type: per-team
+serve: http
+flag_via: flag-service
+points: 825
+ports: [9999]
+siem: true
+description: >
+  El mismo mensaje fue cifrado con RSA e=3 para tres destinatarios distintos,
+  cada uno con su propio módulo. Los tres ciphertexts están disponibles.
+  No necesitas factorizar ningún módulo para recuperar el mensaje.

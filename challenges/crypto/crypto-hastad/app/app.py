@@ -1,4 +1,4 @@
-"""BroadcastRSA — crypto-hastad (Crypto INSANE, HTTP/Flask).
+﻿"""BroadcastRSA — crypto-hastad (Crypto INSANE, HTTP/Flask).
 
 Vulnerabilidad central: ATAQUE DE HASTAD SOBRE BROADCAST RSA.
 
@@ -34,7 +34,7 @@ from Crypto.Util.number import long_to_bytes, bytes_to_long, getPrime
 from siem import emit
 from reqlog import reqlog_http
 
-FLAG = os.environ.get("FLAG", "flag{EJEMPLO_LOCAL}").encode()
+FLAG = os.environ.get("FLAG", "HL4{EJEMPLO_LOCAL}").encode()
 CHALLENGE_ID = os.environ.get("CHALLENGE_ID", "crypto-hastad")
 
 app = Flask(__name__)

@@ -1,6 +1,6 @@
-# web-supply-01 — Poisoned Pipeline. Parametrizable por equipo: TEAM_ID + FLAG + TEAM_N + CHAL_NET.
+﻿# web-supply-01 — Poisoned Pipeline. Parametrizable por equipo: TEAM_ID + FLAG + TEAM_N + CHAL_NET.
 #   Lanzado por infra/launch-team-challenges.sh:
-#     TEAM_ID=team_03 TEAM_N=3 FLAG="flag{...}" CHAL_NET=ctf_team_03 \
+#     TEAM_ID=team_03 TEAM_N=3 FLAG="HL4{...}" CHAL_NET=ctf_team_03 \
 #       docker compose -p ctf_team_03_web_supply_01 up -d --build
 #
 # AISLAMIENTO: ambos servicios viven SOLO en la red del equipo (172.30.N.0/24),
@@ -28,7 +28,7 @@ services:
     depends_on:
       - registry
     environment:
-      FLAG: "${FLAG:-flag{EJEMPLO_LOCAL}}"
+      FLAG: "${FLAG:-HL4{EJEMPLO_LOCAL}}"
       TEAM_ID: "${TEAM_ID:-team_local}"
       CHALLENGE_ID: "web-supply-01"
       REGISTRY_URL: "http://registry:8080"

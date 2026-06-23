@@ -1,4 +1,4 @@
-"""Phantom Cache — pwn-pickle-03 (PWN INSANE).
+﻿"""Phantom Cache — pwn-pickle-03 (PWN INSANE).
 
 VULN central: DESERIALIZACION INSEGURA DE PICKLE (RCE) sobre datos del cliente,
 encadenada con una FUGA DE CLAVE de firma HMAC que un atacante necesita para
@@ -66,7 +66,7 @@ app = FastAPI(title="Phantom Cache", docs_url=None, redoc_url=None, openapi_url=
 #   DEBUG_TOKEN: token del endpoint de debug heredado. Quedo "olvidado" en el
 #                historial .git expuesto (eslabon 1 de la cadena).
 # --------------------------------------------------------------------------
-FLAG = os.environ.get("FLAG", "flag{EJEMPLO_LOCAL}")
+FLAG = os.environ.get("FLAG", "HL4{EJEMPLO_LOCAL}")
 SIGNING_KEY = os.environ.get("SIGNING_KEY", secrets.token_hex(24)).encode()
 DEBUG_TOKEN = os.environ.get("DEBUG_TOKEN", "dbg_" + secrets.token_hex(8))
 

@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}FacturaPro — Importar Factura XML{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h4 class="fw-bold mb-0">Importar Factura XML</h4>
+    <p class="text-muted small mb-0">Cargue una factura en formato XML para procesarla</p>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-md-7">
+    <div class="card">
+      <div class="card-header"><i class="bi bi-file-earmark-xml me-2"></i>Subir Factura XML</div>
+      <div class="card-body">
+        {% if error %}
+        <div class="alert alert-danger"><i class="bi bi-exclamation-triangle me-2"></i>{{ error }}</div>
+        {% endif %}
+        <form method="post" enctype="multipart/form-data">
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Archivo XML</label>
+            <input type="file" name="xmlfile" class="form-control" accept=".xml">
+            <div class="form-text">Formatos soportados: XML (ISO 21778, UBL 2.1, SUNAT)</div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">O pegue el contenido XML directamente:</label>
+            <textarea name="xmlcontent" class="form-control font-monospace" rows="12" placeholder='<?xml version="1.0" encoding="UTF-8"?>
+<invoice>
+  <id>INV-2024-005</id>
+  <amount>5000.00</amount>
+  <vendor>Proveedor SAC</vendor>
+  <currency>PEN</currency>
+</invoice>'></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary w-100"><i class="bi bi-cloud-upload me-1"></i>Procesar Factura</button>
+        </form>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-5">
+    <div class="card h-100">
+      <div class="card-header"><i class="bi bi-info-circle me-2"></i>Información del Sistema</div>
+      <div class="card-body">
+        {% if result %}
+          <div class="alert alert-success mb-3"><i class="bi bi-check-circle me-2"></i>{{ result.status }}</div>
+          <table class="table table-sm">
+            <tr><th>ID Factura</th><td><code>{{ result.invoice_id }}</code></td></tr>
+            <tr><th>Proveedor</th><td><pre class="xml-output mb-0" style="font-size:.75rem;">{{ result.vendor }}</pre></td></tr>
+            <tr><th>Monto</th><td>{{ result.currency }} {{ result.amount }}</td></tr>
+          </table>
+        {% else %}
+          <p class="text-muted">El sistema acepta documentos XML con la siguiente estructura:</p>
+          <pre class="xml-output"><code>&lt;?xml version="1.0"?&gt;
+&lt;!DOCTYPE invoice [
+  &lt;!ENTITY name SYSTEM "..."&gt;
+]&gt;
+&lt;invoice&gt;
+  &lt;id&gt;INV-XXXX&lt;/id&gt;
+  &lt;amount&gt;0.00&lt;/amount&gt;
+  &lt;vendor&gt;&amp;name;&lt;/vendor&gt;
+  &lt;currency&gt;PEN&lt;/currency&gt;
+&lt;/invoice&gt;</code></pre>
+          <p class="text-muted small mt-2">
+            <i class="bi bi-cpu me-1"></i>Motor XML: lxml 5.1.0<br>
+            <i class="bi bi-hdd-network me-1"></i>Validación: Servicio interno de metadatos<br>
+            <i class="bi bi-lock me-1"></i>Entorno: Red corporativa aislada
+          </p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,4 +1,4 @@
-"""DataHub Analytics API — api-datahub (GraphQL SQLi via @filter directive).
+﻿"""DataHub Analytics API — api-datahub (GraphQL SQLi via @filter directive).
 
 Vulnerabilidad:
   El campo `records` del tipo Dataset acepta un argumento `predicate` que
@@ -28,7 +28,7 @@ from reqlog import reqlog_http
 
 app = Flask(__name__)
 
-FLAG = os.environ.get("FLAG", "flag{EJEMPLO_LOCAL}")
+FLAG = os.environ.get("FLAG", "HL4{EJEMPLO_LOCAL}")
 
 # ---------------------------------------------------------------------------
 # Base de datos SQLite (en memoria, inicializada al arrancar)

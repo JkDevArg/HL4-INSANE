@@ -1,0 +1,19 @@
+# web-prototype-pollution — Node.js prototype pollution → EJS RCE
+# Lanzar: TEAM_ID=team_04 TEAM_N=4 FLAG="HL4{...}" CHAL_NET=ctf_team_04 docker compose -f challenges/web/web-prototype-pollution/docker-compose.yml up -d --build
+networks:
+  team_net:
+    external: true
+    name: ${CHAL_NET:-ctf_local}
+
+services:
+  app:
+    build: .
+    image: web-prototype-pollution-app
+    environment:
+      FLAG: "${FLAG:-HL4{EJEMPLO_LOCAL}}"
+      TEAM_ID: "${TEAM_ID:-team_local}"
+      CHALLENGE_ID: "web-prototype-pollution"
+    networks:
+      team_net:
+        ipv4_address: 172.30.${TEAM_N:-99}.11
+    restart: unless-stopped

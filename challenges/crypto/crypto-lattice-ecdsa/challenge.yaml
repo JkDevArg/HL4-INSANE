@@ -1,0 +1,14 @@
+id: crypto-lattice-ecdsa
+category: crypto
+name: "Lattice Strikes Back"
+difficulty: insane
+type: per-team
+serve: tcp
+flag_via: flag-service
+points: 950
+ports: [9999]
+siem: true
+description: >
+  Un servidor de firma digital expone un endpoint para firmar mensajes arbitrarios.
+  El servicio ha estado funcionando durante meses sin incidentes. Dicen que los nonces
+  son "suficientemente aleatorios". Consigue la clave privada y demuestra que no lo son.

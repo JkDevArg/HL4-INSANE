@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}ERP — Pedidos{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h4 class="fw-bold mb-0">Gestión de Pedidos</h4>
+    <p class="text-muted small mb-0">Listado completo de pedidos del sistema</p>
+  </div>
+  <div class="d-flex gap-2 align-items-center">
+    <span class="badge bg-info text-dark">WAF: Activo</span>
+    <span class="text-muted small">Orden actual: <code>{{ sort }}</code></span>
+  </div>
+</div>
+
+{% if error %}
+<div class="alert alert-danger"><i class="bi bi-exclamation-triangle me-2"></i><strong>Error SQL:</strong> {{ error }}</div>
+{% endif %}
+
+<div class="card mb-3">
+  <div class="card-header small d-flex align-items-center gap-2">
+    <i class="bi bi-funnel"></i> Ordenar por columna
+    <span class="badge bg-warning text-dark ms-auto">WAF bloquea: UNION, SELECT, OR, AND, --, DROP...</span>
+  </div>
+  <div class="card-body py-2">
+    <form method="get" class="row g-2 align-items-center">
+      <div class="col-auto">
+        <select name="sort" class="form-select form-select-sm">
+          {% for col in valid_columns %}
+          <option value="{{ col }}" {% if col == sort %}selected{% endif %}>{{ col }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-auto">
+        <button class="btn btn-sm btn-outline-primary">Aplicar</button>
+      </div>
+      <div class="col-auto text-muted small">
+        O envíe <code>POST /api/orders</code> con JSON body <code>{"sort": "..."}</code>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header d-flex justify-content-between">
+    <span><i class="bi bi-cart3 me-2"></i>Pedidos</span>
+    <span class="badge bg-secondary">{{ orders|length }} registros</span>
+  </div>
+  <div class="card-body p-0">
+    <table class="table table-hover mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>ID</th><th>Cliente</th><th>Producto</th><th>Cantidad</th><th>Total (PEN)</th><th>Estado</th><th>Fecha</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for o in orders %}
+        <tr>
+          <td>{{ o.id }}</td>
+          <td>{{ o.customer }}</td>
+          <td>{{ o.product }}</td>
+          <td>{{ o.quantity }}</td>
+          <td><strong>S/ {{ "%.2f"|format(o.total|float) }}</strong></td>
+          <td><span class="badge badge-{{ o.status }} px-2">{{ o.status }}</span></td>
+          <td><small class="text-muted">{{ o.created_at }}</small></td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7" class="text-center text-muted py-3">Sin resultados</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,17 @@
+id: pwn-aarch64-rop
+category: pwn
+name: "AArch64 ROP"
+difficulty: insane
+type: per-team
+serve: tcp
+flag_via: flag-service
+points: 950
+ports: [9998]
+siem: true
+description: >
+  Binario ARM64 (AArch64) con un buffer overflow clásico. Sin PIE, con ASLR.
+  La convención de llamada AArch64 y el conjunto de gadgets son distintos a x86:
+  el link register (x30/lr) almacena la dirección de retorno, los argumentos
+  van en x0-x7, y los gadgets típicos son "ldp x29,x30,[sp],#N; ret".
+  Construye una cadena ROP para leak de libc via puts(), calcula la dirección
+  de system() y ejecuta /bin/sh en AArch64 emulado.

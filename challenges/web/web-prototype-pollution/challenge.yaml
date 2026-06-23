@@ -1,0 +1,15 @@
+id: web-prototype-pollution
+category: web
+name: "Prototype Pollution RCE"
+difficulty: insane
+type: per-team
+serve: http
+flag_via: flag-service
+points: 900
+ports: [8080]
+siem: true
+description: >
+  Una API corporativa permite configurar el comportamiento de la aplicación
+  mediante objetos de configuración que se fusionan con la configuración base.
+  La aplicación usa EJS para renderizar reportes personalizados. El sistema
+  de configuración es "flexible por diseño". Explora qué tan flexible es realmente.

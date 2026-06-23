@@ -1,4 +1,4 @@
-"""Template de reto CRYPTO (servicio TCP estilo `nc host port`).
+﻿"""Template de reto CRYPTO (servicio TCP estilo `nc host port`).
 
 - Lee la flag SOLO de os.environ["FLAG"] (inyectada por equipo).
 - Servir por red (NO binario descargable) -> anti-cheat ARCHITECTURE §6.3.
@@ -8,7 +8,7 @@ Reemplaza el protocolo de abajo por tu oraculo/esquema real.
 import os
 import socketserver
 
-FLAG = os.environ.get("FLAG", "flag{EJEMPLO_LOCAL}").encode()
+FLAG = os.environ.get("FLAG", "HL4{EJEMPLO_LOCAL}").encode()
 HOST = "0.0.0.0"
 PORT = int(os.environ.get("PORT", "9999"))
 

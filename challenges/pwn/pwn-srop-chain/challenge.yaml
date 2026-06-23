@@ -1,0 +1,17 @@
+id: pwn-srop-chain
+category: pwn
+name: "SROP Chain"
+difficulty: insane
+type: per-team
+serve: tcp
+flag_via: flag-service
+points: 925
+ports: [9998]
+siem: true
+description: >
+  Binario x86-64 minimalista: solo ejecuta read(0, rsp, 1024) y luego ret.
+  No hay libc linkeada. Solo existen dos gadgets útiles en el binario:
+  "syscall; ret" y "pop rax; ret". Sin execve directo, sin libc, sin PLT.
+  Usa Sigreturn-Oriented Programming (rt_sigreturn, syscall 15) para forjar
+  un frame de señal completo en el stack y controlar todos los registros.
+  rax=59, rdi=ptr("/bin/sh"), rsi=0, rdx=0, rip=syscall → shell.

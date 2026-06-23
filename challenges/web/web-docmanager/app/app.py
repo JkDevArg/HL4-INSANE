@@ -1,4 +1,4 @@
-"""DocManager SOAP API — web-docmanager (Web INSANE) · "XXE en SOAP".
+﻿"""DocManager SOAP API — web-docmanager (Web INSANE) · "XXE en SOAP".
 
 Vulnerabilidad: XXE (XML External Entity Injection) en endpoint SOAP.
 
@@ -34,7 +34,7 @@ from reqlog import reqlog_http
 
 app = Flask(__name__)
 
-FLAG = os.environ.get("FLAG", "flag{EJEMPLO_LOCAL}")
+FLAG = os.environ.get("FLAG", "HL4{EJEMPLO_LOCAL}")
 
 # Escribir flag a disco
 try:
@@ -405,7 +405,7 @@ def soap_upload_v2():
     filename = doc_info.get("filename", "")
 
     # Detectar si el filename contiene la flag (XXE exitoso)
-    if FLAG in filename and FLAG != "flag{EJEMPLO_LOCAL}":
+    if FLAG in filename and FLAG != "HL4{EJEMPLO_LOCAL}":
         emit("challenge_solved", "alert", src_ip=src_ip,
              detail={"vuln": "xxe-soap-file-read", "filename": filename[:100]})
 

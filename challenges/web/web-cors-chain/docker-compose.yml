@@ -1,0 +1,32 @@
+# web-cors-chain — CORS misconfiguration + admin bot credential theft
+# Lanzar: TEAM_ID=team_05 TEAM_N=5 FLAG="HL4{...}" CHAL_NET=ctf_team_05 docker compose -f challenges/web/web-cors-chain/docker-compose.yml up -d --build
+networks:
+  team_net:
+    external: true
+    name: ${CHAL_NET:-ctf_local}
+  internal_net:
+    driver: bridge
+    internal: true
+
+services:
+  api:
+    build: ./api
+    image: web-cors-chain-api
+    environment:
+      FLAG: "${FLAG:-HL4{EJEMPLO_LOCAL}}"
+      TEAM_ID: "${TEAM_ID:-team_local}"
+      CHALLENGE_ID: "web-cors-chain"
+    networks:
+      team_net:
+        ipv4_address: 172.30.${TEAM_N:-99}.10
+      internal_net:
+    restart: unless-stopped
+
+  admin-bot:
+    build: ./admin-bot
+    image: web-cors-chain-bot
+    networks:
+      internal_net:
+    restart: unless-stopped
+    depends_on:
+      - api

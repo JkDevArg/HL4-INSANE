@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>AuthServer Corp — OAuth2</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <style>
+    body { background: #0f172a; color: #e2e8f0; }
+    .card { background: #1e293b; border: 1px solid #334155; }
+    .card-header { background: #0f172a; border-bottom: 1px solid #334155; }
+    a { color: #60a5fa; }
+    .endpoint-badge { background: #1e3a5f; color: #60a5fa; padding:.2rem .5rem; border-radius:4px; font-size:.8rem; font-family:monospace; }
+  </style>
+</head>
+<body>
+<nav class="navbar" style="background:#0a0f1e; border-bottom:1px solid #1e293b;">
+  <div class="container">
+    <span class="navbar-brand text-light fw-bold"><i class="bi bi-shield-lock me-2"></i>AuthServer Corp v2.1</span>
+    <span class="text-muted small">OAuth 2.0 Authorization Server</span>
+  </div>
+</nav>
+
+<!--
+  DEBUG INFO (eliminar antes de produccion):
+  client_admin secret: admin_secret_abc
+  client_reader secret: reader_secret_xyz
+  TODO: remover esta seccion antes del despliegue en prod
+-->
+
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="text-center mb-5">
+        <i class="bi bi-shield-lock-fill display-3 text-primary mb-3"></i>
+        <h2 class="fw-bold">OAuth 2.0 Authorization Server</h2>
+        <p class="text-muted">Servidor de autorización corporativo para aplicaciones internas</p>
+      </div>
+
+      <div class="card mb-4">
+        <div class="card-header py-2"><small class="text-muted">ENDPOINTS DISPONIBLES</small></div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-6">
+              <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="badge bg-primary">GET</span>
+                <span class="endpoint-badge">/authorize</span>
+              </div>
+              <p class="text-muted small mb-0">Endpoint de autorización OAuth2</p>
+            </div>
+            <div class="col-6">
+              <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="badge bg-success">POST</span>
+                <span class="endpoint-badge">/token</span>
+              </div>
+              <p class="text-muted small mb-0">Intercambio de tokens</p>
+            </div>
+            <div class="col-6">
+              <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="badge bg-success">POST</span>
+                <span class="endpoint-badge">/token/introspect</span>
+              </div>
+              <p class="text-muted small mb-0">Introspección de tokens activos</p>
+            </div>
+            <div class="col-6">
+              <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="badge bg-primary">GET</span>
+                <span class="endpoint-badge">/clients</span>
+              </div>
+              <p class="text-muted small mb-0">Listado de clientes registrados</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card mb-4">
+        <div class="card-header py-2"><small class="text-muted">FLUJOS SOPORTADOS</small></div>
+        <div class="card-body">
+          <ul class="mb-0">
+            <li><strong>Authorization Code</strong> — Para aplicaciones con usuario final</li>
+            <li><strong>Client Credentials</strong> — Para servicios machine-to-machine</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header py-2"><small class="text-muted">CLIENTES REGISTRADOS</small></div>
+        <div class="card-body p-0">
+          <table class="table table-dark mb-0">
+            <thead>
+              <tr><th>Client ID</th><th>Nombre</th><th>Scopes</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>client_reader</code></td>
+                <td>Reader App</td>
+                <td><span class="badge bg-secondary">read</span> <span class="badge bg-secondary">profile</span></td>
+              </tr>
+              <tr>
+                <td><code>client_admin</code></td>
+                <td>Admin Panel</td>
+                <td><span class="badge bg-danger">admin</span> <span class="badge bg-warning text-dark">write</span> <span class="badge bg-secondary">read</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="text-center mt-4">
+        <a href="/authorize?client_id=client_reader&response_type=code&scope=read&redirect_uri=http://localhost:3000/callback&state=xyz123" class="btn btn-primary">
+          Probar Flujo de Autorización
+        </a>
+        <a href="/clients" class="btn btn-outline-light ms-2">Ver Clientes (JSON)</a>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

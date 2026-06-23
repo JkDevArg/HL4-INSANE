@@ -1,4 +1,4 @@
-# api-datahub — DataHub Analytics (GraphQL SQLi). Vive solo en la red del equipo.
+﻿# api-datahub — DataHub Analytics (GraphQL SQLi). Vive solo en la red del equipo.
 networks:
   team_net:
     external: true
@@ -9,7 +9,7 @@ services:
     build: .
     image: api-datahub
     environment:
-      FLAG: "${FLAG:-flag{EJEMPLO_LOCAL}}"
+      FLAG: "${FLAG:-HL4{EJEMPLO_LOCAL}}"
       TEAM_ID: "${TEAM_ID:-team_local}"
       CHALLENGE_ID: "api-datahub"
       COLLECTOR_URL: "${COLLECTOR_URL:-http://collector:9000}"

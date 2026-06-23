@@ -1,4 +1,4 @@
-"""HRMPro Human Resources API — api-hrmpro (mass assignment + type-check bypass).
+﻿"""HRMPro Human Resources API — api-hrmpro (mass assignment + type-check bypass).
 
 Vulnerabilidad:
   El endpoint PUT /profile/update tiene una lista blanca de campos permitidos:
@@ -45,7 +45,7 @@ from reqlog import reqlog_http
 
 app = Flask(__name__)
 
-FLAG = os.environ.get("FLAG", "flag{EJEMPLO_LOCAL}")
+FLAG = os.environ.get("FLAG", "HL4{EJEMPLO_LOCAL}")
 JWT_SECRET = secrets.token_hex(32)
 
 # Campos que los usuarios pueden actualizar directamente (lista blanca)

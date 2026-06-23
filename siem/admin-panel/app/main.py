@@ -55,6 +55,14 @@ TEAM_CONTAINER_RE = re.compile(r"^/?ctf_team_(\d{2})_")
 # Patrón para extraer el número de equipo de un nombre de contenedor.
 TEAM_NUM_RE = re.compile(r"ctf_team_(\d{2})_")
 
+TEAM_NAMES = {
+    1: "Bytreach",
+    2: "MoodySploiters",
+    3: "DARKHIVE",
+    4: "Threat Hunters",
+    5: "Capa 8",
+}
+
 STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
 
 app = FastAPI(title="CTFHL4 Admin Panel", docs_url=None, redoc_url=None, openapi_url=None)
@@ -294,6 +302,7 @@ async def api_stats(session: str | None = Cookie(default=None)):
             t,
             {
                 "team": t,
+                "name": TEAM_NAMES.get(t, f"Equipo {t:02d}"),
                 "containers": 0,
                 "running": 0,
                 "cpu_pct": 0.0,

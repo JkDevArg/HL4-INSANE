@@ -1,0 +1,13 @@
+id: pwn-vm-escape
+name: "VM Escape"
+category: pwn
+difficulty: insane
+points: 500
+port: 9998
+description: |
+  A custom bytecode VM interpreter with 16 opcodes.
+  The STORE opcode doesn't verify bounds — write outside vm_mem[].
+  Overwrite a function pointer that lives after the VM memory.
+  Escape the VM to execute the win function.
+flag_format: HL4{...}
+author: HL4bs

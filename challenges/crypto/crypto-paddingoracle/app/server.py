@@ -1,4 +1,4 @@
-"""NoisyVault — crypto-paddingoracle (Crypto INSANE, servido por TCP).
+﻿"""NoisyVault — crypto-paddingoracle (Crypto INSANE, servido por TCP).
 
 Vulnerabilidad central: AES-CBC PADDING ORACLE con ruido estadístico.
 
@@ -30,7 +30,7 @@ from Crypto.Random import get_random_bytes
 from siem import emit
 from reqlog import reqlog_tcp
 
-FLAG = os.environ.get("FLAG", "flag{EJEMPLO_LOCAL}").encode()
+FLAG = os.environ.get("FLAG", "HL4{EJEMPLO_LOCAL}").encode()
 HOST = "0.0.0.0"
 PORT = int(os.environ.get("PORT", "9999"))
 BLOCK = 16

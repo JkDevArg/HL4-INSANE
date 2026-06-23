@@ -1,0 +1,14 @@
+id: crypto-wiener
+category: crypto
+name: "Small Key Big Problem"
+difficulty: insane
+type: per-team
+serve: tcp
+flag_via: flag-service
+points: 875
+ports: [9999]
+siem: true
+description: >
+  Un servicio RSA multi-instancia usa exponentes privados pequeños para mayor
+  velocidad de descifrado. El exponente público e es enorme. Cuando d < n^0.25,
+  el ataque de Wiener usando fracciones continuas recupera d en tiempo polinomial.

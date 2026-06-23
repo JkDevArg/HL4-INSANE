@@ -1,4 +1,4 @@
-# Solución — web-reportgen · Template Injection WAF
+﻿# Solución — web-reportgen · Template Injection WAF
 
 **Categoría:** web · **Dificultad:** insane · **Puntos:** 650 · **Vuln:** SSTI Jinja2 con WAF bypass mediante hex escapes
 
@@ -55,8 +55,8 @@ req = urllib.request.Request(f"{TARGET}/render", data=data,
 with urllib.request.urlopen(req) as resp:
     body = resp.read().decode()
     # Flag is in the rendered output in the page
-    if "flag{" in body:
-        start = body.find("flag{")
+    if "HL4{" in body:
+        start = body.find("HL4{")
         end = body.find("}", start) + 1
         print(f"[FLAG] {body[start:end]}")
     else:

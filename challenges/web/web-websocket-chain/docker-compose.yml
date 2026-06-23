@@ -1,0 +1,32 @@
+# web-websocket-chain — CSWSH + admin bot WebSocket hijacking
+# Lanzar: TEAM_ID=team_04 TEAM_N=4 FLAG="HL4{...}" CHAL_NET=ctf_team_04 docker compose -f challenges/web/web-websocket-chain/docker-compose.yml up -d --build
+networks:
+  team_net:
+    external: true
+    name: ${CHAL_NET:-ctf_local}
+  internal_net:
+    driver: bridge
+    internal: true
+
+services:
+  webapp:
+    build: ./webapp
+    image: web-websocket-chain-webapp
+    environment:
+      FLAG: "${FLAG:-HL4{EJEMPLO_LOCAL}}"
+      TEAM_ID: "${TEAM_ID:-team_local}"
+      CHALLENGE_ID: "web-websocket-chain"
+    networks:
+      team_net:
+        ipv4_address: 172.30.${TEAM_N:-99}.12
+      internal_net:
+    restart: unless-stopped
+
+  admin-bot:
+    build: ./admin-bot
+    image: web-websocket-chain-bot
+    networks:
+      internal_net:
+    restart: unless-stopped
+    depends_on:
+      - webapp

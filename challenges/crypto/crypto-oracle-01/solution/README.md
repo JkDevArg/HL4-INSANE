@@ -1,4 +1,4 @@
-# Solución — crypto-oracle-01 · Padding Confessions
+﻿# Solución — crypto-oracle-01 · Padding Confessions
 
 **Categoría:** crypto · **Dificultad:** insane · **Vuln central:** Padding Oracle sobre AES-CBC + PKCS#7.
 
@@ -29,8 +29,8 @@ es el "bloque anterior" del primer bloque de ct).
 
 ```sh
 python solution/exploit.py <host> 9999
-# [+] bloque 1: b'flag{EJEMPLO}\x03\x03\x03'
-# [*] FLAG: flag{EJEMPLO}
+# [+] bloque 1: b'HL4{EJEMPLO}\x03\x03\x03'
+# [*] FLAG: HL4{EJEMPLO}
 ```
 
 El script (`solution/exploit.py`) maneja el falso positivo clásico en `pad=1`

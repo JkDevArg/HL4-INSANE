@@ -1,0 +1,14 @@
+id: crypto-fermat-rsa
+category: crypto
+name: "Too Close For Comfort"
+difficulty: insane
+type: per-team
+serve: tcp
+flag_via: flag-service
+points: 825
+ports: [9999]
+siem: true
+description: >
+  Un servidor RSA genera sus primos p y q de manera "especial" para mayor rendimiento.
+  El módulo público está disponible. Si los primos están demasiado cerca entre sí,
+  Fermat tiene algo que decirte.

@@ -1,4 +1,4 @@
-"""CreditView API — web-creditview (Web INSANE) · "Deuda de Legado".
+﻿"""CreditView API — web-creditview (Web INSANE) · "Deuda de Legado".
 
 Vulnerabilidad central: INSECURE DESERIALIZATION via formato binario propietario.
 
@@ -68,7 +68,7 @@ from reqlog import reqlog_http
 
 app = Flask(__name__)
 
-FLAG = os.environ.get("FLAG", "flag{EJEMPLO_LOCAL}")
+FLAG = os.environ.get("FLAG", "HL4{EJEMPLO_LOCAL}")
 
 # ---------------------------------------------------------------------------
 # Clase target de deserialización

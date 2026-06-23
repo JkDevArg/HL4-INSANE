@@ -1,4 +1,4 @@
-# Solución — web-CAMBIAME-NN (TEMPLATE)
+﻿# Solución — web-CAMBIAME-NN (TEMPLATE)
 
 > Reemplaza este writeup con la solución real del reto.
 
@@ -10,7 +10,7 @@ CAMBIAME (ej: SSTI, SQLi, deserialización, supply chain...).
 
 1. ...
 2. ...
-3. Obtener la flag: `flag{EJEMPLO}`.
+3. Obtener la flag: `HL4{EJEMPLO}`.
 
 ## Nota anti-cheat
 

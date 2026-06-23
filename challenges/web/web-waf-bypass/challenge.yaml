@@ -1,0 +1,16 @@
+id: web-waf-bypass
+category: web
+name: "WAF Bypass SQLi"
+difficulty: insane
+type: per-team
+serve: http
+flag_via: flag-service
+points: 850
+ports: [8080]
+siem: true
+description: >
+  Un portal de búsqueda corporativo está protegido por un WAF personalizado
+  que bloquea las inyecciones SQL más comunes. El equipo de seguridad probó
+  todos los payloads estándar y el WAF los bloqueó todos. La base de datos
+  SQLite guarda información confidencial. ¿Puede el WAF ser engañado con
+  técnicas de codificación avanzadas?

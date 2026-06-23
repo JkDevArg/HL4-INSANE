@@ -1,4 +1,4 @@
-# web-docmanager — DocManager SOAP XXE. Parametrizable por equipo.
+﻿# web-docmanager — DocManager SOAP XXE. Parametrizable por equipo.
 networks:
   team_net:
     external: true
@@ -9,7 +9,7 @@ services:
     build: .
     image: web-docmanager-app
     environment:
-      FLAG: "${FLAG:-flag{EJEMPLO_LOCAL}}"
+      FLAG: "${FLAG:-HL4{EJEMPLO_LOCAL}}"
       TEAM_ID: "${TEAM_ID:-team_local}"
       CHALLENGE_ID: "web-docmanager"
       COLLECTOR_URL: "${COLLECTOR_URL:-http://collector:9000}"

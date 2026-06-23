@@ -1,4 +1,4 @@
-"""Royal Console — web-jwt-04 (Web INSANE).
+﻿"""Royal Console — web-jwt-04 (Web INSANE).
 
 App de administracion del "Reino" con autenticacion por JWT (RS256). Cualquiera
 puede registrarse / pedir un token de invitado (role=guest). El endpoint
@@ -81,7 +81,7 @@ def _log_request():
         pass
 
 
-FLAG = os.environ.get("FLAG", "flag{EJEMPLO_LOCAL}")
+FLAG = os.environ.get("FLAG", "HL4{EJEMPLO_LOCAL}")
 
 ISSUER = "royal-console"
 KID = "royal-2024"

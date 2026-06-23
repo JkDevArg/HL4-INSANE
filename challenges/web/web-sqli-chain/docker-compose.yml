@@ -1,0 +1,21 @@
+# web-sqli-chain — ERP con SQLi + WAF bypass
+# Lanzar: TEAM_ID=team_03 TEAM_N=3 FLAG="HL4{...}" CHAL_NET=ctf_team_03 docker compose up -d --build
+networks:
+  team_net:
+    external: true
+    name: ${CHAL_NET:-ctf_local}
+
+services:
+  webapp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: web-sqli-chain-webapp
+    environment:
+      FLAG: "${FLAG:-HL4{EJEMPLO_LOCAL}}"
+      TEAM_ID: "${TEAM_ID:-team_local}"
+      CHALLENGE_ID: "web-sqli-chain"
+    networks:
+      team_net:
+        ipv4_address: 172.30.${TEAM_N:-99}.10
+    restart: unless-stopped

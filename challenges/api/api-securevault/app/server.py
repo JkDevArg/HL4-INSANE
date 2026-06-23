@@ -1,4 +1,4 @@
-"""SecureVault Secrets API — api-securevault (JWT kid path traversal).
+﻿"""SecureVault Secrets API — api-securevault (JWT kid path traversal).
 
 Vulnerabilidad:
   El servidor usa el campo `kid` del header JWT para cargar la clave de
@@ -44,7 +44,7 @@ from reqlog import reqlog_http
 
 app = Flask(__name__)
 
-FLAG = os.environ.get("FLAG", "flag{EJEMPLO_LOCAL}")
+FLAG = os.environ.get("FLAG", "HL4{EJEMPLO_LOCAL}")
 KEYS_DIR = "/keys"
 
 # ---------------------------------------------------------------------------

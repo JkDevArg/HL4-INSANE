@@ -1,4 +1,4 @@
-# Solución — crypto-CAMBIAME-NN (TEMPLATE)
+﻿# Solución — crypto-CAMBIAME-NN (TEMPLATE)
 
 > Reemplaza con la solución real + script de explotación.
 
@@ -7,7 +7,7 @@ CAMBIAME (padding oracle AES-CBC, ECB cut-and-paste, nonce reuse...).
 
 ## Pasos / script
 1. ...
-2. Flag: `flag{EJEMPLO}`.
+2. Flag: `HL4{EJEMPLO}`.
 
 ## Nota anti-cheat
 El reto se sirve **por red** (`nc host 9999`): no hay binario descargable, así

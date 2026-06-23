@@ -1,0 +1,12 @@
+id: pwn-seccomp-bypass
+name: "Seccomp Bypass"
+category: pwn
+difficulty: insane
+points: 500
+port: 9998
+description: |
+  A static binary with a seccomp filter that blocks execve/fork/socket.
+  You have a stack overflow but can't spawn a shell.
+  Build an open-read-write ROP chain to read the flag directly.
+flag_format: HL4{...}
+author: HL4bs

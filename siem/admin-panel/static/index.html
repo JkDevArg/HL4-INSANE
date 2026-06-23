@@ -188,11 +188,13 @@ function renderTeams(teams){
   root.innerHTML = "";
   teams.forEach(t=>{
     const nn = String(t.team).padStart(2,"0");
+    const teamName = t.name || `Equipo ${nn}`;
     const card = document.createElement("div");
     card.className = "card";
     card.innerHTML = `
-      <h2><span class="led ${ledClass(t)}"></span> Equipo ${nn}
-        <span style="margin-left:auto;color:var(--muted);font-size:12px">${t.running}/${t.containers} up</span></h2>
+      <h2><span class="led ${ledClass(t)}"></span> ${teamName}
+        <span style="margin-left:auto;color:var(--muted);font-size:11px">${t.running}/${t.containers} up</span></h2>
+      <div class="metric"><span style="color:var(--muted);font-size:11px">Equipo ${nn}</span><b></b></div>
       <div class="metric"><span>CPU (suma)</span><b>${t.cpu_pct.toFixed(1)} %</b></div>
       <div class="metric"><span>RAM</span><b>${fmtBytes(t.mem_used)}</b></div>
       <div class="bar"><div style="width:${Math.min(t.cpu_pct,100)}%"></div></div>

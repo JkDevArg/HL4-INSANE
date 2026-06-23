@@ -1,0 +1,16 @@
+id: web-oauth-misconfig
+category: web
+name: "OAuth2 Misconfiguration"
+difficulty: insane
+type: per-team
+serve: http
+flag_via: flag-service
+points: 900
+ports: [8080]
+siem: true
+description: >
+  Una empresa implementó su propio servidor de autorización OAuth2 para
+  manejar el acceso de aplicaciones internas. Dos clientes están registrados:
+  una app de lectura y un panel de administración. El servidor de recursos
+  contiene información confidencial accesible solo para administradores.
+  ¿Pueden los límites de scope ser eludidos?

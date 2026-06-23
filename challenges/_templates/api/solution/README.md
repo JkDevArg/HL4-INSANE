@@ -1,4 +1,4 @@
-# Solución — api-CAMBIAME-NN (TEMPLATE)
+﻿# Solución — api-CAMBIAME-NN (TEMPLATE)
 
 > Reemplaza con la solución real.
 
@@ -7,7 +7,7 @@ CAMBIAME (BOLA/IDOR, mass assignment, JWT mal validado...).
 
 ## Pasos
 1. ...
-2. Flag: `flag{EJEMPLO}`.
+2. Flag: `HL4{EJEMPLO}`.
 
 ## Nota anti-cheat
 Flag dinámica por equipo (HMAC, `ARCHITECTURE §4`). Enviar la flag de otro

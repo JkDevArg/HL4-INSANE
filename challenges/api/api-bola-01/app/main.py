@@ -1,4 +1,4 @@
-"""LedgerX API — api-bola-01 (API INSANE).
+﻿"""LedgerX API — api-bola-01 (API INSANE).
 
 Cadena de vulnerabilidades encadenadas:
   1) JWT MAL VALIDADO: el verificador acepta tokens con `alg: none` (sin firma).
@@ -80,7 +80,7 @@ class ReqLogMiddleware:
 
 app.add_middleware(ReqLogMiddleware)
 
-FLAG = os.environ.get("FLAG", "flag{EJEMPLO_LOCAL}")
+FLAG = os.environ.get("FLAG", "HL4{EJEMPLO_LOCAL}")
 JWT_SECRET = os.environ.get("JWT_SECRET", secrets.token_hex(16))
 
 # --- "Base de datos" en memoria ---

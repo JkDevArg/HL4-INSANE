@@ -1,0 +1,15 @@
+id: web-cache-deception
+category: web
+name: "Cache Deception"
+difficulty: insane
+type: per-team
+serve: http
+flag_via: flag-service
+points: 850
+ports: [8080]
+siem: true
+description: >
+  Una aplicación web corporativa sirve perfiles de usuario a través de un
+  CDN/proxy de caché para mejorar el rendimiento. El sistema distingue entre
+  recursos estáticos y dinámicos para optimizar el caché. El administrador
+  revisa el sistema regularmente. ¿Puede el caché traicionar sus secretos?

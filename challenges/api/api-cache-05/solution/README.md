@@ -1,4 +1,4 @@
-# Solucion — api-cache-05 · Poisoned Edge
+﻿# Solucion — api-cache-05 · Poisoned Edge
 
 **Categoria:** api · **Dificultad:** insane · **Vuln central:** Web Cache Deception (path confusion en la API + cache-key inseguro en el edge/CDN) encadenada con un envenenamiento dirigido a una victima autenticada (admin-bot).
 
@@ -63,7 +63,7 @@ cachea el admin.
 5. **Leer la flag** con la cookie admin robada:
    ```
    GET /api/v1/admin/flag   (Cookie: session=adm_xxxx...)
-   -> {"flag":"flag{...}"}
+   -> {"flag":"HL4{...}"}
    ```
 
 Exploit completo: `python solution/exploit.py http://<host>:8080`

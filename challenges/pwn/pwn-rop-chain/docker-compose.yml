@@ -1,0 +1,17 @@
+networks:
+  team_net:
+    external: true
+    name: ${CHAL_NET:-ctf_local}
+
+services:
+  app:
+    build: .
+    image: pwn-rop-chain-app
+    environment:
+      FLAG: "${FLAG:-HL4{f4ke_fl4g_r0p_ch41n}}"
+      TEAM_ID: "${TEAM_ID:-team_local}"
+      CHALLENGE_ID: "pwn-rop-chain"
+    networks:
+      team_net:
+        ipv4_address: 172.30.${TEAM_N:-99}.31
+    restart: unless-stopped

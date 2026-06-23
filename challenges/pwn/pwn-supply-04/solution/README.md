@@ -1,4 +1,4 @@
-# Solución — pwn-supply-04 · Poisoned Pipeline
+﻿# Solución — pwn-supply-04 · Poisoned Pipeline
 
 **Categoría:** pwn · **Dificultad:** insane · **Puntos:** 700
 **Vuln central:** Ataque de **cadena de suministro** — ejecución de **lifecycle scripts** de npm (`postinstall`) en un CI runner sin sandbox → RCE → exfiltración del secreto de CI (la flag) en el log del build.
@@ -142,14 +142,14 @@ curl -s http://<forge>:8080/build/<id> | grep -oE 'flag\{[^}]*\}'
 ```
 
 **Todo automatizado en `solution/exploit/pwn.sh <forge_host> <registry_host>`.**
-Salida verificada (FLAG de prueba `flag{poisoned_pipeline_TEST}`):
+Salida verificada (FLAG de prueba `HL4{poisoned_pipeline_TEST}`):
 
 ```
 [2] disparando build...
 log: "> @forge/logger@9.9.9 postinstall\n> node postinstall.js\n
       === FORGE-PWNED postinstall ejecutado en el runner ===
-      CI_SECRET_FLAG=flag{poisoned_pipeline_TEST}"
-[3] flag: flag{poisoned_pipeline_TEST}
+      CI_SECRET_FLAG=HL4{poisoned_pipeline_TEST}"
+[3] flag: HL4{poisoned_pipeline_TEST}
 ```
 
 ### Vector alternativo (lockfile manipulado)

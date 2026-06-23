@@ -1,4 +1,4 @@
-"""ReportGen — web-reportgen (Web INSANE) · "Template Injection WAF".
+﻿"""ReportGen — web-reportgen (Web INSANE) · "Template Injection WAF".
 
 Vulnerabilidad: SSTI (Server-Side Template Injection) en Jinja2 con WAF bypass.
 
@@ -25,7 +25,7 @@ from reqlog import reqlog_http
 
 app = Flask(__name__)
 
-FLAG = os.environ.get("FLAG", "flag{EJEMPLO_LOCAL}")
+FLAG = os.environ.get("FLAG", "HL4{EJEMPLO_LOCAL}")
 
 # Escribir flag a disco para que SSTI pueda leerla via os.popen
 try:
@@ -210,7 +210,7 @@ def render():
             result="", error=f"Error inesperado: {e}", waf_blocked=None, prefill=template_str)
 
     # Detectar flag en el output (challenge_solved)
-    if FLAG in rendered and FLAG != "flag{EJEMPLO_LOCAL}":
+    if FLAG in rendered and FLAG != "HL4{EJEMPLO_LOCAL}":
         emit("challenge_solved", "alert", src_ip=src_ip,
              detail={"vuln": "ssti-jinja2-waf-bypass"})
 
@@ -241,7 +241,7 @@ def api_render():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-    if FLAG in rendered and FLAG != "flag{EJEMPLO_LOCAL}":
+    if FLAG in rendered and FLAG != "HL4{EJEMPLO_LOCAL}":
         emit("challenge_solved", "alert", src_ip=src_ip,
              detail={"vuln": "ssti-jinja2-waf-bypass"})
 

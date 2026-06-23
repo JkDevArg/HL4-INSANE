@@ -1,0 +1,14 @@
+id: crypto-hash-length-ext
+category: crypto
+name: "Secret Suffix? Prefix!"
+difficulty: insane
+type: per-team
+serve: http
+flag_via: flag-service
+points: 850
+ports: [9999]
+siem: true
+description: >
+  Una API firma sus requests con HMAC usando un secreto de longitud desconocida:
+  sig = SHA256(secret || message). Tienes un request firmado válido. Extiéndelo
+  para añadir admin=true sin conocer el secreto.

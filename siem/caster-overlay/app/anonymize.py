@@ -39,6 +39,24 @@ TEAM_NAMES = {
     5: "Capa 8",
 }
 
+# Jugadores por equipo: team_N -> [jugador_1, jugador_2, jugador_3, jugador_4]
+# Completar con los nombres reales de vpn/teams.json antes del deploy.
+PLAYER_NAMES: dict[int, list[str]] = {
+    1: [],  # Bytreach
+    2: [],  # MoodySploiters
+    3: [],  # DARKHIVE
+    4: [],  # Threat Hunters
+    5: [],  # Capa 8
+}
+
+
+def _player_label(team_n: int, player_idx: int) -> str:
+    """Devuelve el nombre del jugador (1-based) o 'Jugador N' como fallback."""
+    names = PLAYER_NAMES.get(team_n, [])
+    if names and 1 <= player_idx <= len(names):
+        return names[player_idx - 1]
+    return f"Jugador {player_idx}"
+
 
 def _team_label(n: int) -> str:
     """team N -> nombre del equipo (o 'Equipo NN' como fallback)."""
@@ -64,8 +82,8 @@ def anonymize_ip(ip: str) -> str:
 
     # Red VPN / equipos / plataforma / siem: 10.10.x.x
     if o[0] == 10 and o[1] == 10:
-        if 1 <= o[2] <= 10:
-            return _team_label(o[2])          # 10.10.N.M -> Equipo NN
+        if 1 <= o[2] <= 5:
+            return _team_label(o[2])          # 10.10.N.M -> nombre equipo
         if o[2] == 100:
             return "plataforma"               # 10.10.100.x
         if o[2] == 200:
@@ -76,8 +94,8 @@ def anonymize_ip(ip: str) -> str:
 
     # Red Docker de retos por equipo: 172.30.N.x
     if o[0] == 172 and o[1] == 30:
-        if 1 <= o[2] <= 10:
-            return f"reto(Equipo {o[2]:02d})"
+        if 1 <= o[2] <= 5:
+            return f"reto({_team_label(o[2])})"
         return "reto"
 
     # Cualquier otra IP privada -> interno
@@ -102,17 +120,17 @@ def team_from_ip(ip: str):
         return None
     o = ip.split(".")
     a, b, c = int(o[0]), int(o[1]), int(o[2])
-    if a == 10 and b == 10 and 1 <= c <= 10:
+    if a == 10 and b == 10 and 1 <= c <= 5:
         return _team_label(c)
     return None
 
 
 def team_from_team_id(team_id):
-    """team_03 / team_01_p2 -> nombre del equipo. Cualquier otra cosa -> None."""
+    """team_03 / team_01_alice / team_01_p2 -> nombre del equipo. Cualquier otra cosa -> None."""
     if not team_id:
         return None
-    # Acepta team_NN y también team_NN_pX (certs por jugador).
-    m = re.match(r"team_?(\d{1,2})(?:_p\d+)?$", str(team_id).strip(), re.IGNORECASE)
+    # Acepta: team_NN, team_NN_pX (legacy), team_NN_playername (nuevo).
+    m = re.match(r"team_?(\d{1,2})(?:_.+)?$", str(team_id).strip(), re.IGNORECASE)
     if not m:
         return None
     return _team_label(int(m.group(1)))

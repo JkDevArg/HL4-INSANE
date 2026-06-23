@@ -1,0 +1,14 @@
+id: crypto-ecdh-invalid
+category: crypto
+name: "Off Curve"
+difficulty: insane
+type: per-team
+serve: tcp
+flag_via: flag-service
+points: 950
+ports: [9999]
+siem: true
+description: >
+  Un servidor ECDH P-256 acepta puntos del cliente sin validar que estén
+  en la curva correcta. Enviando puntos de curvas de orden pequeño puedes
+  revelar el secreto privado del servidor bit a bit usando CRT.

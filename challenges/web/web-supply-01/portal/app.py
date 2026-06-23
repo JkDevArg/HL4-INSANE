@@ -1,4 +1,4 @@
-"""DevOps Portal — web-supply-01 (Supply chain INSANE).
+﻿"""DevOps Portal — web-supply-01 (Supply chain INSANE).
 
 Escenario realista:
   - ACME tiene un index PyPI PRIVADO (servicio `registry`) que permite subir
@@ -52,7 +52,7 @@ def _log_request():
         # El logging jamás debe tumbar el reto.
         pass
 
-FLAG = os.environ.get("FLAG", "flag{EJEMPLO_LOCAL}")
+FLAG = os.environ.get("FLAG", "HL4{EJEMPLO_LOCAL}")
 REGISTRY_URL = os.environ.get("REGISTRY_URL", "http://registry:8080")
 
 # Resultados de builds (en memoria). build_id -> log.

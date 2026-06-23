@@ -1,0 +1,51 @@
+# web-oss-registry — Fake pip registry + CI runner + build server supply chain
+# Launch: TEAM_ID=team_01 TEAM_N=1 FLAG="HL4{...}" CHAL_NET=ctf_team_01 docker compose -f challenges/web/web-oss-registry/docker-compose.yml up -d --build
+networks:
+  team_net:
+    external: true
+    name: ${CHAL_NET:-ctf_local}
+  internal_net:
+    driver: bridge
+    internal: true
+
+services:
+  registry:
+    build:
+      context: .
+      dockerfile: registry/Dockerfile
+    image: web-oss-registry-registry-${TEAM_ID:-local}
+    environment:
+      FLAG: "${FLAG:-HL4{EJEMPLO_LOCAL}}"
+      TEAM_ID: "${TEAM_ID:-team_local}"
+      CHALLENGE_ID: "web-oss-registry"
+    networks:
+      team_net:
+        ipv4_address: 172.30.${TEAM_N:-99}.10
+      internal_net:
+    restart: unless-stopped
+
+  ci-runner:
+    build:
+      context: .
+      dockerfile: ci-runner/Dockerfile
+    image: web-oss-registry-ci-runner-${TEAM_ID:-local}
+    environment:
+      REGISTRY_URL: "http://registry:8080"
+      BUILD_SERVER_URL: "http://build-server:9000"
+    networks:
+      internal_net:
+    restart: unless-stopped
+    depends_on:
+      - registry
+      - build-server
+
+  build-server:
+    build:
+      context: .
+      dockerfile: build-server/Dockerfile
+    image: web-oss-registry-build-server-${TEAM_ID:-local}
+    environment:
+      FLAG: "${FLAG:-HL4{EJEMPLO_LOCAL}}"
+    networks:
+      internal_net:
+    restart: unless-stopped

@@ -1,0 +1,19 @@
+# web-waf-bypass — WAF bypass + SQLi via JSON body
+# Lanzar: TEAM_ID=team_05 TEAM_N=5 FLAG="HL4{...}" CHAL_NET=ctf_team_05 docker compose -f challenges/web/web-waf-bypass/docker-compose.yml up -d --build
+networks:
+  team_net:
+    external: true
+    name: ${CHAL_NET:-ctf_local}
+
+services:
+  app:
+    build: .
+    image: web-waf-bypass-app
+    environment:
+      FLAG: "${FLAG:-HL4{EJEMPLO_LOCAL}}"
+      TEAM_ID: "${TEAM_ID:-team_local}"
+      CHALLENGE_ID: "web-waf-bypass"
+    networks:
+      team_net:
+        ipv4_address: 172.30.${TEAM_N:-99}.12
+    restart: unless-stopped

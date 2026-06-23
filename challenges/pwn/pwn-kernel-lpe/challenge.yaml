@@ -1,0 +1,13 @@
+id: pwn-kernel-lpe
+name: "Kernel LPE"
+category: pwn
+difficulty: insane
+points: 500
+port: 9998
+description: |
+  A privileged driver process exposes a TCP service with a binary protocol.
+  The driver has no ASLR (personality ADDR_NO_RANDOMIZE).
+  Overflow its kernel stack buffer, overwrite a function pointer, escalate to root.
+  The flag is in /root/flag.txt — only root can read it.
+flag_format: HL4{...}
+author: HL4bs

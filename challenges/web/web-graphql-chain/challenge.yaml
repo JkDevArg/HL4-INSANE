@@ -1,0 +1,15 @@
+id: web-graphql-chain
+category: web
+name: "GraphQL Federation Chain"
+difficulty: insane
+type: per-team
+serve: http
+flag_via: flag-service
+points: 900
+ports: [8080]
+siem: true
+description: >
+  Una plataforma de microservicios usa GraphQL Federation para unificar
+  múltiples subgráficos. El gateway expone una API GraphQL unificada con
+  control de acceso basado en roles. El equipo cree que la introspección
+  está deshabilitada en producción... Explora la superficie de ataque.

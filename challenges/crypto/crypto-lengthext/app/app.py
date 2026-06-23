@@ -1,4 +1,4 @@
-"""HashForge — crypto-lengthext (Crypto INSANE, HTTP/Flask).
+﻿"""HashForge — crypto-lengthext (Crypto INSANE, HTTP/Flask).
 
 Vulnerabilidad central: MD5 LENGTH EXTENSION ATTACK.
 
@@ -34,7 +34,7 @@ from flask import Flask, request, jsonify
 from siem import emit
 from reqlog import reqlog_http
 
-FLAG = os.environ.get("FLAG", "flag{EJEMPLO_LOCAL}")
+FLAG = os.environ.get("FLAG", "HL4{EJEMPLO_LOCAL}")
 SECRET = os.urandom(16)  # 16 bytes, aleatorio por instancia
 SECRET_LEN = len(SECRET)
 

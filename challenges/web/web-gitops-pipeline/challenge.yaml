@@ -1,0 +1,15 @@
+id: web-gitops-pipeline
+category: web
+name: "GitOps Pipeline"
+difficulty: insane
+type: per-team
+serve: http
+flag_via: flag-service
+points: 900
+ports: [8080]
+siem: true
+description: >
+  Un equipo de DevOps usa un servidor Git interno con pipelines automatizados.
+  El sistema tiene un servidor Git web, un runner de webhooks y un pipeline
+  que se dispara automáticamente. El historial de Git a veces guarda más
+  de lo que debería...

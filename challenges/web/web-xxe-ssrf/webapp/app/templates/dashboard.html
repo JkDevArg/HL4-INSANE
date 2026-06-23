@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}FacturaPro — Dashboard{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h4 class="fw-bold mb-0">Dashboard</h4>
+    <p class="text-muted small mb-0">Bienvenido, {{ username }}</p>
+  </div>
+  <a href="/import" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Importar Factura</a>
+</div>
+
+<div class="row mb-4">
+  <div class="col-md-3"><div class="card p-3"><p class="text-muted small mb-1">Total Facturas</p><h3 class="fw-bold">{{ invoices|length }}</h3></div></div>
+  <div class="col-md-3"><div class="card p-3"><p class="text-muted small mb-1">Pagadas</p><h3 class="fw-bold text-success">2</h3></div></div>
+  <div class="col-md-3"><div class="card p-3"><p class="text-muted small mb-1">Pendientes</p><h3 class="fw-bold text-warning">1</h3></div></div>
+  <div class="col-md-3"><div class="card p-3"><p class="text-muted small mb-1">En Revisión</p><h3 class="fw-bold text-info">1</h3></div></div>
+</div>
+
+<div class="card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <span><i class="bi bi-table me-2"></i>Facturas Recientes</span>
+    <span class="badge bg-secondary">{{ invoices|length }} registros</span>
+  </div>
+  <div class="card-body p-0">
+    <table class="table table-hover mb-0">
+      <thead class="table-light">
+        <tr><th>ID Factura</th><th>Proveedor</th><th>Monto (PEN)</th><th>Estado</th><th>Acción</th></tr>
+      </thead>
+      <tbody>
+        {% for inv in invoices %}
+        <tr>
+          <td><code>{{ inv.id }}</code></td>
+          <td>{{ inv.vendor }}</td>
+          <td><strong>S/ {{ inv.amount }}</strong></td>
+          <td>
+            <span class="badge badge-status-{{ inv.status.lower() }} px-2 py-1">{{ inv.status }}</span>
+          </td>
+          <td>
+            <a href="/api/validate?id={{ inv.id }}" class="btn btn-sm btn-outline-secondary">Validar</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

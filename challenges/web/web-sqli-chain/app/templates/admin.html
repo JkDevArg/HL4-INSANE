@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}ERP — Panel Admin{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h4 class="fw-bold mb-0"><i class="bi bi-gear-wide-connected me-2"></i>Panel de Administración</h4>
+    <p class="text-muted small mb-0">Gestión de usuarios, configuración y backups</p>
+  </div>
+  <span class="badge bg-danger fs-6">ADMIN</span>
+</div>
+
+<div class="row mb-4">
+  <div class="col-md-8">
+    <div class="card">
+      <div class="card-header"><i class="bi bi-people me-2"></i>Usuarios del Sistema</div>
+      <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+          <thead class="table-light">
+            <tr><th>ID</th><th>Usuario</th><th>Rol</th><th>Email</th></tr>
+          </thead>
+          <tbody>
+            {% for u in users %}
+            <tr>
+              <td>{{ u.id }}</td>
+              <td><strong>{{ u.username }}</strong></td>
+              <td><span class="badge {% if u.role == 'admin' %}bg-danger{% elif u.role == 'manager' %}bg-warning text-dark{% else %}bg-secondary{% endif %}">{{ u.role }}</span></td>
+              <td>{{ u.email }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card">
+      <div class="card-header"><i class="bi bi-sliders me-2"></i>Configuración</div>
+      <div class="card-body p-0">
+        <table class="table table-sm mb-0">
+          {% for c in config %}
+          <tr><th class="small">{{ c.key }}</th><td class="small"><code>{{ c.value }}</code></td></tr>
+          {% endfor %}
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header"><i class="bi bi-download me-2"></i>Backup de Base de Datos</div>
+  <div class="card-body">
+    <div class="row g-3">
+      <div class="col-md-8">
+        <form id="backupForm">
+          <div class="input-group">
+            <span class="input-group-text"><i class="bi bi-folder"></i></span>
+            <input type="text" id="backupPath" class="form-control font-monospace"
+                   value="/app/backups/backup.sql"
+                   placeholder="Ruta del archivo de backup">
+            <button type="submit" class="btn btn-warning">Generar Backup</button>
+          </div>
+          <div class="form-text">Ruta donde se guardará el backup SQL del sistema.</div>
+        </form>
+      </div>
+      <div class="col-md-4">
+        <div class="input-group">
+          <input type="text" id="downloadFile" class="form-control font-monospace"
+                 value="backup.sql" placeholder="Nombre del archivo">
+          <button class="btn btn-outline-secondary" onclick="downloadBackup()">Descargar</button>
+        </div>
+        <div class="form-text">Descargar archivo desde /app/backups/</div>
+      </div>
+    </div>
+    <div id="backupResult" class="mt-3"></div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+document.getElementById('backupForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const path = document.getElementById('backupPath').value;
+  const res = await fetch('/admin/backup', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+    body: 'path=' + encodeURIComponent(path)
+  });
+  const data = await res.json();
+  const div = document.getElementById('backupResult');
+  if (data.status === 'ok') {
+    div.innerHTML = `<div class="alert alert-success py-2 small"><i class="bi bi-check-circle me-1"></i>Backup generado: <code>${data.path}</code> (${data.size} bytes)</div>`;
+  } else {
+    div.innerHTML = `<div class="alert alert-danger py-2 small"><i class="bi bi-x-circle me-1"></i>${data.error}</div>`;
+  }
+});
+function downloadBackup() {
+  const file = document.getElementById('downloadFile').value;
+  window.location = '/admin/backup/download?file=' + encodeURIComponent(file);
+}
+</script>
+{% endblock %}

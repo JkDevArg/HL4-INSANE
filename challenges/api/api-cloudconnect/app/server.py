@@ -1,4 +1,4 @@
-"""CloudConnect OAuth API — api-cloudconnect (JWT RS256→HS256 algorithm confusion).
+﻿"""CloudConnect OAuth API — api-cloudconnect (JWT RS256→HS256 algorithm confusion).
 
 Vulnerabilidad:
   El servidor valida JWTs aceptando AMBOS algoritmos: RS256 y HS256.
@@ -40,7 +40,7 @@ from reqlog import reqlog_http
 
 app = Flask(__name__)
 
-FLAG = os.environ.get("FLAG", "flag{EJEMPLO_LOCAL}")
+FLAG = os.environ.get("FLAG", "HL4{EJEMPLO_LOCAL}")
 
 # ---------------------------------------------------------------------------
 # Generación del par de claves RSA al arrancar (único por instancia/equipo)

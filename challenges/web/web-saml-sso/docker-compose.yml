@@ -1,0 +1,53 @@
+# web-saml-sso — Identity Provider + Service Provider + Metadata Service
+# Lanzar: TEAM_ID=team_01 TEAM_N=1 FLAG="HL4{...}" CHAL_NET=ctf_team_01 docker compose -f challenges/web/web-saml-sso/docker-compose.yml up -d --build
+networks:
+  team_net:
+    external: true
+    name: ${CHAL_NET:-ctf_local}
+  internal_net:
+    driver: bridge
+    internal: true
+
+services:
+  idp:
+    build:
+      context: .
+      dockerfile: idp/Dockerfile
+    image: web-saml-sso-idp
+    environment:
+      TEAM_ID: "${TEAM_ID:-team_local}"
+      CHALLENGE_ID: "web-saml-sso"
+      SP_ACS_URL: "http://sp:8081/saml/acs"
+    networks:
+      team_net:
+        ipv4_address: 172.30.${TEAM_N:-99}.12
+      internal_net:
+    restart: unless-stopped
+
+  sp:
+    build:
+      context: .
+      dockerfile: sp/Dockerfile
+    image: web-saml-sso-sp
+    environment:
+      FLAG: "${FLAG:-HL4{EJEMPLO_LOCAL}}"
+      IDP_SSO_URL: "http://idp:8080/saml/sso"
+      IDP_METADATA_URL: "http://idp:8080/saml/metadata"
+      METADATA_SERVICE_URL: "http://metadata-service:80"
+    networks:
+      internal_net:
+    restart: unless-stopped
+    depends_on:
+      - idp
+      - metadata-service
+
+  metadata-service:
+    build:
+      context: .
+      dockerfile: metadata-service/Dockerfile
+    image: web-saml-sso-metadata
+    environment:
+      FLAG: "${FLAG:-HL4{EJEMPLO_LOCAL}}"
+    networks:
+      internal_net:
+    restart: unless-stopped

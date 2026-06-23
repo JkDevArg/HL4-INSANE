@@ -1,4 +1,4 @@
-# Solución — web-creditview: CreditView Pickle Deserialization Bypass
+﻿# Solución — web-creditview: CreditView Pickle Deserialization Bypass
 
 **Dificultad:** INSANE  
 **Puntos:** 700  
@@ -206,14 +206,14 @@ python3 exploit.py http://172.30.1.10:8080
   "access": "GRANTED",
   "data": {
     "classification": "TOP SECRET",
-    "flag": "flag{...}",
+    "flag": "HL4{...}",
     "note": "Acceso a datos confidenciales concedido"
   },
   "report_type": "CONFIDENTIAL",
   "status": "ok"
 }
 
-[FLAG] flag{...}
+[FLAG] HL4{...}
 ```
 
 ---

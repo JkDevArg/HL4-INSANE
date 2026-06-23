@@ -1,0 +1,14 @@
+id: crypto-jwt-confusion
+category: crypto
+name: "Algorithm Confusion"
+difficulty: insane
+type: per-team
+serve: http
+flag_via: flag-service
+points: 875
+ports: [9999]
+siem: true
+description: >
+  Un sistema de autenticación moderno usa JWT con criptografía asimétrica RS256.
+  La clave pública está disponible en el endpoint estándar JWKS. El panel de
+  administración está bloqueado detrás de verificación de rol. ¿Puedes entrar?

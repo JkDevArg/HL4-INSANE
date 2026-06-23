@@ -1,0 +1,16 @@
+id: web-websocket-chain
+category: web
+name: "WebSocket Hijacking"
+difficulty: insane
+type: per-team
+serve: http
+flag_via: flag-service
+points: 900
+ports: [8080]
+siem: true
+description: >
+  Una plataforma de colaboración en tiempo real usa WebSockets para comunicación
+  instantánea entre usuarios. Los administradores tienen acceso a comandos
+  especiales del servidor. El bot de administración está siempre conectado
+  y ejecuta comandos de mantenimiento. ¿Puede un usuario no autorizado
+  enviar mensajes al canal del admin?

@@ -40,7 +40,7 @@ from fastapi import FastAPI
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
-from .anonymize import anonymize, anonymize_ip, team_from_ip, team_from_team_id
+from .anonymize import anonymize, anonymize_ip, team_from_ip, team_from_team_id, _player_label
 
 # Anonimización SUAVE para PAYLOADS (body/query de las peticiones): muestra el
 # ataque tal cual lo escribió el jugador (p.ej. 169.254.169.254 en un SSRF, o
@@ -373,7 +373,13 @@ def map_vpn(ts_ns, line, labels):
     if not team:
         team = team_from_ip(src_ip)
     team = team or "Equipo ?"
-    who = _who(team, src_ip)  # añade "· Jugador N" si la IP VPN lo identifica
+
+    # Usar el nombre del jugador del evento (on-connect.sh envía detail.player="alice")
+    player_name = detail.get("player") or ev.get("player") or ""
+    if player_name:
+        who = f"{team} · {player_name}"
+    else:
+        who = _who(team, src_ip)
 
     if etype == "vpn_connect":
         return _item(ts_ns, team, "vpn_connect", "info", f"{who} se conectó a la VPN", priority=2)
@@ -433,13 +439,14 @@ def map_suricata(ts_ns, line, labels):
 
 
 def _player_from_ip(ip):
-    """10.10.N.(11-14) -> '1'..'4' (certs por miembro). Si no aplica -> ''."""
+    """10.10.N.(11-14) -> nombre del jugador (o 'Jugador N' si no hay config). Si no aplica -> ''."""
     try:
         o = str(ip).split(".")
         if len(o) == 4 and o[0] == "10" and o[1] == "10":
+            team_n = int(o[2])
             last = int(o[3])
             if 11 <= last <= 14:
-                return str(last - 10)
+                return _player_label(team_n, last - 10)
     except (ValueError, IndexError):
         pass
     return ""
@@ -486,9 +493,10 @@ def map_challenge_flows(rows):
         team = team_from_ip(src_ip)
         if not team:
             try:
+                from .anonymize import _team_label as _tl
                 n = int(str(dest_ip).split(".")[2])
-                if 1 <= n <= 10:
-                    team = f"Equipo {n:02d}"
+                if 1 <= n <= 5:
+                    team = _tl(n)
             except (ValueError, IndexError):
                 team = None
         team = team or "Equipo ?"
@@ -596,9 +604,10 @@ def detect_scans(rows):
         team = team_from_ip(src_ip)
         if not team:
             try:
+                from .anonymize import _team_label as _tl
                 n = int(str(dest_ip).split(".")[2])
-                if 1 <= n <= 10:
-                    team = f"Equipo {n:02d}"
+                if 1 <= n <= 5:
+                    team = _tl(n)
             except (ValueError, IndexError):
                 team = None
         team = team or "Equipo ?"
@@ -1093,6 +1102,8 @@ async def collect_teams():
     # --- Sesiones VPN: por equipo, estado de cada sesión en orden cronológico.
     # session_state[team_label][session_key] = ('connect'|'disconnect'|'ban', ts_ns)
     session_state = defaultdict(dict)
+    # Nombre del jugador por sesión: team -> {skey -> player_name}
+    session_player: dict = defaultdict(dict)
     # Último vpn_ban / vpn_connect por equipo para derivar 'banned'.
     last_ban = {}        # team_label -> ts_ns
     last_connect = {}    # team_label -> ts_ns
@@ -1119,13 +1130,20 @@ async def collect_teams():
         real_port = str(detail.get("real_port") or "?")
         skey = f"{real_ip}:{real_port}"
 
+        # Nombre del jugador desde el evento (on-connect.sh envía detail.player="alice")
+        player_name = detail.get("player") or ev.get("player") or ""
+
         if etype == "vpn_connect":
             session_state[team][skey] = ("connect", ts_ns)
+            if player_name:
+                session_player[team][skey] = player_name
             last_connect[team] = ts_ns
-            last_action[team] = (ts_ns, f"{team} se conectó a la VPN")
+            who_txt = f"{team} · {player_name}" if player_name else team
+            last_action[team] = (ts_ns, f"{who_txt} se conectó a la VPN")
         elif etype == "vpn_disconnect":
             session_state[team][skey] = ("disconnect", ts_ns)
-            last_action[team] = (ts_ns, f"{team} se desconectó de la VPN")
+            who_txt = f"{team} · {player_name}" if player_name else team
+            last_action[team] = (ts_ns, f"{who_txt} se desconectó de la VPN")
         elif etype == "vpn_ban":
             session_state[team][skey] = ("ban", ts_ns)
             last_ban[team] = ts_ns
@@ -1135,10 +1153,13 @@ async def collect_teams():
     now_ns = _ns(datetime.now(timezone.utc))
     ttl_ns = SESSION_TTL_SEC * 1_000_000_000
     connected = defaultdict(int)
+    connected_players: dict = defaultdict(list)  # team -> [player_name, ...]
     for team, sessions in session_state.items():
         for skey, (state, ts_ns) in sessions.items():
             if state == "connect" and (now_ns - ts_ns) <= ttl_ns:
                 connected[team] += 1
+                p = session_player.get(team, {}).get(skey, "")
+                connected_players[team].append(p if p else "—")
 
     # --- Puntos / solves / last_action de plataforma (flag_ok y demás).
     points = defaultdict(int)
@@ -1199,6 +1220,7 @@ async def collect_teams():
             "team": team,
             "team_id": tid,
             "connected": c,
+            "players": connected_players.get(team, []),
             "points": pts,
             "solves": slv,
             "status": status,
@@ -1658,6 +1680,14 @@ async def index():
     if index_file.exists():
         return FileResponse(str(index_file), media_type="text/html")
     return JSONResponse({"error": "index.html no encontrado"}, status_code=500)
+
+
+@app.get("/streams")
+async def streams():
+    f = STATIC_DIR / "streams.html"
+    if f.exists():
+        return FileResponse(str(f), media_type="text/html")
+    return JSONResponse({"error": "streams.html no encontrado"}, status_code=500)
 
 
 @app.get("/api/feed")

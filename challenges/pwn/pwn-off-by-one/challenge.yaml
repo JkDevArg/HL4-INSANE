@@ -1,0 +1,16 @@
+id: pwn-off-by-one
+category: pwn
+name: "Off-By-One"
+difficulty: insane
+type: per-team
+serve: tcp
+flag_via: flag-service
+points: 900
+ports: [9998]
+siem: true
+description: >
+  Gestor de strings en C con un off-by-one en la función de copia: el bucle
+  itera con <= en lugar de <, escribiendo el null terminator un byte más allá.
+  El byte extra sobrescribe el LSB del campo size del siguiente chunk del heap.
+  Usa heap feng shui para crear overlapping chunks, luego tcache poisoning
+  para arbitrary write y control total del flujo de ejecución.

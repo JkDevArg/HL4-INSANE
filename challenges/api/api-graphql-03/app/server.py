@@ -1,4 +1,4 @@
-"""NebulaGraph — api-graphql-03 (API GraphQL INSANE).
+﻿"""NebulaGraph — api-graphql-03 (API GraphQL INSANE).
 
 Cadena de vulnerabilidades GraphQL:
 
@@ -74,7 +74,7 @@ def _log_request():
     except Exception:
         pass
 
-FLAG = os.environ.get("FLAG", "flag{EJEMPLO_LOCAL}")
+FLAG = os.environ.get("FLAG", "HL4{EJEMPLO_LOCAL}")
 # PIN de 4 dígitos del admin, aleatorio por instancia/equipo.
 ADMIN_PIN = os.environ.get("ADMIN_PIN") or f"{secrets.randbelow(10000):04d}"
 

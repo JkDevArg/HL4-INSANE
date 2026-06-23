@@ -1,4 +1,4 @@
-export type Category = 'web' | 'api' | 'crypto' | 'reversing';
+export type Category = 'web' | 'crypto' | 'pwn' | 'rev';
 export type InstanceStatus = 'stopped' | 'starting' | 'running' | 'error';
 
 export interface TokenResponse {

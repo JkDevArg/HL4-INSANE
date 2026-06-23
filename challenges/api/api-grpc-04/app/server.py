@@ -1,4 +1,4 @@
-"""SilentChannel gRPC — api-grpc-04 (API INSANE).
+﻿"""SilentChannel gRPC — api-grpc-04 (API INSANE).
 
 Reto: "Silent Channel". Un servidor gRPC ("SilentChannel") con reflexión
 habilitada PERO con un servicio administrativo OCULTO.
@@ -46,7 +46,7 @@ import vault_pb2_grpc
 from siem import emit
 from reqlog import reqlog_grpc
 
-FLAG = os.environ.get("FLAG", "flag{EJEMPLO_LOCAL}")
+FLAG = os.environ.get("FLAG", "HL4{EJEMPLO_LOCAL}")
 SERVER_NAME = "SilentChannel"
 SERVER_VERSION = "1.4.2"
 

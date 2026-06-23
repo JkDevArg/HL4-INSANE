@@ -1,0 +1,15 @@
+id: crypto-rsa-crt-fault
+category: crypto
+name: "Bellcore's Revenge"
+difficulty: insane
+type: per-team
+serve: tcp
+flag_via: flag-service
+points: 925
+ports: [9999]
+siem: true
+description: >
+  Un servidor de firma RSA-CRT tiene un bug de hardware que ocasionalmente
+  introduce errores en el cómputo de dp. Cuando una firma es inválida, el
+  MCD entre la firma correcta y la errónea revela un factor de N. Esta es
+  la base del ataque de Bellcore de 1997.

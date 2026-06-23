@@ -1,0 +1,14 @@
+id: crypto-gcm-nonce
+category: crypto
+name: "GCM Groundhog Day"
+difficulty: insane
+type: per-team
+serve: tcp
+flag_via: flag-service
+points: 900
+ports: [9999]
+siem: true
+description: >
+  Un servidor usa AES-256-GCM para cifrar mensajes, pero reutiliza el mismo
+  nonce para todos los mensajes. Tienes el texto plano de un mensaje y su
+  ciphertext. El flag está cifrado con el mismo nonce. Recupéralo.

@@ -1,0 +1,15 @@
+id: web-cors-chain
+category: web
+name: "CORS Misconfiguration"
+difficulty: insane
+type: per-team
+serve: http
+flag_via: flag-service
+points: 850
+ports: [8080]
+siem: true
+description: >
+  Una API corporativa implementa CORS para permitir acceso cross-origin a sus
+  recursos. El sistema tiene un bot de administración que revisa URLs reportadas
+  por usuarios. La API exporta datos sensibles para usuarios autenticados.
+  El equipo de seguridad dice que CORS está "bien configurado". ¿Lo está?

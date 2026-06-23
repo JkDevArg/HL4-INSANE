@@ -1,4 +1,4 @@
-"""MetricStream Infrastructure API — api-metricstream (header injection auth bypass).
+﻿"""MetricStream Infrastructure API — api-metricstream (header injection auth bypass).
 
 Cadena de vulnerabilidades:
 
@@ -32,7 +32,7 @@ from reqlog import reqlog_http
 
 app = Flask(__name__)
 
-FLAG = os.environ.get("FLAG", "flag{EJEMPLO_LOCAL}")
+FLAG = os.environ.get("FLAG", "HL4{EJEMPLO_LOCAL}")
 JWT_SECRET = secrets.token_hex(32)  # Secreto HS256 por instancia
 
 # ---------------------------------------------------------------------------

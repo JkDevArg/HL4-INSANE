@@ -3,9 +3,9 @@ import type { Category } from '@/lib/types';
 // Badge de categoria con color por tipo de reto.
 const CAT_STYLES: Record<Category, string> = {
   web: 'border-neon/50 text-neon',
-  api: 'border-neon-cyan/50 text-neon-cyan',
   crypto: 'border-warn/50 text-warn',
-  reversing: 'border-red-500/50 text-red-400',
+  pwn: 'border-red-500/50 text-red-400',
+  rev: 'border-neon-cyan/50 text-neon-cyan',
 };
 
 export function CategoryBadge({ category }: { category: Category }) {

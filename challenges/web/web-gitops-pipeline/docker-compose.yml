@@ -1,0 +1,40 @@
+# web-gitops-pipeline — Fake git server + webhook runner
+# Launch: TEAM_ID=team_01 TEAM_N=1 FLAG="HL4{...}" CHAL_NET=ctf_team_01 docker compose -f challenges/web/web-gitops-pipeline/docker-compose.yml up -d --build
+networks:
+  team_net:
+    external: true
+    name: ${CHAL_NET:-ctf_local}
+  internal_net:
+    driver: bridge
+    internal: true
+
+services:
+  gitserver:
+    build:
+      context: .
+      dockerfile: gitserver/Dockerfile
+    image: web-gitops-pipeline-gitserver-${TEAM_ID:-local}
+    environment:
+      TEAM_ID: "${TEAM_ID:-team_local}"
+      CHALLENGE_ID: "web-gitops-pipeline"
+      WEBHOOK_SECRET: "sup3rs3cr3t_hmac_k3y"
+      WEBHOOK_RUNNER_URL: "http://webhook-runner:9001"
+    networks:
+      team_net:
+        ipv4_address: 172.30.${TEAM_N:-99}.11
+      internal_net:
+    restart: unless-stopped
+
+  webhook-runner:
+    build:
+      context: .
+      dockerfile: webhook-runner/Dockerfile
+    image: web-gitops-pipeline-webhook-runner-${TEAM_ID:-local}
+    environment:
+      FLAG: "${FLAG:-HL4{EJEMPLO_LOCAL}}"
+      WEBHOOK_SECRET: "sup3rs3cr3t_hmac_k3y"
+    networks:
+      internal_net:
+    restart: unless-stopped
+    depends_on:
+      - gitserver

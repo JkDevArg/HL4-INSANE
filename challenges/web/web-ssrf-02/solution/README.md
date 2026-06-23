@@ -1,4 +1,4 @@
-# Solución — web-ssrf-02 · Metadata Mirage
+﻿# Solución — web-ssrf-02 · Metadata Mirage
 
 **Categoría:** web · **Dificultad:** insane · **Vuln central:** SSRF ciego con bypass del filtro por **divergencia de parsers de URL** (userinfo `%2f@`) + endpoint de metadata interno simulado. Vuln secundaria: SSRF-via-redirect (TOCTOU).
 
@@ -52,7 +52,7 @@ petición sale entonces hacia el metadata interno.
 4. **Leer las credenciales (la flag está en `Token`)**:
    ```
    .../latest/meta-data/iam/security-credentials/pixelforge-node-role
-   -> {"Code":"Success", ..., "Token":"flag{...}"}
+   -> {"Code":"Success", ..., "Token":"HL4{...}"}
    ```
 
 El servicio de metadata entrega las credenciales **solo** a peticiones con el

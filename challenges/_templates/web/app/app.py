@@ -1,4 +1,4 @@
-"""Template de reto WEB (Flask).
+﻿"""Template de reto WEB (Flask).
 
 - Lee la flag SOLO de os.environ["FLAG"] (inyectada por equipo).
 - NO hardcodea flags.
@@ -15,7 +15,7 @@ from siem import emit
 app = Flask(__name__)
 
 # La flag se inyecta por equipo. En local cae a un valor de ejemplo.
-FLAG = os.environ.get("FLAG", "flag{EJEMPLO_LOCAL}")
+FLAG = os.environ.get("FLAG", "HL4{EJEMPLO_LOCAL}")
 
 
 @app.get("/")

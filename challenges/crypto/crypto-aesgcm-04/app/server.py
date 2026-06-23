@@ -1,4 +1,4 @@
-"""VaultGCM — crypto-aesgcm-04 (Crypto INSANE, servido por TCP).
+﻿"""VaultGCM — crypto-aesgcm-04 (Crypto INSANE, servido por TCP).
 
 Vulnerabilidad central: REUSO DE NONCE en AES-GCM.
 
@@ -30,7 +30,7 @@ from Crypto.Random import get_random_bytes
 from siem import emit
 from reqlog import reqlog_tcp
 
-FLAG = os.environ.get("FLAG", "flag{EJEMPLO_LOCAL}")
+FLAG = os.environ.get("FLAG", "HL4{EJEMPLO_LOCAL}")
 HOST = "0.0.0.0"
 PORT = int(os.environ.get("PORT", "9999"))
 

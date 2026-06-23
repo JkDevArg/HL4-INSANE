@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}About - Corporate Portal{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-8">
+    <div class="card shadow">
+      <div class="card-header bg-dark text-white">
+        <h5 class="mb-0">About Corporate Portal</h5>
+      </div>
+      <div class="card-body">
+        <p class="lead">Enterprise product catalog and search system.</p>
+        <h6>Security Features</h6>
+        <ul>
+          <li>Custom WAF v2.0 - blocks SQL injection patterns</li>
+          <li>Session-based authentication</li>
+          <li>Input validation on all endpoints</li>
+        </ul>
+        <h6>API Access</h6>
+        <p>The system provides a REST API for programmatic access:</p>
+        <pre class="bg-dark text-light p-3 rounded"><code>POST /api/search
+Content-Type: application/json
+
+{"q": "laptop", "cat": "Electronics"}</code></pre>
+        <div class="alert alert-info">
+          <strong>Note:</strong> The REST API accepts JSON requests for integration with
+          third-party systems. Authentication via session cookie.
+        </div>
+        <h6>Stack</h6>
+        <ul class="list-unstyled">
+          <li>Python Flask 3.0</li>
+          <li>SQLite database</li>
+          <li>Custom WAF middleware</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

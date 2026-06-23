@@ -1,0 +1,12 @@
+id: pwn-rop-chain
+name: "ROP Chain"
+category: pwn
+difficulty: insane
+points: 500
+port: 9998
+description: |
+  An authentication server with two vulnerabilities in sequence.
+  First, leak the canary and PIE base via format string.
+  Then overflow the buffer with a ROP chain to get a shell.
+flag_format: HL4{...}
+author: HL4bs

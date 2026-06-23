@@ -1,4 +1,4 @@
-"""LedgerPay API — api-bola-02 "Mass Assignment Heist" (API INSANE).
+﻿"""LedgerPay API — api-bola-02 "Mass Assignment Heist" (API INSANE).
 
 Plataforma de facturación B2B. Las cuentas tienen un `tier` (free/pro/
 enterprise) y un `org_role` (member/org_admin). Solo un `org_admin` puede
@@ -98,7 +98,7 @@ class ReqLogMiddleware:
 app.add_middleware(ReqLogMiddleware)
 
 
-FLAG = os.environ.get("FLAG", "flag{EJEMPLO_LOCAL}")
+FLAG = os.environ.get("FLAG", "HL4{EJEMPLO_LOCAL}")
 
 # --- "Base de datos" en memoria ---
 # Cada cuenta es un registro mass-assignable. token -> account_id.

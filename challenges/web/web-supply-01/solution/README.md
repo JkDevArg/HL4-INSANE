@@ -1,4 +1,4 @@
-# Solución — web-supply-01 · Poisoned Pipeline
+﻿# Solución — web-supply-01 · Poisoned Pipeline
 
 **Categoría:** web · **Dificultad:** insane · **Vuln central:** Supply chain / Dependency confusion + RCE en `pip install` vía `setup.py`.
 
@@ -51,8 +51,8 @@ importado por el smoke test, lee `os.environ["FLAG"]` y lo incluye en el banner
    la flag al log.
 4. **Leer la flag** del log:
    ```sh
-   curl -s http://<host>:8080/build/abc123 | grep -o 'flag{[^}]*}'
-   # flag{EJEMPLO}
+   curl -s http://<host>:8080/build/abc123 | grep -o 'HL4{[^}]*}'
+   # HL4{EJEMPLO}
    ```
 
 Todo automatizado en `solution/exploit/pwn.sh <host>`.

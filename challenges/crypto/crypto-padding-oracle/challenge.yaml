@@ -1,0 +1,14 @@
+id: crypto-padding-oracle
+category: crypto
+name: "Byte by Byte"
+difficulty: insane
+type: per-team
+serve: tcp
+flag_via: flag-service
+points: 875
+ports: [9999]
+siem: true
+description: >
+  Un gestor de sesiones cifra cookies con AES-CBC. El servidor te dice si el padding
+  es válido o no. Eso es todo lo que necesitas para descifrar y modificar cualquier
+  cookie. Conviértete en admin.

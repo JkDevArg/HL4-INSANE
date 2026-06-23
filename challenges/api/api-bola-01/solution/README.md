@@ -1,4 +1,4 @@
-# Solución — api-bola-01 · Broken Object Ledger
+﻿# Solución — api-bola-01 · Broken Object Ledger
 
 **Categoría:** api · **Dificultad:** insane · **Vuln central:** cadena BOLA (IDOR) + Mass Assignment + JWT mal validado (`alg: none`).
 
@@ -30,7 +30,7 @@ LedgerX expone tres fallos encadenables. El objetivo es leer
 4. **Leer la flag**:
    ```
    GET /api/admin/secret   (Authorization: Bearer <token forjado>)
-   -> {"secret":"flag{EJEMPLO}"}
+   -> {"secret":"HL4{EJEMPLO}"}
    ```
 
 ## Camino alternativo (mass assignment)

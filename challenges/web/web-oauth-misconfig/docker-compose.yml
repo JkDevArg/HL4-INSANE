@@ -1,0 +1,38 @@
+# web-oauth-misconfig — OAuth2 server misconfiguration + credential leak
+# Lanzar: TEAM_ID=team_04 TEAM_N=4 FLAG="HL4{...}" CHAL_NET=ctf_team_04 docker compose up -d --build
+networks:
+  team_net:
+    external: true
+    name: ${CHAL_NET:-ctf_local}
+  internal_net:
+    driver: bridge
+    internal: true
+
+services:
+  auth-server:
+    build:
+      context: .
+      dockerfile: auth-server/Dockerfile
+    image: web-oauth-auth-server
+    environment:
+      FLAG: "${FLAG:-HL4{EJEMPLO_LOCAL}}"
+      TEAM_ID: "${TEAM_ID:-team_local}"
+      CHALLENGE_ID: "web-oauth-misconfig"
+      RESOURCE_SERVER_URL: "http://resource-server:9000"
+    networks:
+      team_net:
+        ipv4_address: 172.30.${TEAM_N:-99}.10
+      internal_net:
+    restart: unless-stopped
+
+  resource-server:
+    build:
+      context: .
+      dockerfile: resource-server/Dockerfile
+    image: web-oauth-resource-server
+    environment:
+      FLAG: "${FLAG:-HL4{EJEMPLO_LOCAL}}"
+      AUTH_SERVER_URL: "http://auth-server:8080"
+    networks:
+      internal_net:
+    restart: unless-stopped

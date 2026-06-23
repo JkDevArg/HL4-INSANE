@@ -35,11 +35,20 @@ EVENTS_LOG="${EVENTS_LOG:-/var/log/openvpn/events.log}"
 # ---------------------------------------------------------------------------
 # Datos del cliente (con defaults defensivos para no romper set -u)
 # ---------------------------------------------------------------------------
-TEAM="${common_name:-unknown}"
+CN="${common_name:-unknown}"
 VPN_IP="${ifconfig_pool_remote_ip:-?}"
 REAL_IP="${trusted_ip:-${untrusted_ip:-?}}"
 REAL_PORT="${trusted_port:-${untrusted_port:-?}}"
 TS="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
+# Extrae team_id del CN: "team_01_alice" → "team_01", "team_01" → "team_01"
+if [[ "$CN" =~ ^(team_[0-9]{2})(_(.+))?$ ]]; then
+    TEAM="${BASH_REMATCH[1]}"
+    PLAYER="${BASH_REMATCH[3]:-}"   # nombre del jugador (vacío si es cert de equipo)
+else
+    TEAM="$CN"
+    PLAYER=""
+fi
 
 # ---------------------------------------------------------------------------
 # Helper: emite evento SIEM (fire-and-forget, nunca bloquea ni falla el script)
@@ -49,7 +58,7 @@ emit_siem() {
     local event_type="$1" severity="$2" detail="$3"
     local payload
     payload=$(cat <<JSON
-{"ts":"${TS}","source":"vpn","team_id":"${TEAM}","user":"${TEAM}","src_ip":"${VPN_IP}","event_type":"${event_type}","severity":"${severity}","detail":${detail}}
+{"ts":"${TS}","source":"vpn","team_id":"${TEAM}","user":"${CN}","player":"${PLAYER}","src_ip":"${VPN_IP}","event_type":"${event_type}","severity":"${severity}","detail":${detail}}
 JSON
 )
     # --max-time corta si el collector no responde; & lo manda a background.
@@ -81,17 +90,17 @@ else
 fi
 
 if [[ "$BANNED" == "1" ]]; then
-    log_event vpn_connect_rejected "reason=banned"
-    emit_siem "vpn_connect" "alert" '{"action":"rejected","reason":"team_banned"}'
-    echo "[on-connect] ${TEAM} BANEADO -> conexion rechazada" >&2
-    exit 1   # <-- OpenVPN aborta la conexion del cliente
+    log_event vpn_connect_rejected "reason=banned cn=${CN} player=${PLAYER}"
+    emit_siem "vpn_connect" "alert" "{\"action\":\"rejected\",\"reason\":\"team_banned\",\"cn\":\"${CN}\",\"player\":\"${PLAYER}\"}"
+    echo "[on-connect] ${CN} (equipo ${TEAM}) BANEADO -> conexion rechazada" >&2
+    exit 1
 fi
 
 # ---------------------------------------------------------------------------
 # 2) + 3) Conexion permitida: log + evento SIEM informativo.
 # ---------------------------------------------------------------------------
-log_event vpn_connect "action=accepted"
+log_event vpn_connect "action=accepted cn=${CN} player=${PLAYER}"
 emit_siem "vpn_connect" "info" \
-    "{\"action\":\"accepted\",\"real_ip\":\"${REAL_IP}\",\"real_port\":\"${REAL_PORT}\"}"
+    "{\"action\":\"accepted\",\"cn\":\"${CN}\",\"player\":\"${PLAYER}\",\"real_ip\":\"${REAL_IP}\",\"real_port\":\"${REAL_PORT}\"}"
 
 exit 0

@@ -1,4 +1,4 @@
-"""SignOracle — crypto-ecdsanonce (Crypto INSANE, HTTP/Flask).
+﻿"""SignOracle — crypto-ecdsanonce (Crypto INSANE, HTTP/Flask).
 
 Vulnerabilidad central: ECDSA NONCE SESGADO + ATAQUE LLL.
 
@@ -32,7 +32,7 @@ from flask import Flask, request, jsonify
 from siem import emit
 from reqlog import reqlog_http
 
-FLAG = os.environ.get("FLAG", "flag{EJEMPLO_LOCAL}")
+FLAG = os.environ.get("FLAG", "HL4{EJEMPLO_LOCAL}")
 CHALLENGE_ID = os.environ.get("CHALLENGE_ID", "crypto-ecdsanonce")
 
 app = Flask(__name__)

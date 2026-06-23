@@ -1,0 +1,15 @@
+id: web-xxe-ssrf
+category: web
+name: "XXE to SSRF Chain"
+difficulty: insane
+type: per-team
+serve: http
+flag_via: flag-service
+points: 900
+ports: [8080]
+siem: true
+description: >
+  Un portal de facturación corporativo permite importar facturas en formato XML.
+  El sistema procesa documentos XML para extraer información de facturas y los
+  valida contra un servicio de metadatos interno. El departamento de TI asegura
+  que el sistema está "completamente aislado". Encuentra la cadena completa.

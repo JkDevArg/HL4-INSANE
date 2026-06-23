@@ -1,0 +1,15 @@
+id: web-saml-sso
+category: web
+name: "SAML SSO Chain"
+difficulty: insane
+type: per-team
+serve: http
+flag_via: flag-service
+points: 950
+ports: [8080]
+siem: true
+description: >
+  Una empresa corporativa usa SAML SSO para autenticar usuarios en su portal
+  de documentos. El Identity Provider emite aserciones firmadas, el Service
+  Provider las valida, y hay un importador de documentos XML para los empleados.
+  El vault de credenciales está protegido... o eso creen.

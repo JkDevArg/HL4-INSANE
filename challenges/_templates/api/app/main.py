@@ -1,4 +1,4 @@
-"""Template de reto API (FastAPI).
+﻿"""Template de reto API (FastAPI).
 
 - Lee la flag SOLO de os.environ["FLAG"] (inyectada por equipo).
 - NO hardcodea flags.
@@ -13,7 +13,7 @@ from siem import emit
 
 app = FastAPI(title="template-api", docs_url=None, redoc_url=None)
 
-FLAG = os.environ.get("FLAG", "flag{EJEMPLO_LOCAL}")
+FLAG = os.environ.get("FLAG", "HL4{EJEMPLO_LOCAL}")
 
 
 @app.get("/health")

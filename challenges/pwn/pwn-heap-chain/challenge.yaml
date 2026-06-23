@@ -1,0 +1,12 @@
+id: pwn-heap-chain
+name: "Heap Chain"
+category: pwn
+difficulty: insane
+points: 500
+port: 9998
+description: |
+  A note-taking application with subtle heap management flaws.
+  Chain the vulnerabilities to get a shell.
+  Hints: heap overflow (8 bytes) + use-after-free + tcache poisoning
+flag_format: HL4{...}
+author: HL4bs
