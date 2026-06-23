@@ -16,7 +16,7 @@
         "label": "Equipo",
         "type": "custom",
         "description": "Filtra por contenedores de un equipo (NN) o todos.",
-        "query": "ctf_team_.* : Todos, ctf_team_01_.* : team_01, ctf_team_02_.* : team_02, ctf_team_03_.* : team_03, ctf_team_04_.* : team_04, ctf_team_05_.* : team_05, ctf_team_06_.* : team_06, ctf_team_07_.* : team_07, ctf_team_08_.* : team_08, ctf_team_09_.* : team_09, ctf_team_10_.* : team_10",
+        "query": "ctf_team_.* : Todos, ctf_team_01_.* : team_01, ctf_team_02_.* : team_02, ctf_team_03_.* : team_03, ctf_team_04_.* : team_04, ctf_team_05_.* : team_05",
         "current": { "text": "Todos", "value": "ctf_team_.*" },
         "includeAll": false,
         "multi": false,

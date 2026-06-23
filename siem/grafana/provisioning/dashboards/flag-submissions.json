@@ -15,7 +15,7 @@
         "name": "team",
         "label": "Equipo",
         "type": "custom",
-        "query": "all,team_01,team_02,team_03,team_04,team_05,team_06,team_07,team_08,team_09,team_10",
+        "query": "all,team_01,team_02,team_03,team_04,team_05",
         "current": { "text": "all", "value": "all" },
         "includeAll": false,
         "options": []

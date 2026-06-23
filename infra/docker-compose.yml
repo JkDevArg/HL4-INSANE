@@ -74,7 +74,7 @@ services:
       # Docker socket: needed to spin up/down per-team challenge containers on demand
       - /var/run/docker.sock:/var/run/docker.sock
       # Challenges directory: instance_manager reads docker-compose.yml files from here
-      - /home/hackl4bs/Descargas/HL4-INSANE/challenges:/challenges:ro
+      - ../challenges:/challenges:ro
     networks:
       net_platform:
         ipv4_address: 10.10.100.12

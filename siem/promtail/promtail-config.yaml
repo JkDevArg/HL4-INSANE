@@ -156,14 +156,17 @@ scrape_configs:
       - targets: [localhost]
         labels:
           job: vpn-events
+          source: vpn
           __path__: /var/log/openvpn/events.log
     pipeline_stages:
-      # Formato esperado: "<ts> <event> CN=team_03 ip=10.10.3.4 count=2"
+      # Formato real escrito por on-connect.sh:
+      # "2024-01-01T00:00:00Z evt=vpn_connect team=team_01 vpn_ip=10.10.1.11 real_ip=1.2.3.4:12345 action=accepted cn=team_01_p1 player=p1"
       - regex:
-          expression: '(?P<event>connect|disconnect|ban)\s+CN=(?P<team_id>team_\d+)(\s+ip=(?P<src_ip>[\d.]+))?(\s+count=(?P<count>\d+))?'
+          expression: 'evt=(?P<event_type>vpn_connect|vpn_disconnect|vpn_ban|vpn_connect_rejected)\s+team=(?P<team_id>team_\d+)\s+vpn_ip=(?P<src_ip>[\d.]+)'
       - labels:
-          event:
+          event_type:
           team_id:
+          src_ip:
 
   # ---------------------------------------------------------------------------
   # Firewall (nftables): bloqueos LOG con prefijos del contrato.

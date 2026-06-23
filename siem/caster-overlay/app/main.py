@@ -1483,13 +1483,13 @@ async def collect_stats():
 
 
 def _team_label_from_nn(nn) -> str:
-    """'3' / '03' / 3 -> 'Equipo 03'. Para resolver el path param /api/team/{nn}."""
+    """'3' / '03' / 3 -> nombre del equipo. Para resolver el path param /api/team/{nn}."""
     try:
         n = int(str(nn).strip())
     except (TypeError, ValueError):
         return ""
-    if 1 <= n <= 99:
-        return f"Equipo {n:02d}"
+    if 1 <= n <= 5:
+        return team_from_team_id(f"team_{n:02d}") or f"Equipo {n:02d}"
     return ""
 
 
@@ -1656,7 +1656,7 @@ async def collect_timeseries(minutes: int = 15):
             alerts[idx] += 1
         if kind == "ai_block":
             ai_blocked[idx] += 1
-        if team and team.startswith("Equipo") and "?" not in team:
+        if team and "?" not in team:
             by_team[team] += 1
 
     by_team_sorted = dict(sorted(by_team.items(), key=lambda kv: kv[0]))

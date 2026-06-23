@@ -42,11 +42,11 @@ TEAM_NAMES = {
 # Jugadores por equipo: team_N -> [jugador_1, jugador_2, jugador_3, jugador_4]
 # Completar con los nombres reales de vpn/teams.json antes del deploy.
 PLAYER_NAMES: dict[int, list[str]] = {
-    1: [],  # Bytreach
-    2: [],  # MoodySploiters
-    3: [],  # DARKHIVE
-    4: [],  # Threat Hunters
-    5: [],  # Capa 8
+    1: ["sh4dowxz", "gorje", "AlarmW", "kincito"],          # Bytreach
+    2: ["quimichin", "Aulloaal", "Marinex", "NA787"],        # MoodySploiters
+    3: ["ast4x", "NoTtrebor", "Italo", "Onhubxx"],           # DARKHIVE
+    4: ["vulc4nx", "APT404", "m4thv", "K4w0rU2"],            # Threat Hunters
+    5: ["SonyB0t", "rafooo_6", "Fetuccini", "Michi"],        # Capa 8
 }
 
 
