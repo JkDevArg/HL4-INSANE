@@ -6,11 +6,11 @@ una IP real al aire. Toda salida del servicio debe pasar por anonymize().
 
 Mapeo (basado en docs/ARCHITECTURE.md sección 2 - Plan de Red):
 
-  10.10.N.M       (N = 1..10)   -> "Equipo NN"   (VPN, subnet de equipo)
+  10.10.N.M       (N = 1..5)    -> nombre del equipo (VPN, subnet de equipo)
   10.10.100.x                   -> "plataforma"  (plataforma + servicios internos)
   10.10.200.x                   -> "siem"        (stack SIEM)
   10.10.0.x                     -> "interno"     (pool VPN sin asignar)
-  172.30.N.x      (N = 1..10)   -> "reto(EquipoNN)" (red Docker de retos del team_N)
+  172.30.N.x      (N = 1..5)    -> "reto(NombreEquipo)" (red Docker de retos del team_N)
   otra IP interna 10.x / 172.x / 192.168.x       -> "interno"
   cualquier IP pública                            -> "externo"
 
@@ -152,7 +152,8 @@ if __name__ == "__main__":
     cases_ip = [
         ("10.10.3.4", "DARKHIVE"),
         ("10.10.1.100", "Bytreach"),
-        ("10.10.10.250", "Equipo 10"),
+        ("10.10.5.1",  "Capa 8"),
+        ("10.10.6.1",  "interno"),      # equipo 6 no existe → interno
         ("10.10.100.10", "plataforma"),
         ("10.10.100.2", "plataforma"),
         ("10.10.200.20", "siem"),
@@ -160,7 +161,8 @@ if __name__ == "__main__":
         ("10.10.0.5", "interno"),
         ("10.10.55.5", "interno"),
         ("172.30.3.5", "reto(DARKHIVE)"),
-        ("172.30.10.9", "reto(Equipo 10)"),
+        ("172.30.5.9", "reto(Capa 8)"),
+        ("172.30.6.9", "reto"),          # equipo 6 no existe → reto genérico
         ("172.30.99.9", "reto"),
         ("192.168.1.5", "interno"),
         ("10.0.0.1", "interno"),
@@ -186,8 +188,8 @@ if __name__ == "__main__":
             "DARKHIVE intentó resolver chat.openai.com desde DARKHIVE",
         ),
         (
-            "nmap scan 10.10.7.22 hacia 172.30.7.10",
-            "nmap scan Equipo 07 hacia reto(Equipo 07)",
+            "nmap scan 10.10.3.22 hacia 172.30.3.10",
+            "nmap scan DARKHIVE hacia reto(DARKHIVE)",
         ),
         (
             "version 1.2 build 3 no toca octetos sueltos",
