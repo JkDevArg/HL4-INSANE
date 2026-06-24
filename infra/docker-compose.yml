@@ -27,6 +27,7 @@ volumes:
   loki-data:
   grafana-data:
   prometheus-data:    # TSDB de Prometheus (métricas históricas de recursos)
+  promtail-positions: # positions.yaml persistente — evita re-leer logs históricos en restart
 
 services:
 
@@ -164,6 +165,8 @@ services:
       # Logs JSON nativos de los contenedores (peticiones CTFREQ de los retos).
       # READ-ONLY: promtail solo lee, nunca escribe.
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      # Posiciones persistentes: evita re-leer todo al reiniciar el contenedor.
+      - promtail-positions:/var/promtail
     networks:
       - net_siem
     depends_on: [loki]
