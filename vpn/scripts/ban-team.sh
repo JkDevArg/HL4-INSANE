@@ -21,8 +21,9 @@
 set -euo pipefail
 
 TEAM_NAME="${1:-}"
+TRIGGER_CN="${2:-}"   # CN del jugador que disparó el ban (opcional, para SIEM)
 if [[ -z "$TEAM_NAME" ]]; then
-    echo "Uso: $0 <nombre_equipo>   (ej: $0 team_03)" >&2
+    echo "Uso: $0 <nombre_equipo> [cn_jugador]   (ej: $0 team_03 team_03_player1)" >&2
     exit 1
 fi
 
@@ -109,8 +110,8 @@ fi
 # ---------------------------------------------------------------------------
 # 4) Evento SIEM critico.
 # ---------------------------------------------------------------------------
-log vpn_ban "action=banned kill=${KILLED}"
-emit_siem "{\"action\":\"banned\",\"reason\":\"vpn_disconnect_threshold\",\"threshold\":${DISCONNECT_THRESHOLD},\"kill_method\":\"${KILLED}\",\"blocks_platform_login\":true}"
+log vpn_ban "action=banned kill=${KILLED} trigger_cn=${TRIGGER_CN:-team}"
+emit_siem "{\"action\":\"banned\",\"reason\":\"vpn_disconnect_threshold\",\"threshold\":${DISCONNECT_THRESHOLD},\"kill_method\":\"${KILLED}\",\"blocks_platform_login\":true,\"trigger_cn\":\"${TRIGGER_CN:-}\"}"
 
 echo "[ban-team] ${TEAM_NAME} BANEADO."
 echo "           - login en plataforma bloqueado (Redis ban:${TEAM_NAME})"

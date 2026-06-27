@@ -48,6 +48,11 @@ remote-cert-tls server
 cipher AES-256-GCM
 tls-version-min 1.2
 verb 3
+# Deshabilita DCO en el cliente — el modulo ovpn-dco puede romper el routing
+# de subredes contiguas al pool VPN (ej. 10.10.100.x vs pool /18).
+disable-dco
+# block-outside-dns es solo Windows; ignorar en Linux/Mac.
+pull-filter ignore "block-outside-dns"
 
 key-direction 1
 

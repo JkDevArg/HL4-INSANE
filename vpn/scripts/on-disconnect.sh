@@ -28,7 +28,7 @@ REDIS_HOST="${REDIS_HOST:-10.10.100.31}"
 REDIS_PORT="${REDIS_PORT:-6379}"
 COLLECTOR_URL="${COLLECTOR_URL:-http://10.10.200.10:9000/event}"
 EVENTS_LOG="${EVENTS_LOG:-/var/log/openvpn/events.log}"
-DISCONNECT_THRESHOLD="${DISCONNECT_THRESHOLD:-3}"
+DISCONNECT_THRESHOLD="${DISCONNECT_THRESHOLD:-8}"
 KEEPALIVE_TIMEOUT="${KEEPALIVE_TIMEOUT:-120}"
 DISC_WINDOW_TTL="${DISC_WINDOW_TTL:-0}"
 # Tiempo de gracia (segundos) antes de liberar el slot del cert.
@@ -155,7 +155,7 @@ emit_siem "vpn_disconnect" "$SEV" \
 if (( COUNT >= DISCONNECT_THRESHOLD )); then
     log_event vpn_ban_trigger "count=${COUNT}"
     if [[ -x "$BAN_SCRIPT" ]]; then
-        "$BAN_SCRIPT" "$TEAM" >> "$EVENTS_LOG" 2>&1 || \
+        "$BAN_SCRIPT" "$TEAM" "$CN" >> "$EVENTS_LOG" 2>&1 || \
             log_event vpn_ban_error "note=ban_script_failed"
     else
         log_event vpn_ban_error "note=ban_script_missing path=${BAN_SCRIPT}"

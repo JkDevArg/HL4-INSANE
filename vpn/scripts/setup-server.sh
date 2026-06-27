@@ -67,12 +67,15 @@ tls-auth ta.key 0
 
 # Cada equipo en su propia subnet /24
 topology subnet
-server 10.10.0.0 255.255.0.0
+server 10.10.0.0 255.255.192.0
 
 # Habilitar routing entre clientes y hacia challenges
 client-to-client
 push "route 10.10.100.0 255.255.255.0"
 push "route 10.10.200.0 255.255.255.0"
+push "redirect-gateway def1"
+push "dhcp-option DNS 10.10.0.1"
+push "block-outside-dns"
 
 # Logs de conexión (alimentan el SIEM)
 status /var/log/openvpn/status.log 10
