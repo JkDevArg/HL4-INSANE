@@ -59,9 +59,11 @@ def anonymize_payload(s) -> str:
 # Config
 # ----------------------------------------------------------------------------
 LOKI_URL = os.environ.get("LOKI_URL", "http://loki:3100").rstrip("/")
-WINDOW_MIN = int(os.environ.get("WINDOW_MIN", "1440"))   # ventana histórica (default 24h)
-SESSION_TTL_MIN = int(os.environ.get("SESSION_TTL_MIN", "20"))  # TTL sesión VPN "online"
+WINDOW_MIN = int(os.environ.get("WINDOW_MIN", "1440"))      # ventana histórica (scoreboard, violations)
+STATS_WIN_MIN = int(os.environ.get("STATS_WIN_MIN", "60"))  # ventana contadores en vivo (stats header)
+SESSION_TTL_MIN = int(os.environ.get("SESSION_TTL_MIN", "20"))
 CTF_NAME = os.environ.get("CTF_NAME", "CTF HACKL4BS")
+LOKI_TIMEOUT = float(os.environ.get("LOKI_TIMEOUT", "15"))
 
 STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
 
@@ -213,13 +215,15 @@ def _ns(dt: datetime) -> int:
     return int(dt.timestamp() * 1_000_000_000)
 
 
-async def loki_query_range(query: str, limit: int = 500):
+async def loki_query_range(query: str, limit: int = 500, window_min: int = None):
     """
     Consulta /loki/api/v1/query_range. Devuelve lista de
     (ts_ns:int, line:str, labels:dict) o [] si algo falla (Loki caído).
+    window_min: ventana en minutos (default WINDOW_MIN).
     """
+    win = window_min if window_min is not None else WINDOW_MIN
     now = datetime.now(timezone.utc)
-    start = _ns(now) - WINDOW_MIN * 60 * 1_000_000_000
+    start = _ns(now) - win * 60 * 1_000_000_000
     end = _ns(now)
     params = {
         "query": query,
@@ -230,7 +234,7 @@ async def loki_query_range(query: str, limit: int = 500):
     }
     out = []
     try:
-        async with httpx.AsyncClient(timeout=5.0) as client:
+        async with httpx.AsyncClient(timeout=LOKI_TIMEOUT) as client:
             r = await client.get(f"{LOKI_URL}/loki/api/v1/query_range", params=params)
             r.raise_for_status()
             data = r.json()
@@ -1383,22 +1387,20 @@ async def collect_violations(limit: int = 40):
 
 async def collect_stats():
     """
-    Contadores globales para el header del overlay (sobre la ventana actual):
-      ai_blocked   = respuestas DNS 'is 0.0.0.0'
-      scans        = alertas suricata cuya firma sea scan/nmap/port
-      alerts       = eventos severity alert/critical (suricata + cheat + ban + IA bloqueada)
-      total_events = total de eventos ÚTILES mapeados (sin flow/ruido)
-      solves       = nº de flag_ok
+    Contadores globales para el header del overlay.
+    solves usa WINDOW_MIN (histórico completo). El resto usa STATS_WIN_MIN
+    (ventana corta) para que las queries a Loki sean rápidas y no hagan timeout.
     """
     fetch = 5000
+    w = STATS_WIN_MIN
 
-    plat_rows = await loki_query_range('{source="platform"}', limit=fetch)
-    vpn_rows = await loki_query_range('{source="vpn"}', limit=fetch)
+    plat_rows = await loki_query_range('{source="platform"}', limit=fetch, window_min=WINDOW_MIN)
+    vpn_rows = await loki_query_range('{source="vpn"}', limit=fetch, window_min=w)
     sur_rows = await loki_query_range(
-        '{job="suricata"} |= "\\"event_type\\":\\"alert\\""', limit=fetch
+        '{job="suricata"} |= "\\"event_type\\":\\"alert\\""', limit=fetch, window_min=w
     )
-    flow_rows = await loki_query_range('{job="suricata"} |= "172.30."', limit=fetch)
-    dns_rows = await loki_query_range('{job="dns"}', limit=fetch)
+    flow_rows = await loki_query_range('{job="suricata"} |= "172.30."', limit=fetch, window_min=w)
+    dns_rows = await loki_query_range('{job="dns"}', limit=fetch, window_min=w)
 
     total_events = 0
     alerts = 0
