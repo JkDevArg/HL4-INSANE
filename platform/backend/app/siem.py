@@ -27,6 +27,8 @@ EventType = Literal[
     "vpn_ban",
     "ids_alert",
     "scan_detected",
+    "instance_start",
+    "instance_stop",
 ]
 Severity = Literal["info", "warn", "alert", "critical"]
 
