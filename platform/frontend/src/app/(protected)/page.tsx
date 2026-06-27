@@ -6,12 +6,13 @@ import type { Category, Challenge, InstanceStatus } from '@/lib/types';
 import { ChallengeCard } from '@/components/ChallengeCard';
 import { Spinner } from '@/components/Spinner';
 
-const CATEGORY_ORDER: Category[] = ['web', 'crypto', 'pwn', 'rev'];
+const CATEGORY_ORDER: Category[] = ['web', 'crypto', 'pwn', 'rev', 'gobl1n'];
 const CATEGORY_LABEL: Record<Category, string> = {
   web: 'Web',
   crypto: 'Crypto',
   pwn: 'Pwn',
   rev: 'Reversing',
+  gobl1n: 'Gobl1n',
 };
 
 const POLL_INTERVAL_MS = 6000;
