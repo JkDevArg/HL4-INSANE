@@ -3,7 +3,7 @@
 #
 # ESTRATEGIA DE BLOQUEO:
 #   El bloqueo de IAs (ChatGPT, Claude, Gemini, etc.) se hace por DNS sinkhole
-#   (dnsmasq + dns-blacklist). El firewall NO bloquea internet.
+#   (dnsmasq + dns-blacklist). El firewall NO bloquea internet general.
 #
 # LO QUE SE PERMITE desde la VPN (10.10.0.0/16):
 #   - Internet general          (para usar herramientas, man pages, etc.)
@@ -12,7 +12,7 @@
 #
 # LO QUE SE BLOQUEA:
 #   - SIEM interno:             10.10.200.0/24  (jugadores no deben verlo)
-#   - Challenges de otros equipos (inter-equipo)
+#   - Challenges de otros equipos (aislamiento inter-equipo)
 #   - IAs: bloqueadas por DNS sinkhole en dnsmasq (no por firewall)
 #
 # IDEMPOTENTE: limpia todas las reglas CTF previas antes de insertar,
@@ -26,8 +26,7 @@ log() { echo "[apply-firewall] $*"; }
 
 # ---------------------------------------------------------------------------
 # 1. Flush: eliminar TODAS las reglas CTF existentes en DOCKER-USER para
-#    evitar duplicados. Se identifican por saddr 10.10.0.0/16 o por ser
-#    reglas de challenges (172.30.x.x). Se repite hasta que no quede ninguna.
+#    evitar duplicados al correr el script más de una vez.
 # ---------------------------------------------------------------------------
 log "Limpiando reglas CTF previas en DOCKER-USER..."
 
@@ -63,26 +62,22 @@ log "Limpieza completada."
 #
 #    Orden final de evaluación (de arriba a abajo):
 #      1. ACCEPT: VPN → platform CTF (10.10.100.0/24)
-#      2. ACCEPT: team_N → sus challenges (172.30.N.0/24) — aislamiento inter-equipo
-#      3. DROP:   VPN → SIEM (10.10.200.0/24) — los jugadores no ven el SIEM
-#      4. DROP:   VPN → cualquier otra red Docker (172.16/12, 10.10.200+)
-#      5. RETURN: todo lo demás (internet) pasa — las IAs las bloquea dnsmasq
+#      2. ACCEPT: team_N → sus challenges (172.30.N.0/24)
+#      3. DROP:   VPN → SIEM (10.10.200.0/24) y otras redes Docker privadas
+#      4. RETURN: todo lo demás (internet) pasa — IAs las bloquea dnsmasq
 # ---------------------------------------------------------------------------
 
-# [5] RETURN para internet: cualquier destino fuera de las redes internas pasa.
-# nft RETURN en DOCKER-USER devuelve al FORWARD hook y el paquete sigue normal.
+# [4] RETURN para internet: destinos fuera de redes privadas pasan libremente.
 nft insert rule ip filter DOCKER-USER \
     ip saddr 10.10.0.0/16 \
     ip daddr != { 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16 } \
     return 2>/dev/null || true
 
-# [4] DROP: VPN → cualquier otra subred privada Docker no autorizada
+# [3] DROP: VPN → SIEM y redes Docker privadas no autorizadas
 nft insert rule ip filter DOCKER-USER \
     ip saddr 10.10.0.0/16 \
     ip daddr { 172.16.0.0/12, 10.10.200.0/24 } \
     drop 2>/dev/null || true
-
-# [3] ya cubierto por [4]: 10.10.200.0/24 está en el bloque anterior
 
 # [2] ACCEPT por equipo: solo su propia subred de challenges
 nft insert rule ip filter DOCKER-USER \
@@ -119,4 +114,4 @@ log "Estado actual de DOCKER-USER:"
 nft list chain ip filter DOCKER-USER 2>/dev/null \
     | grep -E 'saddr|daddr|tun0|return|drop|accept' || true
 
-log "OK — internet PERMITIDO para jugadores VPN. IAs bloqueadas por dnsmasq."
+log "OK — internet PERMITIDO. SIEM e inter-equipo BLOQUEADOS. IAs bloqueadas por dnsmasq."
