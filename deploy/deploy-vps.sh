@@ -35,7 +35,9 @@ SERVER_IP="${1:-}"
 VPN_PORT="${VPN_PORT:-1194}"
 VPN_PROTO="${VPN_PROTO:-udp}"
 REPO_URL="https://github.com/JkDevArg/HL4-INSANE.git"
-REPO_DIR="${REPO_DIR:-/opt/HL4-INSANE}"
+# Auto-detecta el repo: el script vive en <repo>/deploy/deploy-vps.sh
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_DIR="${REPO_DIR:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 LOG_FILE="/var/log/ctf-deploy.log"
 OVPN_DIR="/etc/openvpn/clients"
 SCRIPTS_DIR="/etc/openvpn/scripts"
@@ -99,17 +101,25 @@ apt-get update -qq
 apt-get upgrade -y -qq 2>/dev/null | tail -1
 
 log "Instalando paquetes necesarios..."
-apt-get install -y -qq \
-    git curl wget unzip \
-    docker.io docker-compose-plugin \
-    openvpn easy-rsa \
-    nftables \
-    redis-tools \
-    dnsmasq \
-    jq \
-    netcat-openbsd \
-    zip 2>/dev/null | tail -1
-ok "Dependencias instaladas"
+# Instalar en bloques: si uno falla, el error es visible (sin -qq aquí)
+apt-get install -y git curl wget unzip jq zip nftables redis-tools dnsmasq netcat-openbsd
+ok "Herramientas base instaladas"
+
+# OpenVPN + EasyRSA
+apt-get install -y openvpn easy-rsa
+ok "OpenVPN + EasyRSA instalados"
+
+# Docker: intentar docker.io + plugin; si falla instalar solo docker.io
+if apt-get install -y docker.io docker-compose-plugin 2>/dev/null; then
+    ok "Docker + docker compose plugin instalados"
+elif apt-get install -y docker.io docker-compose 2>/dev/null; then
+    ok "Docker + docker-compose (legacy) instalados"
+    # Crear alias para que 'docker compose' funcione con el binario legacy
+    ln -sf /usr/bin/docker-compose /usr/local/bin/docker-compose 2>/dev/null || true
+else
+    fail "No se pudo instalar Docker. Instálalo manualmente y vuelve a ejecutar."
+fi
+ok "Todas las dependencias instaladas"
 
 # IP forwarding
 if ! grep -q "^net.ipv4.ip_forward=1" /etc/sysctl.conf 2>/dev/null; then
