@@ -245,6 +245,20 @@ cd "$OVPN_DIR" && zip -q -r "$OVPN_ZIP" *.ovpn 2>/dev/null && cd -
 ok "Certificados comprimidos en $OVPN_ZIP"
 
 # =============================================================================
+# PASO 3.5 — Scripts VPN (instalados ANTES de iniciar OpenVPN para que
+#            server.conf pueda referenciarlos al arranque)
+# =============================================================================
+log "Pre-instalando scripts VPN en $SCRIPTS_DIR (requeridos por server.conf)..."
+mkdir -p "$SCRIPTS_DIR"
+for script in on-connect.sh on-disconnect.sh ban-team.sh unban.sh revoke-team.sh apply-firewall.sh gen-team-cert.sh; do
+    SRC="$REPO_DIR/vpn/scripts/$script"
+    [[ -f "$SRC" ]] || continue
+    cp "$SRC" "$SCRIPTS_DIR/$script"
+    chmod +x "$SCRIPTS_DIR/$script"
+done
+ok "Scripts VPN pre-instalados en $SCRIPTS_DIR"
+
+# =============================================================================
 # PASO 4 — OpenVPN: IPs estáticas por equipo/jugador (CCD)
 # =============================================================================
 step "PASO 4 — CCD: IPs estáticas por jugador"
@@ -299,14 +313,14 @@ fi
 # =============================================================================
 step "PASO 6 — Scripts VPN y reglas de firewall"
 
-log "Instalando scripts en $SCRIPTS_DIR..."
+log "Actualizando scripts en $SCRIPTS_DIR (por si el repo cambió desde PASO 3.5)..."
 mkdir -p "$SCRIPTS_DIR"
 for script in on-connect.sh on-disconnect.sh ban-team.sh unban.sh revoke-team.sh apply-firewall.sh gen-team-cert.sh; do
     SRC="$REPO_DIR/vpn/scripts/$script"
     [[ -f "$SRC" ]] || continue
     cp "$SRC" "$SCRIPTS_DIR/$script"
     chmod +x "$SCRIPTS_DIR/$script"
-    ok "  $script instalado"
+    ok "  $script actualizado"
 done
 
 log "Aplicando reglas de firewall CTF..."
@@ -333,6 +347,19 @@ EOF
 systemctl daemon-reload
 systemctl enable ctf-firewall.service
 ok "ctf-firewall.service instalado y habilitado al arranque"
+
+# Si OpenVPN no está activo (falló en PASO 4), intentar de nuevo ahora que
+# los scripts ya están instalados y el firewall está listo.
+if ! systemctl is-active --quiet openvpn@server; then
+    log "OpenVPN no estaba activo — reintentando ahora que los scripts están en su lugar..."
+    systemctl restart openvpn@server || warn "OpenVPN sigue fallando — revisa: journalctl -xeu openvpn@server"
+    sleep 3
+    if systemctl is-active --quiet openvpn@server; then
+        ok "OpenVPN activo (segundo intento)"
+    else
+        warn "OpenVPN no pudo iniciar. Diagnóstico: journalctl -xeu openvpn@server --no-pager | tail -40"
+    fi
+fi
 
 # =============================================================================
 # PASO 7 — DNS sinkhole de IAs (dnsmasq)
@@ -361,8 +388,7 @@ if [[ -f "$DNSMASQ_CONF_SRC" ]] && [[ -f "$BLOCKLIST_SRC" ]]; then
 else
     warn "dnsmasq.conf o ai-blocklist.txt no encontrados — usando sinkhole mínimo..."
     cat > "$DNSMASQ_CONF_DST" <<'EOF'
-interface=tun0
-bind-dynamic
+listen-address=127.0.0.1,10.10.0.1
 no-resolv
 server=1.1.1.1
 server=1.0.0.1
@@ -395,6 +421,16 @@ address=/dns.google/0.0.0.0
 EOF
     ok "Sinkhole mínimo configurado"
 fi
+
+# Drop-in systemd para que dnsmasq arranque DESPUÉS de OpenVPN (tun0 debe existir
+# antes de que dnsmasq intente bind en 10.10.0.1).
+mkdir -p /etc/systemd/system/dnsmasq.service.d
+cat > /etc/systemd/system/dnsmasq.service.d/after-openvpn.conf <<'EOF'
+[Unit]
+After=openvpn@server.service
+Wants=openvpn@server.service
+EOF
+systemctl daemon-reload
 
 systemctl enable dnsmasq 2>/dev/null || true
 systemctl restart dnsmasq || warn "dnsmasq no pudo reiniciar — revisa: journalctl -u dnsmasq"

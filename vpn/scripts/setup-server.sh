@@ -38,7 +38,14 @@ echo "[*] Generando Diffie-Hellman..."
 ./easyrsa gen-dh
 
 echo "[*] Generando TLS auth key..."
-openvpn --genkey secret /etc/openvpn/ta.key
+# --genkey tls-auth es la sintaxis para OpenVPN 2.5+; en 2.4 era --genkey --secret
+# Intentar nueva sintaxis primero y caer en la vieja si falla.
+if openvpn --genkey tls-auth /etc/openvpn/ta.key 2>/dev/null; then
+    echo "    ta.key generado (OpenVPN 2.5+ syntax)"
+else
+    openvpn --genkey --secret /etc/openvpn/ta.key
+    echo "    ta.key generado (OpenVPN 2.4 legacy syntax)"
+fi
 
 # Copiar archivos necesarios al directorio OpenVPN
 cp pki/ca.crt /etc/openvpn/
@@ -77,7 +84,8 @@ keepalive 10 120
 persist-key
 persist-tun
 
-# Seguridad
+# Seguridad — OpenVPN 2.5+ usa data-ciphers; cipher se mantiene como fallback
+data-ciphers AES-256-GCM:AES-128-GCM
 cipher AES-256-GCM
 tls-version-min 1.2
 EOF
