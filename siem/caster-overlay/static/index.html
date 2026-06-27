@@ -499,9 +499,16 @@ function esc(s) {
     {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]
   ));
 }
-// Resalta "Equipo NN" / "EQUIPO NN". Recibe texto YA ESCAPADO.
+// Resalta nombres de equipos. Recibe texto YA ESCAPADO.
 function hi(text) {
-  return text.replace(/(EQUIPO\s\d{1,2}|Equipo\s\d{1,2})/g, '<span class="team-tag">$1</span>');
+  let t = text.replace(/(EQUIPO\s\d{1,2}|Equipo\s\d{1,2})/g, '<span class="team-tag">$1</span>');
+  for (const tm of lastTeams) {
+    if (tm.team) {
+      const n = esc(tm.team);
+      t = t.split(n).join('<span class="team-tag">' + n + '</span>');
+    }
+  }
+  return t;
 }
 function relTime(iso) {
   const t = new Date(iso).getTime();
@@ -571,6 +578,11 @@ function teamNum(label) {
   const m = String(label || "").match(/(\d{1,2})/);
   return m ? parseInt(m[1], 10) : null;
 }
+function teamIdNum(tid) {
+  // "team_01" -> 1, "team_05" -> 5
+  const m = String(tid || "").match(/(\d+)/);
+  return m ? parseInt(m[1], 10) : null;
+}
 function selectTeam(n) {
   selectedTeam = n;
   renderTabs(lastTeams);
@@ -600,7 +612,7 @@ function renderTabs(teams) {
   if (!el) return;
   let html = `<div class="ttab all ${selectedTeam === null ? "active" : ""}" data-team="all">TODOS</div>`;
   html += teams.map(t => {
-    const n = teamNum(t.team);
+    const n = teamIdNum(t.team_id);
     const status = (t.status || "offline");
     const sc = status === "banned" ? "banned" : (t.connected > 0 ? "on" : "");
     const active = selectedTeam === n ? "active" : "";
@@ -633,7 +645,7 @@ async function tickTeams() {
       const playerList = (t.players || []).filter(p => p && p !== "—");
       const connTxt = playerList.length ? playerList.join(", ") : connCount + "/4";
       const cur = t.current_challenge ? esc(t.current_challenge) : esc(t.last_action || "sin actividad");
-      const n = teamNum(t.team);
+      const n = teamIdNum(t.team_id);
       return `
         <div class="tcard ${cls.join(' ')}" data-team="${n}" style="cursor:pointer">
           <div class="thead">
@@ -798,6 +810,7 @@ const SEV_KIND = {
   cheat: "sev-red", ban: "sev-red", scan: "sev-red",
   ids: "sev-orange", ai_block: "sev-orange", login_fail: "sev-orange",
   flag_ok: "sev-green",
+  vpn_disconnect: "sev-orange",
   login: "sev-cyan", vpn_connect: "sev-cyan", challenge: "sev-cyan",
   request: "sev-cyan",
 };

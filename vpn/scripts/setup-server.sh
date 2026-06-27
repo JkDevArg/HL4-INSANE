@@ -88,10 +88,15 @@ echo "[*] Habilitando IP forwarding..."
 echo 'net.ipv4.ip_forward=1' >> /etc/sysctl.conf
 sysctl -p
 
-echo "[*] Configurando NAT básico..."
+echo "[*] Configurando NAT con nftables..."
 IFACE=$(ip route | grep default | awk '{print $5}' | head -1)
-iptables -t nat -A POSTROUTING -s 10.10.0.0/16 -o "$IFACE" -j MASQUERADE
-netfilter-persistent save
+# Ubuntu 22.04 usa nftables como backend por defecto. iptables MASQUERADE no tiene efecto.
+nft add table ip nat 2>/dev/null || true
+nft add chain ip nat POSTROUTING "{ type nat hook postrouting priority 100 ; }" 2>/dev/null || true
+nft add rule ip nat POSTROUTING ip saddr 10.10.0.0/16 oifname "$IFACE" masquerade
+# Persistir las reglas nftables al reinicio.
+nft list ruleset > /etc/nftables.conf
+systemctl enable nftables 2>/dev/null || true
 
 echo "[*] Iniciando OpenVPN..."
 systemctl enable openvpn@server

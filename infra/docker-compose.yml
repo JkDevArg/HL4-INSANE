@@ -182,7 +182,7 @@ services:
     environment:
       - LOKI_URL=http://loki:3100
       - WINDOW_MIN=15
-      - CTF_NAME=${CTF_NAME:-CTFHL4-INSANE}
+      - CTF_NAME=${CTF_NAME:-CTFHL4 - FINAL}
     networks:
       - net_siem
     ports:

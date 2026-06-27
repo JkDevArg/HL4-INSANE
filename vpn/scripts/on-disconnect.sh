@@ -1,45 +1,23 @@
 #!/bin/bash
 # on-disconnect.sh — script client-disconnect de OpenVPN.
 #
-# OpenVPN lo invoca cuando una sesion de cliente termina, por CUALQUIER motivo:
-#   - El cliente cerro el tunel a proposito (Ctrl-C, "Disconnect", apagar app).
-#   - El cliente perdio la red (su keepalive expiro -> ping-restart).
-#   - El server lo expulso (reload, --explicit-exit-notify, etc).
+# Responsabilidades:
+#   1. Liberar el slot del cert en Redis (vpn:connected:{CN} -> grace 120s).
+#      Esto permite que el mismo jugador reconecte si su internet cayo,
+#      SIN que otra persona pueda usar el mismo cert durante esos 2 min.
+#   2. Contar desconexiones limpias para el sistema de ban (logica original).
+#   3. Emitir evento SIEM.
 #
-# Solo nos interesan las desconexiones LIMPIAS iniciadas por el cliente.
-# Las caidas por timeout/keepalive NO cuentan para el ban (ver heuristica).
+# Variables de entorno que OpenVPN expone:
+#   common_name, ifconfig_pool_remote_ip, trusted_ip, time_duration, signal
 #
-# Variables de entorno que OpenVPN expone aqui:
-#   common_name        -> CN = team_NN
-#   ifconfig_pool_remote_ip -> IP VPN asignada
-#   trusted_ip         -> IP publica real
-#   time_duration      -> duracion de la sesion en SEGUNDOS (entero)
-#   bytes_received / bytes_sent -> trafico de la sesion
-#   signal             -> motivo de cierre cuando OpenVPN lo conoce:
-#                          "remote-exit"  -> el cliente envio exit-notify (LIMPIO)
-#                          "ping-restart" -> timeout de keepalive (NO cuenta)
-#                          "sigterm"/"sigint"/"sigusr1" -> el server reinicio (NO cuenta)
-#                          (vacio)        -> ambiguo, decide la heuristica por duracion
-#
-# ---------------------------------------------------------------------------
-# HEURISTICA limpia-vs-timeout (documentada, configurable):
-#   Cuenta como desconexion del CLIENTE (incrementa contador) si:
+# HEURISTICA limpia-vs-timeout:
+#   Cuenta como desconexion del CLIENTE si:
 #     (a) signal == "remote-exit"  -> exit-notify explicito del cliente, o
-#     (b) signal vacio Y time_duration < KEEPALIVE_TIMEOUT (la sesion no
-#         murio por inactividad: un timeout siempre dura >= ~120s por el
-#         keepalive 10 120 del server.conf, asi que < 120s => cierre voluntario).
-#   NO cuenta (timeout / server-side / caida de red prolongada) si:
-#     - signal en {ping-restart, sigterm, sigint, sigusr1, sighup}, o
-#     - signal vacio Y time_duration >= KEEPALIVE_TIMEOUT (probable timeout).
-#
-#   Rationale: server.conf tiene "keepalive 10 120" => el server declara muerto
-#   a un peer tras ~120s sin respuesta. Una desconexion voluntaria del cliente
-#   manda exit-notify (signal=remote-exit) casi siempre; cuando no llega (UDP
-#   perdido), la sesion corta (<120s) delata un cierre intencional reciente,
-#   mientras que una caida real arrastra hasta el limite del keepalive.
-# ---------------------------------------------------------------------------
-#
-# Dependencias: redis-cli, curl. set -euo pipefail.
+#     (b) signal vacio Y time_duration < KEEPALIVE_TIMEOUT (~120s).
+#   NO cuenta (timeout / server-side) si:
+#     - signal en {ping-restart, sigterm, sigint, sigusr1, sighup}
+#     - signal vacio Y time_duration >= KEEPALIVE_TIMEOUT
 
 set -euo pipefail
 
@@ -51,12 +29,11 @@ REDIS_PORT="${REDIS_PORT:-6379}"
 COLLECTOR_URL="${COLLECTOR_URL:-http://10.10.200.10:9000/event}"
 EVENTS_LOG="${EVENTS_LOG:-/var/log/openvpn/events.log}"
 DISCONNECT_THRESHOLD="${DISCONNECT_THRESHOLD:-3}"
-# Debe coincidir con el segundo valor de "keepalive 10 120" del server.conf.
 KEEPALIVE_TIMEOUT="${KEEPALIVE_TIMEOUT:-120}"
-# TTL de la ventana del contador (segundos). Tras este tiempo sin nuevas
-# desconexiones limpias, Redis expira el contador (evita acumular caidas de
-# red repartidas en todo el evento). 0 = sin expiracion.
 DISC_WINDOW_TTL="${DISC_WINDOW_TTL:-0}"
+# Tiempo de gracia (segundos) antes de liberar el slot del cert.
+# Permite reconexion rapida tras caida de internet sin que otro use el cert.
+GRACE_TTL="${GRACE_TTL:-120}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BAN_SCRIPT="${BAN_SCRIPT:-${SCRIPT_DIR}/ban-team.sh}"
 
@@ -68,11 +45,11 @@ BAN_SCRIPT="${BAN_SCRIPT:-${SCRIPT_DIR}/ban-team.sh}"
 CN="${common_name:-unknown}"
 VPN_IP="${ifconfig_pool_remote_ip:-?}"
 REAL_IP="${trusted_ip:-${untrusted_ip:-?}}"
+REAL_PORT="${trusted_port:-${untrusted_port:-?}}"
 DURATION="${time_duration:-0}"
 SIGNAL="${signal:-}"
 TS="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
-# Extrae team_id del CN: "team_01_alice" → "team_01"
 if [[ "$CN" =~ ^(team_[0-9]{2})(_(.+))?$ ]]; then
     TEAM="${BASH_REMATCH[1]}"
     PLAYER="${BASH_REMATCH[3]:-}"
@@ -81,7 +58,6 @@ else
     PLAYER=""
 fi
 
-# DURATION debe ser numerico para la comparacion; saneamos.
 DURATION="$(echo "$DURATION" | tr -dc '0-9')"
 DURATION="${DURATION:-0}"
 
@@ -104,7 +80,22 @@ log_event() {
 }
 
 # ---------------------------------------------------------------------------
-# Decision: clean (cuenta) vs no-cuenta
+# SIEMPRE: liberar slot con grace period (independiente del tipo de cierre).
+# on-connect.sh chequea vpn:connected:{CN}. Al desconectarse por cualquier
+# motivo (limpio, caida, timeout), borramos vpn:connected y ponemos grace.
+# Si el jugador vuelve dentro de GRACE_TTL segundos -> reconexion permitida.
+# Si pasan mas de GRACE_TTL sin reconectar -> grace expira -> slot libre.
+# ---------------------------------------------------------------------------
+CONNECTED_KEY="vpn:connected:${CN}"
+GRACE_KEY="vpn:grace:${CN}"
+
+redis-cli -h "$REDIS_HOST" -p "$REDIS_PORT" \
+    DEL "$CONNECTED_KEY" >/dev/null 2>&1 || true
+redis-cli -h "$REDIS_HOST" -p "$REDIS_PORT" \
+    SETEX "$GRACE_KEY" "$GRACE_TTL" "${REAL_IP}:${REAL_PORT}" >/dev/null 2>&1 || true
+
+# ---------------------------------------------------------------------------
+# Decision: desconexion limpia (cuenta para ban) vs no-cuenta
 # ---------------------------------------------------------------------------
 COUNTS="no"
 CLASS=""
@@ -116,7 +107,6 @@ case "$SIGNAL" in
     sigterm|sigint|sigusr1|sighup)
         COUNTS="no";  CLASS="server_side_signal" ;;
     "")
-        # Sin signal: decidir por duracion vs keepalive.
         if (( DURATION < KEEPALIVE_TIMEOUT )); then
             COUNTS="yes"; CLASS="short_session_assumed_client"
         else
@@ -124,24 +114,22 @@ case "$SIGNAL" in
         fi
         ;;
     *)
-        # Signal desconocido -> conservador: no contar (evita falsos positivos).
         COUNTS="no";  CLASS="unknown_signal_${SIGNAL}" ;;
 esac
 
 if [[ "$COUNTS" != "yes" ]]; then
     log_event vpn_disconnect "counts=no class=${CLASS}"
     emit_siem "vpn_disconnect" "info" \
-        "{\"counts\":false,\"class\":\"${CLASS}\",\"duration_s\":${DURATION},\"signal\":\"${SIGNAL:-none}\"}"
+        "{\"counts\":false,\"class\":\"${CLASS}\",\"duration_s\":${DURATION},\"signal\":\"${SIGNAL:-none}\",\"real_ip\":\"${REAL_IP}\",\"real_port\":\"${REAL_PORT}\"}"
     exit 0
 fi
 
 # ---------------------------------------------------------------------------
-# Desconexion LIMPIA del cliente: incrementar contador en Redis.
-#   INCR es atomico y crea la key en 0->1 si no existia.
-#   Si Redis esta caido, logueamos y salimos sin contar (no podemos banear).
+# Desconexion limpia: incrementar contador para ban
 # ---------------------------------------------------------------------------
 COUNT=""
-if ! COUNT=$(redis-cli -h "$REDIS_HOST" -p "$REDIS_PORT" INCR "vpn:disc:${TEAM}" 2>/dev/null); then
+if ! COUNT=$(redis-cli -h "$REDIS_HOST" -p "$REDIS_PORT" \
+        INCR "vpn:disc:${TEAM}" 2>/dev/null); then
     log_event vpn_disconnect "counts=yes class=${CLASS} redis=error"
     emit_siem "vpn_disconnect" "warn" \
         "{\"counts\":true,\"class\":\"${CLASS}\",\"duration_s\":${DURATION},\"error\":\"redis_unreachable\"}"
@@ -150,25 +138,23 @@ fi
 COUNT="$(echo "$COUNT" | tr -dc '0-9')"
 COUNT="${COUNT:-0}"
 
-# Renovar ventana del contador si esta configurada.
 if (( DISC_WINDOW_TTL > 0 )); then
-    redis-cli -h "$REDIS_HOST" -p "$REDIS_PORT" EXPIRE "vpn:disc:${TEAM}" "$DISC_WINDOW_TTL" >/dev/null 2>&1 || true
+    redis-cli -h "$REDIS_HOST" -p "$REDIS_PORT" \
+        EXPIRE "vpn:disc:${TEAM}" "$DISC_WINDOW_TTL" >/dev/null 2>&1 || true
 fi
 
 log_event vpn_disconnect "counts=yes class=${CLASS} count=${COUNT}/${DISCONNECT_THRESHOLD}"
 
-# severity escala al acercarse al umbral.
 SEV="info"; (( COUNT >= DISCONNECT_THRESHOLD - 1 )) && SEV="warn"
 emit_siem "vpn_disconnect" "$SEV" \
-    "{\"counts\":true,\"class\":\"${CLASS}\",\"duration_s\":${DURATION},\"count\":${COUNT},\"threshold\":${DISCONNECT_THRESHOLD}}"
+    "{\"counts\":true,\"class\":\"${CLASS}\",\"duration_s\":${DURATION},\"count\":${COUNT},\"threshold\":${DISCONNECT_THRESHOLD},\"real_ip\":\"${REAL_IP}\",\"real_port\":\"${REAL_PORT}\"}"
 
 # ---------------------------------------------------------------------------
-# Si alcanzo el umbral -> banear.
+# Banear si se alcanzo el umbral
 # ---------------------------------------------------------------------------
 if (( COUNT >= DISCONNECT_THRESHOLD )); then
     log_event vpn_ban_trigger "count=${COUNT}"
     if [[ -x "$BAN_SCRIPT" ]]; then
-        # Lanzar el ban; no dejamos que un fallo del ban rompa el hook.
         "$BAN_SCRIPT" "$TEAM" >> "$EVENTS_LOG" 2>&1 || \
             log_event vpn_ban_error "note=ban_script_failed"
     else
