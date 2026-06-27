@@ -747,7 +747,7 @@ ASSIGNMENTS: dict[str, list[str]] = {
         "web-oss-registry",    "web-gitops-pipeline",   "web-saml-sso",
         "crypto-lattice-ecdsa","crypto-jwt-confusion",  "crypto-tls-downgrade",
         "pwn-heap-chain",      "pwn-rop-chain",          "pwn-kernel-lpe",
-        "rev-firmware-chain",  "rev-malware-dropper",    "rev-wasm-chain",
+        "rev-vm-bytecode",     "rev-go-binary",           "rev-dotnet-obf",
         "gobl1n-poke-l4bs",
     ],
     "team_02": [
@@ -761,21 +761,21 @@ ASSIGNMENTS: dict[str, list[str]] = {
         "web-sqli-chain",      "web-graphql-chain",      "web-ssti-chain",
         "crypto-hastad-broadcast","crypto-fermat-rsa",   "crypto-dsa-nonce",
         "pwn-seccomp-bypass",  "pwn-pie-leak",            "pwn-vm-escape",
-        "rev-packed-delta",    "rev-anti-debug-chain",    "rev-llvm-obf",
+        "rev-vm-bytecode",     "rev-go-binary",           "rev-dotnet-obf",
         "gobl1n-poke-l4bs",
     ],
     "team_04": [
         "web-oauth-misconfig", "web-prototype-pollution", "web-websocket-chain",
         "crypto-ecdh-invalid", "crypto-cbc-bitflip",      "crypto-gcm-nonce",
         "pwn-srop-chain",      "pwn-off-by-one",           "pwn-sandbox-escape",
-        "rev-rust-binary",     "rev-kernel-module",        "rev-mobile-apk",
+        "rev-vm-bytecode",     "rev-go-binary",           "rev-dotnet-obf",
         "gobl1n-poke-l4bs",
     ],
     "team_05": [
         "web-cors-chain",      "web-java-deserialization", "web-waf-bypass",
         "crypto-rsa-crt-fault","crypto-bleichenbacher",    "crypto-wiener",
         "pwn-aarch64-rop",     "pwn-heap-master",           "pwn-driver-exploit",
-        "rev-symbolic-exec",   "rev-taint-analysis",        "rev-decompiler-puzzle",
+        "rev-vm-bytecode",     "rev-go-binary",           "rev-dotnet-obf",
         "gobl1n-poke-l4bs",
     ],
 }
