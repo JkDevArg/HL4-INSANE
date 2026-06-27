@@ -108,9 +108,14 @@ nft insert rule ip filter FORWARD \
 nft insert rule ip filter FORWARD \
     iifname "tun0" ip daddr 172.30.0.0/16 counter accept
 
-# [2] ACCEPT plataforma CTF
+# [2b] ACCEPT plataforma CTF
 nft insert rule ip filter FORWARD \
     iifname "tun0" ip daddr 10.10.100.0/24 counter accept
+
+# [2a] ACCEPT VPN -> internet (redirect-gateway def1 manda todo por VPN;
+#      sin esta regla el cliente pierde internet al conectar)
+nft insert rule ip filter FORWARD \
+    iifname "tun0" oifname "ens18" counter accept
 
 # [1] ACCEPT established/related — insertado ultimo, queda al tope
 nft insert rule ip filter FORWARD \
