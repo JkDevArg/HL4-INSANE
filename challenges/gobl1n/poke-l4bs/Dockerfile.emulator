@@ -1,0 +1,21 @@
+FROM ubuntu:22.04
+ENV DEBIAN_FRONTEND=noninteractive
+
+# mGBA (SDL), Xvfb, x11vnc, noVNC (incluye websockify)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        mgba-sdl \
+        xvfb \
+        x11vnc \
+        novnc \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# ROM baked en la imagen — no accesible via ninguna ruta HTTP
+COPY POKE_L4BS.gbc /game/POKE_L4BS.gbc
+
+COPY start.sh /start.sh
+RUN chmod +x /start.sh
+
+# noVNC sirve en este puerto (el emulador NO expone nada a team_net)
+EXPOSE 6080
+
+CMD ["/start.sh"]

@@ -1,15 +1,13 @@
-# gobl1n-poke-l4bs — POKE_L4BS Game Boy Color via cloud-game
+# gobl1n-poke-l4bs — POKE_L4BS Game Boy Color (mGBA + noVNC + CTF overlay)
 # Variables inyectadas por instance_manager: TEAM_ID, TEAM_N, FLAG, CHAL_NET
 #
-# Arquitectura:
-#   nginx (.50:8080)  — entry point + proxy coordinator + inyecta overlay CTF
-#   coordinator       — cloud-game signaling (WebSocket) + web UI
-#   worker (.52)      — ejecución del juego server-side + stream WebRTC
-#   flag-api          — entrega de flag con timer de gameplay (interno)
+# Arquitectura (3 contenedores por equipo):
+#   nginx (.50:8080)  — entry point, proxy noVNC, inyecta overlay CTF
+#   emulator          — mGBA via Xvfb+x11vnc+noVNC (sin imagen de terceros)
+#   flag-api          — timer de gameplay + entrega de flag (interno)
 #
-# El ROM no es descargable: está baked en la imagen del worker.
-# WebRTC va del browser directamente al worker (.52), por eso worker
-# necesita IP en team_net (reachable desde la VPN del jugador).
+# El ROM está baked en la imagen del emulador — no accesible via HTTP.
+# El jugador controla el juego en el navegador (teclado/ratón vía noVNC).
 
 networks:
   team_net:
@@ -20,28 +18,13 @@ networks:
     internal: true
 
 services:
-  coordinator:
-    image: giongto35/coordinator:latest
-    environment:
-      - CLOUD_COORDINATOR_ADDRESS=0.0.0.0:8000
-    networks:
-      - internal_net
-    restart: unless-stopped
-
-  worker:
+  emulator:
     build:
       context: .
-      dockerfile: Dockerfile.worker
-    image: gobl1n-poke-worker-${TEAM_ID:-local}
-    environment:
-      - CLOUD_COORDINATOR=coordinator:8000
-      - CLOUD_GAME_DIR=/home/cloudretro/games
+      dockerfile: Dockerfile.emulator
+    image: gobl1n-poke-emulator-${TEAM_ID:-local}
     networks:
-      team_net:
-        ipv4_address: 172.30.${TEAM_N:-99}.52
-      internal_net:
-    depends_on:
-      - coordinator
+      - internal_net
     restart: unless-stopped
 
   flag-api:
@@ -64,6 +47,6 @@ services:
         ipv4_address: 172.30.${TEAM_N:-99}.50
       internal_net:
     depends_on:
-      - coordinator
+      - emulator
       - flag-api
     restart: unless-stopped

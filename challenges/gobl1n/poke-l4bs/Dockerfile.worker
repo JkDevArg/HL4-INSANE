@@ -1,6 +1,0 @@
-FROM giongto35/worker:latest
-USER root
-RUN mkdir -p /home/cloudretro/games
-# ROM baked en la imagen — no accesible vía HTTP, solo via stream WebRTC
-COPY POKE_L4BS.gbc /home/cloudretro/games/POKE_L4BS.gbc
-RUN chmod 644 /home/cloudretro/games/POKE_L4BS.gbc
