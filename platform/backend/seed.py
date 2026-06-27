@@ -714,6 +714,20 @@ CHALLENGES = [
         "mezclan. Requiere análisis manual del ensamblador puro.",
         "http://172.30.{N}.42:8080  (GET /binary  POST /submit)",
     ),
+
+    # ── GOBL1N — Todos los equipos (slot .50) ────────────────────────────────
+    # Único reto compartido: todos los equipos juegan la misma ROM (GBC).
+    # La flag es team-specific (generada por flag-service).
+    # El jugador DEBE jugar 3 min en el emulador antes de que el botón se active.
+    (
+        "gobl1n-poke-l4bs",
+        "gobl1n",
+        "POKE_L4BS",
+        950,
+        "Consola retro emulada en la nube. El juego esconde un secreto. "
+        "Juega y encuéntralo.",
+        "http://172.30.{N}.50:8080",
+    ),
 ]
 
 # ---------------------------------------------------------------------------
@@ -734,30 +748,35 @@ ASSIGNMENTS: dict[str, list[str]] = {
         "crypto-lattice-ecdsa","crypto-jwt-confusion",  "crypto-tls-downgrade",
         "pwn-heap-chain",      "pwn-rop-chain",          "pwn-kernel-lpe",
         "rev-firmware-chain",  "rev-malware-dropper",    "rev-wasm-chain",
+        "gobl1n-poke-l4bs",
     ],
     "team_02": [
         "web-cache-deception", "web-http-desync",        "web-xxe-ssrf",
         "crypto-rsa-lsb",      "crypto-padding-oracle",  "crypto-hash-length-ext",
         "pwn-format-string",   "pwn-race-condition",      "pwn-uaf-chain",
         "rev-vm-bytecode",     "rev-go-binary",           "rev-dotnet-obf",
+        "gobl1n-poke-l4bs",
     ],
     "team_03": [
         "web-sqli-chain",      "web-graphql-chain",      "web-ssti-chain",
         "crypto-hastad-broadcast","crypto-fermat-rsa",   "crypto-dsa-nonce",
         "pwn-seccomp-bypass",  "pwn-pie-leak",            "pwn-vm-escape",
         "rev-packed-delta",    "rev-anti-debug-chain",    "rev-llvm-obf",
+        "gobl1n-poke-l4bs",
     ],
     "team_04": [
         "web-oauth-misconfig", "web-prototype-pollution", "web-websocket-chain",
         "crypto-ecdh-invalid", "crypto-cbc-bitflip",      "crypto-gcm-nonce",
         "pwn-srop-chain",      "pwn-off-by-one",           "pwn-sandbox-escape",
         "rev-rust-binary",     "rev-kernel-module",        "rev-mobile-apk",
+        "gobl1n-poke-l4bs",
     ],
     "team_05": [
         "web-cors-chain",      "web-java-deserialization", "web-waf-bypass",
         "crypto-rsa-crt-fault","crypto-bleichenbacher",    "crypto-wiener",
         "pwn-aarch64-rop",     "pwn-heap-master",           "pwn-driver-exploit",
         "rev-symbolic-exec",   "rev-taint-analysis",        "rev-decompiler-puzzle",
+        "gobl1n-poke-l4bs",
     ],
 }
 
@@ -772,6 +791,7 @@ _CATEGORY_DESCS: dict[str, str] = {
     "crypto": "Servicio criptográfico activo. Estudia el protocolo y obtén la flag.",
     "pwn":    "Binario en ejecución en el servidor. Explótalo y lee la flag.",
     "rev":    "Artefacto binario para analizar. Entiende su lógica y extrae la flag.",
+    "gobl1n": "Plataforma de juego retro. Explora el entorno y extrae la flag.",
 }
 _ROMAN = ("I", "II", "III")
 
