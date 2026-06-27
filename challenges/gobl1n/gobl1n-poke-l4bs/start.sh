@@ -1,22 +1,25 @@
 #!/bin/bash
-set -e
 
-# Display virtual 800x640 (deja espacio al overlay CTF de 45px)
+# mgba-sdl se instala en /usr/games en Ubuntu; agregar al PATH
+export PATH="/usr/games:$PATH"
+
 Xvfb :99 -screen 0 800x640x24 -ac &
 export DISPLAY=:99
-sleep 1
 
-# VNC server (solo localhost, sin auth)
+# Esperar a que Xvfb cree su socket Unix (más fiable que sleep ciego)
+for i in $(seq 1 40); do
+    [ -e /tmp/.X11-unix/X99 ] && break
+    sleep 0.25
+done
+
 x11vnc -display :99 -nopw -listen 127.0.0.1 -rfbport 5900 -forever -quiet -noncache &
 sleep 1
 
-# noVNC WebSocket proxy (sirve HTML + proxy VNC)
 websockify --web /usr/share/novnc/ 6080 127.0.0.1:5900 &
-
 sleep 1
 
-# Bucle para reiniciar el emulador si el jugador lo cierra
+# Reiniciar el emulador automáticamente si el jugador lo cierra
 while true; do
-    SDL_AUDIODRIVER=dummy mgba-sdl -4 /game/POKE_L4BS.gbc 2>/dev/null || true
+    SDL_VIDEODRIVER=x11 SDL_AUDIODRIVER=dummy mgba-sdl -4 /game/POKE_L4BS.gbc 2>/dev/null || true
     sleep 2
 done

@@ -9,9 +9,17 @@ app = FastAPI(title="CTFHL4 Flag Service", docs_url=None, redoc_url=None)
 MASTER_SECRET = os.environ["MASTER_SECRET"]
 
 
+# Challenges con flag estática (igual para todos los equipos).
+# La flag se obtiene dentro del propio reto, no vía HMAC por equipo.
+STATIC_FLAGS: dict[str, str] = {
+    "gobl1n-poke-l4bs": "HL4{pok3m0n-for3v3r-Hackl4bs}",
+}
+
+
 def generate_flag(team_id: str, challenge_id: str) -> str:
-    # Formato HL4{...}, único por (equipo, reto) vía HMAC -> cada equipo recibe
-    # una flag distinta para el mismo reto; compartirla dispara el anti-cheat.
+    if challenge_id in STATIC_FLAGS:
+        return STATIC_FLAGS[challenge_id]
+    # Formato HL4{...}, único por (equipo, reto) vía HMAC
     key = f"{MASTER_SECRET}:{team_id}:{challenge_id}".encode()
     digest = hmac.new(MASTER_SECRET.encode(), key, hashlib.sha256).hexdigest()
     return f"HL4{{{digest[:20]}}}"

@@ -33,7 +33,6 @@ services:
     image: gobl1n-poke-flagapi-${TEAM_ID:-local}
     environment:
       - FLAG=${FLAG:-HL4{test_gobl1n_flag}}
-      - PLAY_SECONDS=180
     networks:
       - internal_net
     restart: unless-stopped
