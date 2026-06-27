@@ -1,0 +1,118 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "refresh": "15s",
+  "schemaVersion": 39,
+  "tags": ["ctf", "instances", "challenges", "siem"],
+  "templating": {
+    "list": [
+      {
+        "name": "team",
+        "label": "Equipo",
+        "type": "custom",
+        "query": "all,team_01,team_02,team_03,team_04,team_05",
+        "current": { "text": "all", "value": "all" },
+        "includeAll": false,
+        "options": []
+      }
+    ]
+  },
+  "time": { "from": "now-2h", "to": "now" },
+  "title": "Challenge Instances",
+  "uid": "ctf-challenge-instances",
+  "version": 1,
+  "panels": [
+    {
+      "id": 1,
+      "type": "timeseries",
+      "title": "Instancias iniciadas / detenidas (global)",
+      "datasource": { "type": "loki", "uid": "loki" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "fieldConfig": { "defaults": { "custom": { "drawStyle": "bars" } }, "overrides": [] },
+      "targets": [
+        {
+          "refId": "START",
+          "datasource": { "type": "loki", "uid": "loki" },
+          "expr": "sum(count_over_time({source=\"platform\", event_type=\"instance_start\"} [5m]))",
+          "legendFormat": "start"
+        },
+        {
+          "refId": "STOP",
+          "datasource": { "type": "loki", "uid": "loki" },
+          "expr": "sum(count_over_time({source=\"platform\", event_type=\"instance_stop\"} [5m]))",
+          "legendFormat": "stop"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "Instancias iniciadas por equipo",
+      "datasource": { "type": "loki", "uid": "loki" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "loki", "uid": "loki" },
+          "expr": "sum by (team_id) (count_over_time({source=\"platform\", event_type=\"instance_start\"} [5m]))",
+          "legendFormat": "{{team_id}}"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "logs",
+      "title": "Actividad reciente — instancias (start / stop)",
+      "datasource": { "type": "loki", "uid": "loki" },
+      "gridPos": { "h": 12, "w": 24, "x": 0, "y": 8 },
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "prettifyLogMessage": true,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": false
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "loki", "uid": "loki" },
+          "expr": "{source=\"platform\", event_type=~\"instance_start|instance_stop\"}",
+          "legendFormat": ""
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Starts totales (ventana)",
+      "datasource": { "type": "loki", "uid": "loki" },
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 20 },
+      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["sum"] } },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "loki", "uid": "loki" },
+          "expr": "sum(count_over_time({source=\"platform\", event_type=\"instance_start\"} [$__range]))",
+          "legendFormat": "starts"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "Stops totales (ventana)",
+      "datasource": { "type": "loki", "uid": "loki" },
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 20 },
+      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["sum"] } },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "loki", "uid": "loki" },
+          "expr": "sum(count_over_time({source=\"platform\", event_type=\"instance_stop\"} [$__range]))",
+          "legendFormat": "stops"
+        }
+      ]
+    }
+  ]
+}
