@@ -175,33 +175,31 @@ nft insert rule ip nat POSTROUTING \
 log "MASQUERADE VPN->CTF platform configurado."
 
 # ---------------------------------------------------------------------------
-# 7. raw PREROUTING: eliminar drops de Docker que bloquean tráfico VPN
+# 7. raw PREROUTING BYPASS permanente para tráfico VPN→challenges
 #
-# Docker (>=27) añade en la tabla 'ip raw PREROUTING' una regla DROP por cada
-# contenedor con IP en 10.10.100.x:
-#   ip daddr <container_ip> iifname != "br-<id>" drop
-# Estas reglas corren ANTES del chain FORWARD y descartan todos los paquetes
-# que llegan por tun0 (que no es el bridge del contenedor), aunque FORWARD
-# tenga ACCEPT explícito. Este paso borra esas reglas.
+# Docker (>=27) añade en 'ip raw PREROUTING' (hook prioridad -300) una regla
+# DROP por contenedor:
+#   ip daddr <container_ip> iifname != "br-X" drop
+# Esas reglas se re-añaden en CADA docker compose up, por lo que limpiarlas
+# manualmente no es suficiente: el siguiente Start las vuelve a poner.
 #
-# IMPORTANTE: este paso debe correr DESPUÉS de que Docker haya levantado los
-# contenedores (i.e., DESPUÉS de 'docker compose up'). Deploy llama este
-# script dos veces: una antes de Docker (para FORWARD/DOCKER-USER) y otra
-# después (para limpiar el raw PREROUTING que Docker recién creó).
+# SOLUCIÓN PERMANENTE: tabla propia 'ctf_vpn_bypass' con hook prerouting en
+# prioridad -301 (evaluada ANTES que Docker's -300). Acepta tráfico VPN antes
+# de que Docker pueda descartarlo — funciona sin importar cuántos contenedores
+# arranquen o se reinicien.
 # ---------------------------------------------------------------------------
-log "Limpiando raw PREROUTING de Docker (iifname != br-* drop para CTF subnets)..."
-RAW_HANDLES=$(nft -a list chain ip raw PREROUTING 2>/dev/null \
-    | grep -E 'ip daddr (10\.10\.100\.|172\.30\.).*iifname.*drop' \
-    | grep -oP '# handle \K[0-9]+' \
-    | sort -rn | tr '\n' ' ' || true)
-if [[ -n "$RAW_HANDLES" ]]; then
-    for H in $RAW_HANDLES; do
-        nft delete rule ip raw PREROUTING handle "$H" 2>/dev/null || true
-    done
-    log "  Eliminadas reglas raw PREROUTING Docker: handles $RAW_HANDLES"
-else
-    log "  No hay reglas raw PREROUTING Docker para CTF subnets (OK si Docker no arrancó aún)."
-fi
+log "Instalando tabla ctf_vpn_bypass (raw priority -301, permanente)..."
+nft delete table ip ctf_vpn_bypass 2>/dev/null || true
+nft add table ip ctf_vpn_bypass
+nft add chain ip ctf_vpn_bypass prerouting \
+    '{ type filter hook prerouting priority -301; policy accept; }'
+# VPN → challenges de todos los equipos
+nft add rule ip ctf_vpn_bypass prerouting \
+    iifname "tun0" ip daddr 172.30.0.0/16 accept
+# VPN → plataforma CTF
+nft add rule ip ctf_vpn_bypass prerouting \
+    iifname "tun0" ip daddr 10.10.100.0/24 accept
+log "  ctf_vpn_bypass instalado (priority -301). Inmune a reinicios de contenedores."
 
 # ---------------------------------------------------------------------------
 # 8. Verificacion final
