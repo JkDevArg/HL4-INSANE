@@ -390,12 +390,7 @@ def map_vpn(ts_ns, line, labels):
         return _item(ts_ns, team, "vpn_connect", "info", f"{who} se conectó a la VPN", priority=2)
     if etype == "vpn_disconnect":
         return _item(ts_ns, team, "vpn_disconnect", "info", f"{who} se desconectó de la VPN", priority=2)
-    if etype == "vpn_ban":
-        return _item(
-            ts_ns, team, "ban", "critical",
-            f"{team} fue BANEADO (3 desconexiones)",
-            priority=2,
-        )
+    # vpn_ban desactivado — no generar eventos ni notificaciones de ban
     return None
 
 
@@ -1216,15 +1211,8 @@ async def collect_teams():
         slv = solves.get(team, 0)
         max_pts = max(max_pts, pts)
 
-        # status
-        banned = (
-            team in last_ban
-            and last_ban[team] >= last_connect.get(team, -1)
-            and c == 0
-        )
-        if banned:
-            status = "banned"
-        elif c > 0:
+        # status (bans desactivados — solo online / offline)
+        if c > 0:
             status = "online"
         else:
             status = "offline"
@@ -1269,7 +1257,6 @@ async def collect_violations(limit: int = 40):
     )
     flow_rows = await loki_query_range('{job="suricata"} |= "172.30."', limit=fetch)
     plat_rows = await loki_query_range('{source="platform"} |= "cheat"', limit=fetch)
-    vpn_rows = await loki_query_range('{source="vpn"} |= "ban"', limit=fetch)
 
     out = []
     seen = set()  # dedup por (type, team, detalle) en ventana
@@ -1348,19 +1335,7 @@ async def collect_violations(limit: int = 40):
             "type": "cheat", "domain_or_detail": "flag compartida", "text": text,
         })
 
-    # --- Bans VPN.
-    for ts_ns, line, labels in vpn_rows:
-        ev = _parse_json_line(line)
-        if (ev.get("event_type") or labels.get("event_type") or "").lower() != "vpn_ban":
-            continue
-        team = team_from_team_id(ev.get("team_id") or labels.get("team_id")) \
-            or team_from_ip(ev.get("src_ip") or "") or "Equipo ??"
-        num = _team_num(team)
-        text = anonymize(f"⛔ BAN — EQUIPO {num} expulsado de la VPN")
-        out.append({
-            "ts": _rel_ts_iso(ts_ns), "ts_ns": ts_ns, "team": team,
-            "type": "ban", "domain_or_detail": "ban VPN", "text": text,
-        })
+    # Bans VPN desactivados — no se muestran en el panel de violaciones
 
     # AGREGACIÓN CON CONTADOR: una sola fila por (tipo, equipo, jugador, dominio)
     # en toda la ventana, con `count` (×N) y el timestamp MÁS RECIENTE. Evita que
