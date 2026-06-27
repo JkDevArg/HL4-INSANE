@@ -723,7 +723,7 @@ CHALLENGES = [
         "gobl1n-poke-l4bs",
         "gobl1n",
         "POKE_L4BS",
-        1500,
+        1200,
         "Consola retro emulada en la nube. El juego esconde un secreto. "
         "Juega y encuéntralo.",
         "http://172.30.{N}.50:8080",
@@ -840,10 +840,10 @@ async def seed(reset: bool) -> None:
         for order, (cid, cat, name, pts, desc, conn) in enumerate(CHALLENGES):
             pub_name, pub_desc = _PUBLIC_META.get(cid, (name, desc))
             if cid in existing_cids:
-                # Actualiza nombre/descripción pública sin borrar solves.
+                # Actualiza nombre, descripción y puntos sin borrar solves.
                 await db.execute(
                     update(Challenge).where(Challenge.challenge_id == cid)
-                    .values(name=pub_name, description=pub_desc)
+                    .values(name=pub_name, description=pub_desc, points=pts)
                 )
                 updated_count += 1
                 continue
