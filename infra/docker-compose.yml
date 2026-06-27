@@ -245,6 +245,20 @@ services:
       - "127.0.0.1:9090:9090"   # SOLO admin (depuración del scrape). Túnel SSH.
     depends_on: [cadvisor]
 
+  # ── raw PREROUTING watcher: re-inserta accepts VPN tras cada compose up ────
+  # Docker 26+ agrega 'ip daddr <IP> iifname != br-X drop' en raw PREROUTING
+  # cada vez que arranca un contenedor. Este servicio escucha eventos Docker
+  # y re-inserta nuestros accepts (tun0→172.30/10.10.100) al frente de la
+  # chain, antes de que los drops de Docker puedan bloquear el tráfico VPN.
+  ctf-raw-watcher:
+    build: ./ctf-raw-watcher
+    container_name: ctf-raw-watcher
+    restart: unless-stopped
+    network_mode: host
+    privileged: true
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
   # ── Panel admin propio (recursos en vivo + control ON/OFF por equipo) ──────
   # AISLADO del caster y de los jugadores: se publica SOLO en 127.0.0.1:8091
   # (túnel SSH). Monta el socket de Docker para leer stats y hacer stop/start
