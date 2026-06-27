@@ -467,6 +467,12 @@ RUNNING=$(docker ps --filter "name=ctf-" --format "{{.Names}}" | wc -l)
 ok "$RUNNING contenedores CTF corriendo"
 docker compose ps --format "table {{.Name}}\t{{.Status}}" 2>/dev/null | tee -a "$LOG_FILE" | head -20
 
+# Re-aplicar firewall DESPUÉS de Docker: limpia los drops raw PREROUTING que
+# Docker añade por contenedor (bloquearían el tráfico VPN->contenedores).
+log "Re-aplicando firewall CTF (limpiar raw PREROUTING de Docker)..."
+bash "$SCRIPTS_DIR/apply-firewall.sh" 2>&1 | tee -a "$LOG_FILE" | tail -5
+ok "Firewall CTF re-aplicado post-Docker"
+
 # =============================================================================
 # PASO 9 — Seed de base de datos
 # =============================================================================

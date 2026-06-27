@@ -173,7 +173,36 @@ nft insert rule ip nat POSTROUTING \
 log "MASQUERADE VPN->CTF platform configurado."
 
 # ---------------------------------------------------------------------------
-# 7. Verificacion final
+# 7. raw PREROUTING: eliminar drops de Docker que bloquean tráfico VPN
+#
+# Docker (>=27) añade en la tabla 'ip raw PREROUTING' una regla DROP por cada
+# contenedor con IP en 10.10.100.x:
+#   ip daddr <container_ip> iifname != "br-<id>" drop
+# Estas reglas corren ANTES del chain FORWARD y descartan todos los paquetes
+# que llegan por tun0 (que no es el bridge del contenedor), aunque FORWARD
+# tenga ACCEPT explícito. Este paso borra esas reglas.
+#
+# IMPORTANTE: este paso debe correr DESPUÉS de que Docker haya levantado los
+# contenedores (i.e., DESPUÉS de 'docker compose up'). Deploy llama este
+# script dos veces: una antes de Docker (para FORWARD/DOCKER-USER) y otra
+# después (para limpiar el raw PREROUTING que Docker recién creó).
+# ---------------------------------------------------------------------------
+log "Limpiando raw PREROUTING de Docker (iifname != br-* drop para CTF subnets)..."
+RAW_HANDLES=$(nft -a list chain ip raw PREROUTING 2>/dev/null \
+    | grep -E 'ip daddr (10\.10\.100\.|172\.30\.).*iifname.*drop' \
+    | grep -oP '# handle \K[0-9]+' \
+    | sort -rn | tr '\n' ' ' || true)
+if [[ -n "$RAW_HANDLES" ]]; then
+    for H in $RAW_HANDLES; do
+        nft delete rule ip raw PREROUTING handle "$H" 2>/dev/null || true
+    done
+    log "  Eliminadas reglas raw PREROUTING Docker: handles $RAW_HANDLES"
+else
+    log "  No hay reglas raw PREROUTING Docker para CTF subnets (OK si Docker no arrancó aún)."
+fi
+
+# ---------------------------------------------------------------------------
+# 8. Verificacion final
 # ---------------------------------------------------------------------------
 log "--- FORWARD ---"
 nft list chain ip filter FORWARD 2>/dev/null | grep -E 'tun0|established|policy' || true
