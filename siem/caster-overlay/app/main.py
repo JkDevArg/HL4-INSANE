@@ -59,7 +59,8 @@ def anonymize_payload(s) -> str:
 # Config
 # ----------------------------------------------------------------------------
 LOKI_URL = os.environ.get("LOKI_URL", "http://loki:3100").rstrip("/")
-WINDOW_MIN = int(os.environ.get("WINDOW_MIN", "15"))
+WINDOW_MIN = int(os.environ.get("WINDOW_MIN", "1440"))   # ventana histórica (default 24h)
+SESSION_TTL_MIN = int(os.environ.get("SESSION_TTL_MIN", "20"))  # TTL sesión VPN "online"
 CTF_NAME = os.environ.get("CTF_NAME", "CTF HACKL4BS")
 
 STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
@@ -83,7 +84,7 @@ SCAN_WINDOW_SEC = 60          # ventana de agregación para contar puertos
 SCAN_DEDUP_SEC = 60           # no re-emitir el mismo (equipo, host) en esta ventana
 # Una sesión VPN se considera "viva" si su último evento connect es más
 # reciente que esta antigüedad (evita contar sesiones zombie).
-SESSION_TTL_SEC = WINDOW_MIN * 60
+SESSION_TTL_SEC = SESSION_TTL_MIN * 60
 
 # Iconos por tipo de evento (kind).
 ICONS = {
