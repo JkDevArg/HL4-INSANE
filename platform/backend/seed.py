@@ -723,7 +723,7 @@ CHALLENGES = [
         "gobl1n-poke-l4bs",
         "gobl1n",
         "POKE_L4BS",
-        950,
+        1500,
         "Consola retro emulada en la nube. El juego esconde un secreto. "
         "Juega y encuéntralo.",
         "http://172.30.{N}.50:8080",
