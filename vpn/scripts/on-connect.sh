@@ -6,12 +6,9 @@
 # OpenVPN ABORTA la conexion del cliente (lo desconecta).
 #
 # Responsabilidades:
-#   1. Si el equipo ya esta baneado (Redis ban:team_NN) -> exit 1 (rechaza).
-#   2. Si el cert ya tiene una sesion activa (otro jugador/dispositivo lo
-#      usa al mismo tiempo) -> exit 1 (rechaza). Grace period: si el jugador
-#      se desconecto en los ultimos 2 min puede reconectarse (caida de internet).
-#   3. Loguear la conexion (CN, IP asignada VPN, IP real) en formato parseable.
-#   4. Emitir evento SIEM vpn_connect (fire-and-forget).
+#   1. Registrar sesion activa en Redis (permite reconexion con el mismo cert).
+#   2. Loguear la conexion (CN, IP asignada VPN, IP real) en formato parseable.
+#   3. Emitir evento SIEM vpn_connect (fire-and-forget).
 #
 # Variables de entorno que OpenVPN expone a este script:
 #   common_name        -> CN del certificado del cliente = team_NN_pN
@@ -73,40 +70,13 @@ log_event() {
 }
 
 # ---------------------------------------------------------------------------
-# 1) Gate de cert duplicado: un solo dispositivo activo por CN.
+# 1) Registrar sesion activa en Redis (sin rechazar conexiones duplicadas).
 #
-# Redis keys:
-#   vpn:connected:{CN}  -> existe SOLO mientras hay sesion activa (TTL 86400s).
-#                          Se borra en on-disconnect.sh.
-#   vpn:grace:{CN}      -> existe 120s tras desconexion (grace period).
-#                          Mientras exista, el mismo CN puede reconectarse.
-#
-# Logica:
-#   - vpn:connected existe -> mismo cert ya conectado -> rechazar.
-#   - vpn:connected NO existe (este o esta en grace period) -> permitir.
+# Se permite reconectar en cualquier momento con el mismo cert.
 # ---------------------------------------------------------------------------
 CONNECTED_KEY="vpn:connected:${CN}"
 GRACE_KEY="vpn:grace:${CN}"
 
-ALREADY_CONNECTED="0"
-if ALREADY_CONNECTED=$(redis-cli -h "$REDIS_HOST" -p "$REDIS_PORT" \
-        --no-raw EXISTS "$CONNECTED_KEY" 2>/dev/null); then
-    ALREADY_CONNECTED="$(echo "$ALREADY_CONNECTED" | tr -dc '0-9')"
-else
-    ALREADY_CONNECTED="0"   # Redis caido -> fail-open (no bloqueamos)
-fi
-
-if [[ "$ALREADY_CONNECTED" == "1" ]]; then
-    log_event vpn_connect_rejected \
-        "reason=cert_in_use cn=${CN} player=${PLAYER}"
-    emit_siem "vpn_connect" "alert" \
-        "{\"action\":\"rejected\",\"reason\":\"cert_in_use\",\"cn\":\"${CN}\",\"player\":\"${PLAYER}\"}"
-    echo "[on-connect] ${CN} RECHAZADO: cert ya esta en uso" >&2
-    exit 1
-fi
-
-# Registrar sesion activa (TTL largo mientras este conectado).
-# Borramos el grace key por si era una reconexion rapida.
 redis-cli -h "$REDIS_HOST" -p "$REDIS_PORT" \
     SET "$CONNECTED_KEY" "${REAL_IP}:${REAL_PORT}" EX 86400 >/dev/null 2>&1 || true
 redis-cli -h "$REDIS_HOST" -p "$REDIS_PORT" \
