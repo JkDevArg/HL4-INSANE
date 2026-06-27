@@ -1,18 +1,17 @@
-# rev-customvm — CustomVM Crackme
+# rev-wasm-chain — WebAssembly → Native Bridge
 # Lanzado por infra/launch-team-challenges.sh:
 #   TEAM_ID=team_01 TEAM_N=1 FLAG="HL4{...}" CHAL_NET=ctf_team_01 \
-#     docker compose -p ctf_team_01_rev_customvm up -d --build
-version: "3.9"
+#     docker compose -p ctf_team_01_rev_wasm_chain up -d --build
 services:
   app:
     build: .
-    container_name: "ctf_${TEAM_ID:-local}_rev-customvm"
+    container_name: "ctf_${TEAM_ID:-local}_rev-wasm-chain"
     environment:
       - FLAG=${FLAG:-HL4{placeholder}}
       - TEAM_ID=${TEAM_ID:-local}
     networks:
       challenge_net:
-        ipv4_address: 172.30.${TEAM_N:-99}.40
+        ipv4_address: 172.30.${TEAM_N:-99}.42
     restart: unless-stopped
 
 networks:

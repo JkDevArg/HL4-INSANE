@@ -1,18 +1,17 @@
-# rev-packeddelta — XOR Packed Delta Crackme
+# rev-dotnet-obf — .NET Obfuscated Validator
 # Lanzado por infra/launch-team-challenges.sh:
-#   TEAM_ID=team_01 TEAM_N=1 FLAG="HL4{...}" CHAL_NET=ctf_team_01 \
-#     docker compose -p ctf_team_01_rev_packeddelta up -d --build
-version: "3.9"
+#   TEAM_ID=team_02 TEAM_N=2 FLAG="HL4{...}" CHAL_NET=ctf_team_02 \
+#     docker compose -p ctf_team_02_rev_dotnet_obf up -d --build
 services:
   app:
     build: .
-    container_name: "ctf_${TEAM_ID:-local}_rev-packeddelta"
+    container_name: "ctf_${TEAM_ID:-local}_rev-dotnet-obf"
     environment:
       - FLAG=${FLAG:-HL4{placeholder}}
       - TEAM_ID=${TEAM_ID:-local}
     networks:
       challenge_net:
-        ipv4_address: 172.30.${TEAM_N:-99}.40
+        ipv4_address: 172.30.${TEAM_N:-99}.42
     restart: unless-stopped
 
 networks:

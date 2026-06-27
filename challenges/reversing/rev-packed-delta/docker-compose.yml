@@ -1,12 +1,11 @@
-# rev-wasmcrack — Rust Hash Validator
+# rev-packed-delta — Packed Binary + Delta Decryption
 # Lanzado por infra/launch-team-challenges.sh:
-#   TEAM_ID=team_01 TEAM_N=1 FLAG="HL4{...}" CHAL_NET=ctf_team_01 \
-#     docker compose -p ctf_team_01_rev_wasmcrack up -d --build
-version: "3.9"
+#   TEAM_ID=team_03 TEAM_N=3 FLAG="HL4{...}" CHAL_NET=ctf_team_03 \
+#     docker compose -p ctf_team_03_rev_packed_delta up -d --build
 services:
   app:
     build: .
-    container_name: "ctf_${TEAM_ID:-local}_rev-wasmcrack"
+    container_name: "ctf_${TEAM_ID:-local}_rev-packed-delta"
     environment:
       - FLAG=${FLAG:-HL4{placeholder}}
       - TEAM_ID=${TEAM_ID:-local}
