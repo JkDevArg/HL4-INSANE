@@ -198,35 +198,41 @@ export function ChallengeCard({
         )}
       </div>
 
-      <form onSubmit={handleSubmit} className="mt-auto flex flex-col gap-2">
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={flag}
-            onChange={(e) => setFlag(e.target.value)}
-            placeholder={solved ? 'Reto resuelto' : 'HL4{…}'}
-            className="input-term"
-            autoComplete="off"
-            spellCheck={false}
-            disabled={solved}
-          />
-          <button
-            type="submit"
-            className="btn-neon"
-            disabled={solved || submitting || !flag.trim()}
-          >
-            {submitting ? '…' : 'Enviar'}
-          </button>
-        </div>
-        {feedback && (
-          <p
-            role="status"
-            className={`rounded-md border px-3 py-2 font-mono text-xs ${FEEDBACK_STYLE[feedback.kind]}`}
-          >
-            {feedback.text}
-          </p>
-        )}
-      </form>
+      {isRunning || solved ? (
+        <form onSubmit={handleSubmit} className="mt-auto flex flex-col gap-2">
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={flag}
+              onChange={(e) => setFlag(e.target.value)}
+              placeholder={solved ? 'Reto resuelto' : 'HL4{…}'}
+              className="input-term"
+              autoComplete="off"
+              spellCheck={false}
+              disabled={solved}
+            />
+            <button
+              type="submit"
+              className="btn-neon"
+              disabled={solved || submitting || !flag.trim()}
+            >
+              {submitting ? '…' : 'Enviar'}
+            </button>
+          </div>
+          {feedback && (
+            <p
+              role="status"
+              className={`rounded-md border px-3 py-2 font-mono text-xs ${FEEDBACK_STYLE[feedback.kind]}`}
+            >
+              {feedback.text}
+            </p>
+          )}
+        </form>
+      ) : (
+        <p className="mt-auto border-t border-line pt-3 font-mono text-[11px] italic text-muted text-center">
+          Inicia la instancia para desbloquear el envío de flag.
+        </p>
+      )}
     </article>
   );
 }

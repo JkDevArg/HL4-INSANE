@@ -21,7 +21,7 @@ import asyncio
 import secrets
 import string
 
-from sqlalchemy import delete, select
+from sqlalchemy import delete, select, update
 
 from app.auth import hash_password
 from app.db import SessionLocal, init_db
@@ -762,6 +762,35 @@ ASSIGNMENTS: dict[str, list[str]] = {
 }
 
 
+# ---------------------------------------------------------------------------
+# Nombres y descripciones GENÉRICAS para los jugadores
+# (sin pistas sobre el vector de ataque — los retos reales se mantienen
+#  en CHALLENGES solo como referencia interna para el staff del CTF)
+# ---------------------------------------------------------------------------
+_CATEGORY_DESCS: dict[str, str] = {
+    "web":    "Servicio web en producción. Analiza el objetivo y extrae la flag del sistema.",
+    "crypto": "Servicio criptográfico activo. Estudia el protocolo y obtén la flag.",
+    "pwn":    "Binario en ejecución en el servidor. Explótalo y lee la flag.",
+    "rev":    "Artefacto binario para analizar. Entiende su lógica y extrae la flag.",
+}
+_ROMAN = ("I", "II", "III")
+
+# _PUBLIC_META[challenge_id] = (nombre_publico, descripcion_publica)
+# Se genera automáticamente a partir de ASSIGNMENTS: sin pistas del vector.
+_PUBLIC_META: dict[str, tuple[str, str]] = {}
+for _tid, _cids in ASSIGNMENTS.items():
+    _by_cat: dict[str, list[str]] = {}
+    for _cid in _cids:
+        _cat = next(c for _id, c, *_ in CHALLENGES if _id == _cid)
+        _by_cat.setdefault(_cat, []).append(_cid)
+    for _cat, _cat_cids in _by_cat.items():
+        for _i, _cid in enumerate(_cat_cids):
+            _PUBLIC_META[_cid] = (
+                f"{_cat.upper()} {_ROMAN[_i]}",
+                _CATEGORY_DESCS.get(_cat, "Sistema objetivo. Compromételo y obtén la flag."),
+            )
+
+
 def _random_password(length: int = 16) -> str:
     alphabet = string.ascii_letters + string.digits
     alphabet = alphabet.translate(str.maketrans("", "", "Il1O0"))
@@ -787,17 +816,25 @@ async def seed(reset: bool) -> None:
         )).all()}
 
         new_count = 0
+        updated_count = 0
         for order, (cid, cat, name, pts, desc, conn) in enumerate(CHALLENGES):
+            pub_name, pub_desc = _PUBLIC_META.get(cid, (name, desc))
             if cid in existing_cids:
+                # Actualiza nombre/descripción pública sin borrar solves.
+                await db.execute(
+                    update(Challenge).where(Challenge.challenge_id == cid)
+                    .values(name=pub_name, description=pub_desc)
+                )
+                updated_count += 1
                 continue
             db.add(Challenge(
-                challenge_id=cid, category=cat, name=name, difficulty="insane",
-                points=pts, description=desc, connection_info=conn,
+                challenge_id=cid, category=cat, name=pub_name, difficulty="insane",
+                points=pts, description=pub_desc, connection_info=conn,
                 visible=True, sort_order=order,
             ))
             new_count += 1
         await db.commit()
-        print(f"[seed] {new_count} retos nuevos sembrados ({len(CHALLENGES)} en catálogo total).")
+        print(f"[seed] {new_count} retos nuevos + {updated_count} actualizados ({len(CHALLENGES)} total).")
 
         # --- Equipos ---
         existing_teams = {t for (t,) in (await db.execute(

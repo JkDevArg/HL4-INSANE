@@ -711,6 +711,11 @@ def map_dns_batch(rows):
             if answer == "0.0.0.0":
                 # Bloqueado (típicamente IA u otro dominio prohibido).
                 team, _, player = last_query_team.get(domain, (None, None, ""))
+                # Fallback: extraer equipo del dominio si tiene 172.30.N.x embebido.
+                if not team and domain:
+                    m_dom = re.search(r"172\.30\.([1-5])\.\d+", domain)
+                    if m_dom:
+                        team = team_from_ip(f"10.10.{m_dom.group(1)}.1")
                 if team and player:
                     who = f"{team} · Jugador {player}"
                 elif team:
@@ -746,6 +751,13 @@ def map_dns_batch(rows):
             continue
 
         team = team_from_ip(ip) if ip else None
+        # Si la IP no resuelve equipo, intentar extraerlo del dominio.
+        # Caso típico: callback OOB/SSRF con la IP del reto embebida,
+        # p.ej. "*.172.30.1.10.interact.sh" → el tercer octeto (1) es el equipo.
+        if not team and domain:
+            m_dom = re.search(r"172\.30\.([1-5])\.\d+", domain)
+            if m_dom:
+                team = team_from_ip(f"10.10.{m_dom.group(1)}.1")
         # Jugador (miembro) por la IP: 10.10.N.(11-14) -> "1".."4" (certs por miembro).
         player = ""
         if ip:

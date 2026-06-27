@@ -98,11 +98,12 @@ writesonic.com
 jasper.ai
 copy.ai
 
-# --- Herramientas de codificación IA (IDE assistants) ---
+# --- Herramientas de codificación IA (IDE assistants y AI coders) ---
 cursor.sh
 api.cursor.sh
 codeium.com
 api.codeium.com
+windsurf.com
 continue.dev
 tabnine.com
 codestral.mistral.ai
@@ -110,12 +111,20 @@ cody.sourcegraph.com
 sourcegraph.com
 replit.com
 ghostwriter.replit.com
+aider.chat
+v0.dev
+lovable.dev
+bolt.new
+stackblitz.com
+supermaven.com
+augmentcode.com
+codewhisperer.amazonaws.com
+q.aws
 
-# --- GitHub Copilot (endpoints adicionales) ---
+# --- GitHub Copilot (solo endpoints Copilot — github.com y api.github.com NO bloqueados) ---
 githubcopilot.com
 copilot-proxy.githubusercontent.com
-api.github.com
-uploads.github.com
+copilot.github.com
 
 # --- Microsoft Copilot / Bing AI / Office AI ---
 ecs.office.com
