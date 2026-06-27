@@ -1,8 +1,8 @@
 """Router: ciclo de vida de instancias on-demand (Start / Stop / Status)."""
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import select
+from fastapi import APIRouter, Depends, HTTPException, Request, status
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db import get_db
@@ -13,6 +13,8 @@ from app.schemas import InstanceOut
 from app.siem import emit_event
 
 router = APIRouter(prefix="/instances", tags=["instances"])
+
+MAX_INSTANCES_PER_TEAM = 4
 
 
 async def _assert_assigned(db: AsyncSession, team_id: str, challenge_id: str) -> None:
@@ -46,9 +48,25 @@ async def _upsert_instance(
     return inst
 
 
+async def _count_running(db: AsyncSession, team_id: str) -> int:
+    r = await db.execute(
+        select(func.count()).where(
+            ChallengeInstance.team_id == team_id,
+            ChallengeInstance.status == "running",
+        )
+    )
+    return r.scalar() or 0
+
+
+def _client_ip(request: Request) -> str:
+    forwarded = request.headers.get("X-Real-IP") or request.headers.get("X-Forwarded-For", "")
+    return forwarded.split(",")[0].strip() if forwarded else (request.client.host if request.client else "")
+
+
 @router.post("/{challenge_id}/start", response_model=InstanceOut)
 async def start(
     challenge_id: str,
+    request: Request,
     team: Team = Depends(get_current_team),
     db: AsyncSession = Depends(get_db),
 ):
@@ -58,9 +76,18 @@ async def start(
     if inst.status == "running":
         return InstanceOut(challenge_id=challenge_id, status="running", message="Ya está corriendo.")
 
+    # Límite: un equipo no puede tener más de MAX_INSTANCES_PER_TEAM activas.
+    running = await _count_running(db, team.team_id)
+    if running >= MAX_INSTANCES_PER_TEAM:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=f"Límite de instancias alcanzado ({MAX_INSTANCES_PER_TEAM} activas). Detén un reto antes de iniciar otro.",
+        )
+
     inst.status = "starting"
     await db.commit()
 
+    src_ip = _client_ip(request)
     try:
         await start_instance(team.team_id, challenge_id)
         inst.status = "running"
@@ -76,8 +103,9 @@ async def start(
         severity="info",
         team_id=team.team_id,
         user=team.team_id,
+        src_ip=src_ip,
         challenge_id=challenge_id,
-        detail={"action": "start"},
+        detail={"action": "start", "running_after": running + 1, "max": MAX_INSTANCES_PER_TEAM},
     )
     return InstanceOut(challenge_id=challenge_id, status="running", message="Instancia iniciada.")
 
@@ -85,6 +113,7 @@ async def start(
 @router.post("/{challenge_id}/stop", response_model=InstanceOut)
 async def stop(
     challenge_id: str,
+    request: Request,
     team: Team = Depends(get_current_team),
     db: AsyncSession = Depends(get_db),
 ):
@@ -96,11 +125,13 @@ async def stop(
     inst.started_at = None
     await db.commit()
 
+    src_ip = _client_ip(request)
     await emit_event(
         event_type="instance_stop",
         severity="info",
         team_id=team.team_id,
         user=team.team_id,
+        src_ip=src_ip,
         challenge_id=challenge_id,
         detail={"action": "stop"},
     )

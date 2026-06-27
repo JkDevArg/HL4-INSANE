@@ -140,10 +140,12 @@ nft insert rule ip filter DOCKER-USER \
     ip daddr != { 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16 } \
     return 2>/dev/null || true
 
-# [3] DROP SIEM y redes privadas no autorizadas
+# [3] DROP SIEM — solo 10.10.200.0/24.
+# NO bloquear 172.16.0.0/12 aquí porque 172.30.0.0/16 (challenges) es subred de 172.16.
+# El aislamiento inter-equipo lo hacen las reglas [2] por equipo + el FORWARD chain.
 nft insert rule ip filter DOCKER-USER \
     ip saddr 10.10.0.0/16 \
-    ip daddr { 172.16.0.0/12, 10.10.200.0/24 } \
+    ip daddr 10.10.200.0/24 \
     drop 2>/dev/null || true
 
 # [2] ACCEPT por equipo (solo su propia subred de challenges)

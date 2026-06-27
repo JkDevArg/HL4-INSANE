@@ -73,6 +73,7 @@ server 10.10.0.0 255.255.192.0
 client-to-client
 push "route 10.10.100.0 255.255.255.0"
 push "route 10.10.200.0 255.255.255.0"
+push "route 172.30.0.0 255.255.0.0"
 push "redirect-gateway def1"
 push "dhcp-option DNS 10.10.0.1"
 push "block-outside-dns"
