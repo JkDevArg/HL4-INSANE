@@ -215,6 +215,23 @@ log "--- MASQUERADE ---"
 nft list chain ip nat POSTROUTING 2>/dev/null \
     | grep '10\.10\.0\.0/16.*masquerade' || true
 
+# ---------------------------------------------------------------------------
+# 9. Pre-crear redes Docker por equipo (ctf_team_NN / 172.30.N.0/24)
+#
+# Las instancias de retos usan redes con external: true en docker-compose.yml.
+# Si la red no existe al arrancar el compose, falla con:
+#   "network ctf_team_NN declared as external, but could not be found"
+# Creamos aquí las 5 redes para que estén listas antes de cualquier Start.
+# ---------------------------------------------------------------------------
+log "Pre-creando redes Docker por equipo..."
+for N in 1 2 3 4 5; do
+    NET="ctf_team_$(printf '%02d' $N)"
+    SUBNET="172.30.${N}.0/24"
+    docker network create --subnet "$SUBNET" "$NET" >/dev/null 2>&1 \
+        && log "  ${NET} creada (${SUBNET})" \
+        || log "  ${NET} ya existe (OK)"
+done
+
 log "OK — Firewall CTF aplicado correctamente."
 log "    - Internet: PERMITIDO (IAs bloqueadas por dnsmasq)"
 log "    - SIEM (10.10.200.0/24): BLOQUEADO"

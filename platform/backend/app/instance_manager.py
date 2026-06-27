@@ -56,10 +56,13 @@ async def _fetch_flag(team_id: str, challenge_id: str) -> str:
 
 def _ensure_network(team_id: str) -> None:
     net = _team_network(team_id)
-    result = os.popen(f"docker network inspect {net} 2>/dev/null").read()
-    if "Error" in result or not result.strip():
+    # os.popen().read() devuelve "[]" (stdout) cuando la red no existe — exit code
+    # es 1 pero stdout no está vacío y no contiene "Error". Usamos os.system() que
+    # devuelve el exit code real para detectar correctamente si la red falta.
+    rc = os.system(f"docker network inspect {net} >/dev/null 2>&1")
+    if rc != 0:
         subnet = _team_subnet(team_id)
-        os.system(f"docker network create --subnet {subnet} {net} 2>/dev/null || true")
+        os.system(f"docker network create --subnet {subnet} {net} >/dev/null 2>&1 || true")
         logger.info("Red %s creada (%s)", net, subnet)
 
 
