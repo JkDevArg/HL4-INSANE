@@ -88,6 +88,9 @@ persist-tun
 data-ciphers AES-256-GCM:AES-128-GCM
 cipher AES-256-GCM
 tls-version-min 1.2
+# DCO (Data Channel Offload) bypasea netfilter/nftables completamente.
+# Debe estar deshabilitado para que las reglas de firewall/routing funcionen.
+disable-dco
 EOF
 
 mkdir -p /var/log/openvpn
