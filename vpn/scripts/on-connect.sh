@@ -73,25 +73,7 @@ log_event() {
 }
 
 # ---------------------------------------------------------------------------
-# 1) Gate de ban
-# ---------------------------------------------------------------------------
-BANNED="0"
-if BANNED=$(redis-cli -h "$REDIS_HOST" -p "$REDIS_PORT" --no-raw EXISTS "ban:${TEAM}" 2>/dev/null); then
-    BANNED="$(echo "$BANNED" | tr -dc '0-9')"
-else
-    BANNED="0"
-    log_event vpn_connect_redis_error "note=redis_unreachable_failopen"
-fi
-
-if [[ "$BANNED" == "1" ]]; then
-    log_event vpn_connect_rejected "reason=banned cn=${CN} player=${PLAYER}"
-    emit_siem "vpn_connect" "alert" \
-        "{\"action\":\"rejected\",\"reason\":\"team_banned\",\"cn\":\"${CN}\",\"player\":\"${PLAYER}\"}"
-    exit 1
-fi
-
-# ---------------------------------------------------------------------------
-# 2) Gate de cert duplicado: un solo dispositivo activo por CN.
+# 1) Gate de cert duplicado: un solo dispositivo activo por CN.
 #
 # Redis keys:
 #   vpn:connected:{CN}  -> existe SOLO mientras hay sesion activa (TTL 86400s).

@@ -54,9 +54,6 @@ async def login(
         )
         raise invalid
 
-    # Equipo baneado: bloquea login (requisito 4).
-    await ensure_not_banned(team.team_id, redis)
-
     # Limite de 4 sesiones concurrentes (requisito 2).
     session_id = await register_session(redis, team.team_id)
     if session_id is None:

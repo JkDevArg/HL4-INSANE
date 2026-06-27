@@ -121,9 +121,6 @@ async def get_current_team(
             detail="Sesion expirada o cerrada. Inicia sesion nuevamente.",
         )
 
-    # Ban check tambien sobre la API, no solo en login.
-    await ensure_not_banned(team_id, redis)
-
     result = await db.execute(select(Team).where(Team.team_id == team_id))
     team = result.scalar_one_or_none()
     if team is None:

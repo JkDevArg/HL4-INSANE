@@ -117,49 +117,10 @@ case "$SIGNAL" in
         COUNTS="no";  CLASS="unknown_signal_${SIGNAL}" ;;
 esac
 
-if [[ "$COUNTS" != "yes" ]]; then
-    log_event vpn_disconnect "counts=no class=${CLASS}"
-    emit_siem "vpn_disconnect" "info" \
-        "{\"counts\":false,\"class\":\"${CLASS}\",\"duration_s\":${DURATION},\"signal\":\"${SIGNAL:-none}\",\"real_ip\":\"${REAL_IP}\",\"real_port\":\"${REAL_PORT}\"}"
-    exit 0
-fi
-
-# ---------------------------------------------------------------------------
-# Desconexion limpia: incrementar contador para ban
-# ---------------------------------------------------------------------------
-COUNT=""
-if ! COUNT=$(redis-cli -h "$REDIS_HOST" -p "$REDIS_PORT" \
-        INCR "vpn:disc:${TEAM}" 2>/dev/null); then
-    log_event vpn_disconnect "counts=yes class=${CLASS} redis=error"
-    emit_siem "vpn_disconnect" "warn" \
-        "{\"counts\":true,\"class\":\"${CLASS}\",\"duration_s\":${DURATION},\"error\":\"redis_unreachable\"}"
-    exit 0
-fi
-COUNT="$(echo "$COUNT" | tr -dc '0-9')"
-COUNT="${COUNT:-0}"
-
-if (( DISC_WINDOW_TTL > 0 )); then
-    redis-cli -h "$REDIS_HOST" -p "$REDIS_PORT" \
-        EXPIRE "vpn:disc:${TEAM}" "$DISC_WINDOW_TTL" >/dev/null 2>&1 || true
-fi
-
-log_event vpn_disconnect "counts=yes class=${CLASS} count=${COUNT}/${DISCONNECT_THRESHOLD}"
-
-SEV="info"; (( COUNT >= DISCONNECT_THRESHOLD - 1 )) && SEV="warn"
-emit_siem "vpn_disconnect" "$SEV" \
-    "{\"counts\":true,\"class\":\"${CLASS}\",\"duration_s\":${DURATION},\"count\":${COUNT},\"threshold\":${DISCONNECT_THRESHOLD},\"real_ip\":\"${REAL_IP}\",\"real_port\":\"${REAL_PORT}\"}"
-
-# ---------------------------------------------------------------------------
-# Banear si se alcanzo el umbral
-# ---------------------------------------------------------------------------
-if (( COUNT >= DISCONNECT_THRESHOLD )); then
-    log_event vpn_ban_trigger "count=${COUNT}"
-    if [[ -x "$BAN_SCRIPT" ]]; then
-        "$BAN_SCRIPT" "$TEAM" "$CN" >> "$EVENTS_LOG" 2>&1 || \
-            log_event vpn_ban_error "note=ban_script_failed"
-    else
-        log_event vpn_ban_error "note=ban_script_missing path=${BAN_SCRIPT}"
-    fi
-fi
+# Sistema de ban por desconexiones desactivado.
+# Se emite el evento SIEM para visibilidad pero no se cuenta ni se banea.
+log_event vpn_disconnect "class=${CLASS}"
+emit_siem "vpn_disconnect" "info" \
+    "{\"counts\":false,\"class\":\"${CLASS}\",\"duration_s\":${DURATION},\"signal\":\"${SIGNAL:-none}\",\"real_ip\":\"${REAL_IP}\",\"real_port\":\"${REAL_PORT}\"}"
 
 exit 0
