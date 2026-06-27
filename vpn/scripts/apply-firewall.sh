@@ -105,13 +105,64 @@ nft insert rule ip filter DOCKER-USER \
     ip saddr 10.10.0.0/16 ip daddr 10.10.100.0/24 \
     accept 2>/dev/null || true
 
-log "Reglas VPN aplicadas."
+log "Reglas DOCKER-USER aplicadas."
 
 # ---------------------------------------------------------------------------
-# 3. Verificación
+# 3. Aislamiento inter-equipo en tun0 (FORWARD chain).
+#
+# client-to-client en OpenVPN permite que 10.10.1.x alcance 10.10.2.x
+# directamente por tun0, sin pasar por Docker. Hay que bloquearlo aquí.
+#
+# Se permite:
+#   - Cualquier equipo → 10.10.100.0/24 (platform CTF)
+#   - Cualquier equipo → 10.10.0.1      (gateway VPN / DNS dnsmasq)
+#   - Tráfico de retorno (ESTABLISHED/RELATED)
+# Se bloquea:
+#   - Tráfico entre subredes de equipos distintos (10.10.N.x → 10.10.M.x)
 # ---------------------------------------------------------------------------
-log "Estado actual de DOCKER-USER:"
+log "Aplicando aislamiento inter-equipo en FORWARD/tun0..."
+
+# Limpiar reglas tun0 previas para idempotencia.
+while true; do
+    HANDLE=$(nft -a list chain ip filter FORWARD 2>/dev/null \
+        | grep 'iifname "tun0"' \
+        | grep -oP '# handle \K[0-9]+' \
+        | head -1 || true)
+    [[ -z "$HANDLE" ]] && break
+    nft delete rule ip filter FORWARD handle "$HANDLE" 2>/dev/null || break
+done
+
+# Permitir tráfico de retorno (conexiones ya establecidas).
+nft insert rule ip filter FORWARD \
+    iifname "tun0" ct state established,related accept 2>/dev/null || true
+
+# Permitir VPN → platform CTF (10.10.100.0/24).
+nft insert rule ip filter FORWARD \
+    iifname "tun0" ip saddr 10.10.0.0/16 ip daddr 10.10.100.0/24 \
+    accept 2>/dev/null || true
+
+# Permitir VPN → gateway (DNS dnsmasq en 10.10.0.1).
+nft insert rule ip filter FORWARD \
+    iifname "tun0" ip saddr 10.10.0.0/16 ip daddr 10.10.0.1 \
+    accept 2>/dev/null || true
+
+# Bloquear tráfico entre clientes VPN (10.10.0.0/16 → 10.10.0.0/16).
+# Esto cubre team_01 → team_02 y cualquier combinación inter-equipo.
+nft insert rule ip filter FORWARD \
+    iifname "tun0" ip saddr 10.10.0.0/16 ip daddr 10.10.0.0/16 \
+    drop 2>/dev/null || true
+
+log "Aislamiento inter-equipo aplicado."
+
+# ---------------------------------------------------------------------------
+# 4. Verificación
+# ---------------------------------------------------------------------------
+log "--- DOCKER-USER ---"
 nft list chain ip filter DOCKER-USER 2>/dev/null \
     | grep -E 'saddr|daddr|tun0|return|drop|accept' || true
 
-log "OK — internet PERMITIDO. SIEM e inter-equipo BLOQUEADOS. IAs bloqueadas por dnsmasq."
+log "--- FORWARD (tun0) ---"
+nft list chain ip filter FORWARD 2>/dev/null \
+    | grep 'tun0' || true
+
+log "OK — internet PERMITIDO. SIEM, inter-equipo e inter-VPN BLOQUEADOS. IAs bloqueadas por dnsmasq."
