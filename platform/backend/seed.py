@@ -585,7 +585,7 @@ CHALLENGES = [
         "propio (20+ opcodes). El programa en bytecode valida una contraseña. "
         "Reversa el ISA, escribe un disassembler, analiza el bytecode del programa "
         "y deriva la contraseña correcta para desbloquear el flag.",
-        "http://172.30.{N}.40:8080  (GET /binary  POST /submit)",
+        "http://172.30.{N}.40:6001  (GET /binary  POST /check)",
     ),
     (
         "rev-go-binary",
@@ -596,7 +596,7 @@ CHALLENGES = [
         "Las strings están cifradas en el binario y se descifran en runtime. "
         "Usa técnicas de análisis estático en Go (tipos de runtime, goroutines), "
         "parchea las checks anti-debug y extrae el algoritmo de validación.",
-        "http://172.30.{N}.41:8080  (GET /binary  POST /submit)",
+        "http://172.30.{N}.41:6002  (GET /binary  POST /check)",
     ),
     (
         "rev-dotnet-obf",
@@ -607,7 +607,7 @@ CHALLENGES = [
         "están renombrados, el flujo de control está virtualizado. "
         "Usa de4dot para desofuscar parcialmente, luego analiza manualmente "
         "el control flow graph para entender el algoritmo de validación.",
-        "http://172.30.{N}.42:8080  (GET /binary  POST /submit)",
+        "http://172.30.{N}.42:6005  (GET /binary  POST /check)",
     ),
 
     # ── REV — Team 3 (slots .40 .41 .42) ─────────────────────────────────────
@@ -728,6 +728,19 @@ CHALLENGES = [
         "Juega y encuéntralo.",
         "http://172.30.{N}.50:8080",
     ),
+
+    # ── JAKA — Todos los equipos (slot .51) ──────────────────────────────────
+    # Flag estática igual para todos los equipos.
+    # Validación: GET /Xampl3/flag.php?check=<flag> → VALID / INVALID
+    (
+        "jaka",
+        "jaka",
+        "Super Mario CTF",
+        1200,
+        "Plataforma de juego clásica en la nube. Hay un nivel secreto esperando. "
+        "Explora, descubre y extrae la flag.",
+        "http://172.30.{N}.51",
+    ),
 ]
 
 # ---------------------------------------------------------------------------
@@ -748,35 +761,35 @@ ASSIGNMENTS: dict[str, list[str]] = {
         "crypto-lattice-ecdsa","crypto-jwt-confusion",  "crypto-tls-downgrade",
         "pwn-heap-chain",      "pwn-rop-chain",          "pwn-kernel-lpe",
         "rev-vm-bytecode",     "rev-go-binary",           "rev-dotnet-obf",
-        "gobl1n-poke-l4bs",
+        "gobl1n-poke-l4bs",    "jaka",
     ],
     "team_02": [
         "web-cache-deception", "web-http-desync",        "web-xxe-ssrf",
         "crypto-rsa-lsb",      "crypto-padding-oracle",  "crypto-hash-length-ext",
         "pwn-format-string",   "pwn-race-condition",      "pwn-uaf-chain",
         "rev-vm-bytecode",     "rev-go-binary",           "rev-dotnet-obf",
-        "gobl1n-poke-l4bs",
+        "gobl1n-poke-l4bs",    "jaka",
     ],
     "team_03": [
         "web-sqli-chain",      "web-graphql-chain",      "web-ssti-chain",
         "crypto-hastad-broadcast","crypto-fermat-rsa",   "crypto-dsa-nonce",
         "pwn-seccomp-bypass",  "pwn-pie-leak",            "pwn-vm-escape",
         "rev-vm-bytecode",     "rev-go-binary",           "rev-dotnet-obf",
-        "gobl1n-poke-l4bs",
+        "gobl1n-poke-l4bs",    "jaka",
     ],
     "team_04": [
         "web-oauth-misconfig", "web-prototype-pollution", "web-websocket-chain",
         "crypto-ecdh-invalid", "crypto-cbc-bitflip",      "crypto-gcm-nonce",
         "pwn-srop-chain",      "pwn-off-by-one",           "pwn-sandbox-escape",
         "rev-vm-bytecode",     "rev-go-binary",           "rev-dotnet-obf",
-        "gobl1n-poke-l4bs",
+        "gobl1n-poke-l4bs",    "jaka",
     ],
     "team_05": [
         "web-cors-chain",      "web-java-deserialization", "web-waf-bypass",
         "crypto-rsa-crt-fault","crypto-bleichenbacher",    "crypto-wiener",
         "pwn-aarch64-rop",     "pwn-heap-master",           "pwn-driver-exploit",
         "rev-vm-bytecode",     "rev-go-binary",           "rev-dotnet-obf",
-        "gobl1n-poke-l4bs",
+        "gobl1n-poke-l4bs",    "jaka",
     ],
 }
 
@@ -792,6 +805,7 @@ _CATEGORY_DESCS: dict[str, str] = {
     "pwn":    "Binario en ejecución en el servidor. Explótalo y lee la flag.",
     "rev":    "Artefacto binario para analizar. Entiende su lógica y extrae la flag.",
     "gobl1n": "Plataforma de juego retro. Explora el entorno y extrae la flag.",
+    "jaka":   "Plataforma de juego clásica en la nube. Hay un nivel secreto esperando. Explora, descubre y extrae la flag.",
 }
 _ROMAN = ("I", "II", "III")
 
@@ -843,7 +857,7 @@ async def seed(reset: bool) -> None:
                 # Actualiza nombre, descripción y puntos sin borrar solves.
                 await db.execute(
                     update(Challenge).where(Challenge.challenge_id == cid)
-                    .values(name=pub_name, description=pub_desc, points=pts)
+                    .values(name=pub_name, description=pub_desc, points=pts, connection_info=conn)
                 )
                 updated_count += 1
                 continue
@@ -883,12 +897,30 @@ async def seed(reset: bool) -> None:
             )).all()
         }
 
-        for tid, cids in ASSIGNMENTS.items():
-            for cid in cids:
-                if (tid, cid) not in existing_asgn:
-                    db.add(TeamChallengeAssignment(team_id=tid, challenge_id=cid))
+        # Asignaciones correctas según ASSIGNMENTS (conjunto de verdad)
+        correct_asgn = {(tid, cid) for tid, cids in ASSIGNMENTS.items() for cid in cids}
+
+        # Eliminar asignaciones que ya no están en ASSIGNMENTS
+        stale = existing_asgn - correct_asgn
+        for tid, cid in stale:
+            r = await db.execute(
+                select(TeamChallengeAssignment).where(
+                    TeamChallengeAssignment.team_id == tid,
+                    TeamChallengeAssignment.challenge_id == cid,
+                )
+            )
+            obj = r.scalar_one_or_none()
+            if obj:
+                await db.delete(obj)
+        if stale:
+            print(f"[seed] Eliminadas {len(stale)} asignaciones obsoletas.")
+
+        # Añadir las que faltan
+        for tid, cid in correct_asgn:
+            if (tid, cid) not in existing_asgn:
+                db.add(TeamChallengeAssignment(team_id=tid, challenge_id=cid))
         await db.commit()
-        print("[seed] Asignaciones guardadas (3 retos × 4 categorías × 5 equipos = 60 instancias).")
+        print("[seed] Asignaciones guardadas (3×4 + gobl1n + jaka) × 5 equipos = 70 instancias.")
 
     # --- Credenciales ---
     if credentials:

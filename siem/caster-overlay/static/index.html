@@ -772,12 +772,7 @@ async function tickViol() {
   const panel = document.getElementById("panelViol");
   try {
     const vs = await getJSON("/api/violations?limit=30");
-    if (!vs.length) {
-      el.innerHTML = '<div class="empty">Sin violaciones detectadas. Perímetro estable.</div>';
-      panel.classList.remove("alarm");
-      lastViolKey = "";
-      return;
-    }
+    if (!vs.length) return;
     const html = vs.map(v => {
       let inner;
       if (v.type === "ai_block") {
@@ -828,11 +823,8 @@ async function tickFeed() {
   try {
     const items = await getJSON("/api/feed?limit=60");
     dot.textContent = "● stream";
+    if (!items.length) return;
     updateDonut(items);
-    if (!items.length) {
-      el.innerHTML = '<div class="empty">Sin actividad en la ventana actual…</div>';
-      return;
-    }
     el.innerHTML = items.map(it => `
       <div class="ev ${sevClass(it)}">
         <div class="ico">${esc(it.icon || "•")}</div>

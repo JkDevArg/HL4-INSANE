@@ -133,7 +133,7 @@ export function ChallengeCard({
           <DifficultyBadge difficulty={challenge.difficulty} />
         </div>
         <div className="flex items-center gap-2">
-          <span className={`font-mono text-sm font-bold ${challenge.category === 'gobl1n' ? 'text-amber-400' : 'text-neon-cyan'}`}>{challenge.points} pts</span>
+          <span className={`font-mono text-sm font-bold ${challenge.category === 'gobl1n' || challenge.category === 'jaka' ? 'text-amber-400' : 'text-neon-cyan'}`}>{challenge.points} pts</span>
           {solved && (
             <span className="flex items-center gap-1 font-mono text-xs font-bold text-neon">
               <span aria-hidden>✓</span> resuelto

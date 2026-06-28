@@ -32,6 +32,8 @@ services:
       SECRET_KEY: "cache-deception-secret-${TEAM_ID:-local}"
     networks:
       internal_net:
+        aliases:
+          - cache-webapp
     restart: unless-stopped
 
   admin-bot:

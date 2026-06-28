@@ -359,7 +359,12 @@ def map_platform(ts_ns, line, labels):
             priority=2,
         )
 
-    # Otros eventos de plataforma no aportan narrativa -> descartar.
+    if etype == "instance_start":
+        return _item(ts_ns, team, "challenge", "info", f"{team} inició {chal_txt}", priority=2)
+
+    if etype == "instance_stop":
+        return _item(ts_ns, team, "challenge", "info", f"{team} detuvo {chal_txt}", priority=1)
+
     return None
 
 

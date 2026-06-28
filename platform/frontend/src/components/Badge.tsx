@@ -7,6 +7,7 @@ const CAT_STYLES: Record<Category, string> = {
   pwn: 'border-red-500/50 text-red-400',
   rev: 'border-neon-cyan/50 text-neon-cyan',
   gobl1n: 'border-purple-500/50 text-purple-400',
+  jaka:   'border-amber-400/50 text-amber-400',
 };
 
 export function CategoryBadge({ category }: { category: Category }) {

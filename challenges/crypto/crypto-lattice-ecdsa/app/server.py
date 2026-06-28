@@ -52,9 +52,14 @@ def point_mul(k, P):
 
 G = (Gx, Gy)
 
-# Generate private key
-PRIVATE_KEY = random.randint(1, n - 1)
-PUBLIC_KEY = point_mul(PRIVATE_KEY, G)
+# Generate private key (retry on rare edge case in point_mul)
+while True:
+    try:
+        PRIVATE_KEY = random.randint(1, n - 1)
+        PUBLIC_KEY = point_mul(PRIVATE_KEY, G)
+        break
+    except ValueError:
+        continue
 
 def sign(msg_bytes):
     h = int(hashlib.sha256(msg_bytes).hexdigest(), 16)
