@@ -14,7 +14,7 @@ from app.siem import emit_event
 
 router = APIRouter(prefix="/instances", tags=["instances"])
 
-MAX_INSTANCES_PER_TEAM = 4
+MAX_INSTANCES_PER_TEAM = 6
 
 
 async def _assert_assigned(db: AsyncSession, team_id: str, challenge_id: str) -> None:

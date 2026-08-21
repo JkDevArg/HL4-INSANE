@@ -58,11 +58,13 @@ limits_config:
   ingestion_burst_size_mb: 32
   # Permite consultar hasta 7 días hacia atrás en Grafana.
   max_query_lookback: 168h
+  deletion_mode: filter-and-delete
 
 # Compactador: limpia y mantiene el índice boltdb-shipper.
 compactor:
   working_directory: /loki/compactor
   compaction_interval: 10m
+  retention_enabled: true
 
 # Sin reporte de uso anónimo a Grafana Labs.
 analytics:

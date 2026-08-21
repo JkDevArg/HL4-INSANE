@@ -13,6 +13,7 @@ MASTER_SECRET = os.environ["MASTER_SECRET"]
 # La flag se obtiene dentro del propio reto, no vía HMAC por equipo.
 STATIC_FLAGS: dict[str, str] = {
     "gobl1n-poke-l4bs": "HL4{pok3m0n-for3v3r-Hackl4bs}",
+    "jaka": "HL4{n1v3l_s3cr3t0_d3_m4ri0_c0mpl3t4d0}",
 }
 
 
